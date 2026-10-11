@@ -150,6 +150,22 @@ void ImageComponent::onSizeChanged()
 	updateVertices();
 }
 
+void ImageComponent::setSaturation(float saturation)
+{
+	if (mSaturation == saturation)
+		return;
+
+	mSaturation = saturation;
+
+	// reload the current image with the new saturation
+	if (!mPath.empty())
+	{
+		std::string path = mPath;
+		mPath = "";
+		setImage(path, mTexture != nullptr && mTexture->isTiled(), getMaxSizeInfo());
+	}
+}
+
 void ImageComponent::setDefaultImage(std::string path)
 {
 	mDefaultPath = path;
@@ -173,11 +189,11 @@ void ImageComponent::setImage(std::string path, bool tile, MaxSizeInfo maxSize)
 		if (mDefaultPath.empty() || !ResourceManager::getInstance()->fileExists(mDefaultPath))
 			mTexture.reset();
 		else
-			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize);
+			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
 	}
 	else
 	{
-		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize);
+		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
 
 		if (!mForceLoad && mDynamic && !mAllowFading && texture != nullptr && !texture->isLoaded())
 			mLoadingTexture = texture;
@@ -567,6 +583,14 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 	if (elem->has("linearSmooth"))
 		mLinear = elem->get<bool>("linearSmooth");
 
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.0f, 0.0f));
+
+	// before <path> so the image is loaded with it
+	setSaturation(elem->has("saturation") ? elem->get<float>("saturation") : 1.0f);
+
+	if (elem->has("autoFade"))
+		setAllowFading(elem->get<bool>("autoFade"));
+
 	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 	
 	if(properties & POSITION && elem->has("pos"))
@@ -792,6 +816,8 @@ ThemeData::ThemeElement::Property ImageComponent::getProperty(const std::string 
 		return mDefaultPath;
 	else if (name == "autoFade")
 		return mAllowFading;
+	else if (name == "saturation")
+		return mSaturation;
 
 	return GuiComponent::getProperty(name);
 }
@@ -821,6 +847,8 @@ void ImageComponent::setProperty(const std::string name, const ThemeData::ThemeE
 		setColorShift(value.i);
 	else if (value.type == PropType::Int && name == "colorEnd")
 		setColorShiftEnd(value.i);
+	else if (value.type == PropType::Float && name == "saturation")
+		setSaturation(value.f);
 	else if (value.type == PropType::Bool && name == "autoFade")
 		setAllowFading(value.b);
 	else if (value.type == PropType::Float && name == "roundCorners")

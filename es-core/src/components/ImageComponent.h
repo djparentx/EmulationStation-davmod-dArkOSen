@@ -85,6 +85,10 @@ public:
 
 	void setAllowAsync(bool async) { mAllowAsync = async; };
 	void setAllowFading(bool fade) { mAllowFading = fade; };
+
+	// <saturation>: 1 = unchanged, 0 = grayscale (reloads the image)
+	void setSaturation(float saturation);
+	float getSaturation() { return mSaturation; }
 	void setMirroring(Vector2f mirror) { mMirror = mirror; };
 
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
@@ -164,6 +168,7 @@ private:
 	bool					mAllowFading;
 	bool					mAllowAsync;
 	float					mRoundCorners;
+	float					mSaturation = 1.0f;
 
 	Vector2f mTopLeftCrop;
 	Vector2f mBottomRightCrop;	

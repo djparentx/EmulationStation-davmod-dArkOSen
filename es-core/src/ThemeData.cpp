@@ -53,8 +53,15 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipX", BOOLEAN },
 		{ "flipY", BOOLEAN },
 		{ "linearSmooth", BOOLEAN },
+		{ "saturation", FLOAT },
+		{ "autoFade", BOOLEAN },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "imagegrid", {
+		{ "scrollbarColor", COLOR },        // accepted, not rendered yet
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -117,6 +124,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "autoScrollDelay", FLOAT },
 		{ "autoScrollSpeed", FLOAT },
 		{ "emptyTextDefaults", BOOLEAN },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_RECT },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
@@ -205,6 +213,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH } } },
 	{ "networkIcon", {
+		{ "planemodeIcon", PATH },          // accepted, not used
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -250,6 +259,11 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "horizontalMargin", FLOAT },
 		{ "forceUppercase", BOOLEAN },
 		{ "lineSpacing", FLOAT },
+		{ "lines", FLOAT },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
 		{ "zIndex", FLOAT } } },
 	{ "container", {
 		{ "pos", NORMALIZED_PAIR },
@@ -397,7 +411,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "snapshotSource", STRING }, // image, thumbnail, marquee
 		{ "loops", FLOAT }, // Number of loops to do -1 (default) is infinite 
 		{ "showSnapshotNoVideo", BOOLEAN },
-		{ "showSnapshotDelay", BOOLEAN } } },
+		{ "showSnapshotDelay", BOOLEAN },
+		{ "saturation", FLOAT },            // applied to the snapshot image only
+		{ "scaleOrigin", NORMALIZED_PAIR } } },
 	{ "carousel", {
 		{ "type", STRING },
 		{ "size", NORMALIZED_PAIR },
@@ -1381,11 +1397,19 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			continue;
 		}
 
+		// stray text in the element (e.g. "<y>0.5</y>>") is not a property
+		if (node.type() != pugi::node_element)
+			continue;
+
 		ElementPropertyType type = STRING;
 
 		auto typeIt = typeMap.find(node.name());
 		if(typeIt == typeMap.cend())
 		{
+			// nested element of a container (stackpanel children) - parsed as its own element
+			if (sElementMap.find(node.name()) != sElementMap.cend())
+				continue;
+
 			// Exception for menuIcons that can be extended
 			if (element.type == "menuIcons")
 				type = PATH;

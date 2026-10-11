@@ -75,6 +75,10 @@ public:
 
 	//Sets the rotation origin as a percentage of this image (e.g. (0, 0) is top left, (0.5, 0.5) is the center)
 	Vector2f getRotationOrigin() const;
+
+	// scale pivot, relative to the size and offset from the origin point (AmberELEC / Batocera <scaleOrigin>)
+	Vector2f getScaleOrigin() const { return mScaleOrigin; }
+	void setScaleOrigin(const Vector2f& scaleOrigin) { mScaleOrigin = scaleOrigin; }
 	void setRotationOrigin(float originX, float originY);
 	inline void setRotationOrigin(Vector2f origin) { setRotationOrigin(origin.x(), origin.y()); }
 
@@ -205,6 +209,7 @@ protected:
 	Vector3f mPosition;
 	Vector2f mOrigin;
 	Vector2f mRotationOrigin;
+	Vector2f mScaleOrigin = Vector2f(0.0f, 0.0f); // 0 0 = scale around the origin point (non-themed components)
 	Vector2f mSize;
 
 	float mRotation = 0.0;

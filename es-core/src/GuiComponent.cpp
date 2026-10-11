@@ -370,7 +370,16 @@ const Transform4x4f& GuiComponent::getTransform()
 	mTransform.translate(mPosition);
 	if (mScale != 1.0)
 	{
+		const float xOff = mSize.x() * mScaleOrigin.x();
+		const float yOff = mSize.y() * mScaleOrigin.y();
+
+		if (xOff != 0.0f || yOff != 0.0f)
+			mTransform.translate(Vector3f(xOff, yOff, 0.0f));
+
 		mTransform.scale(mScale);
+
+		if (xOff != 0.0f || yOff != 0.0f)
+			mTransform.translate(Vector3f(-xOff, -yOff, 0.0f));
 	}
 	if (mRotation != 0.0)
 	{
@@ -534,6 +543,9 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 	setStoryboards(elem->storyboards);
 	loadBindingExpressions(elem);
 
+	// AmberELEC default scale pivot for themed components is 0.5 0.5 (image / video: 0 0)
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.5f, 0.5f));
+
 	using namespace ThemeFlags;
 	if(properties & POSITION && elem->has("pos"))
 	{
@@ -629,6 +641,9 @@ ThemeData::ThemeElement::Property GuiComponent::getProperty(const std::string na
 	if (name == "rotationOrigin")
 		return getRotationOrigin();
 
+	if (name == "scaleOrigin")
+		return getScaleOrigin();
+
 	if (name == "opacity")
 		return mOpacity / 255.0f;
 
@@ -678,6 +693,8 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 			setOrigin(value.v);
 		else if (name == "rotationOrigin")
 			setRotationOrigin(value.v);
+		else if (name == "scaleOrigin")
+			setScaleOrigin(value.v);
 		break;
 
 	case PropType::Float:

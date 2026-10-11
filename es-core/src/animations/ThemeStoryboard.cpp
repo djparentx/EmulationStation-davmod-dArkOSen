@@ -99,6 +99,7 @@ static const std::map<std::string, ThemeData::ElementPropertyType> commonAnimata
 	{ "size",           ThemeData::NORMALIZED_PAIR },
 	{ "origin",         ThemeData::NORMALIZED_PAIR },
 	{ "rotationOrigin", ThemeData::NORMALIZED_PAIR },
+	{ "scaleOrigin",    ThemeData::NORMALIZED_PAIR },
 	{ "x",              ThemeData::FLOAT },
 	{ "y",              ThemeData::FLOAT },
 	{ "w",              ThemeData::FLOAT },

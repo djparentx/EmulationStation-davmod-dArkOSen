@@ -46,6 +46,9 @@ public:
 
 	void setMaxSize(MaxSizeInfo maxSize);
 
+	// <saturation> (AmberELEC): 1 = unchanged, 0 = grayscale - applied to the pixels when loaded
+	void setSaturation(float saturation) { mSaturation = saturation; }
+
 	// Get the amount of VRAM currenty used by this texture
 	size_t getVRAMUsage();
 
@@ -78,6 +81,7 @@ private:
 	float			mSourceWidth;
 	float			mSourceHeight;	
 	bool			mScalable;
+	float			mSaturation = 1.0f;
 	bool			mReloadable;
 
 	Vector2i		mPackedSize;

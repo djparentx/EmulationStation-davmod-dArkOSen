@@ -215,6 +215,8 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 
 	setStoryboards(elem->storyboards);
 	loadBindingExpressions(elem);
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.0f, 0.0f));
+	mStaticImage.setSaturation(elem->has("saturation") ? elem->get<float>("saturation") : 1.0f);
 
 	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 
