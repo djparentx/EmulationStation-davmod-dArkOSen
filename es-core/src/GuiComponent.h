@@ -175,10 +175,13 @@ public:
 	// theme storyboards (Batocera / AmberELEC <storyboard event="...">)
 	void setStoryboards(const std::map<std::string, std::shared_ptr<ThemeStoryboard>>& storyboards);
 	bool hasStoryboard(const std::string& event) const { return mStoryboards.find(event) != mStoryboards.cend(); }
-	bool startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn = nullptr);
+	// restoreInitialProperties = false: the next storyboard starts from the current values (AmberELEC deselectStoryboard(false))
+	bool startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn = nullptr, bool restoreInitialProperties = true);
 	void stopStoryboard();
 	void pauseStoryboard();
 	bool isStoryboardRunning(const std::string& event = "");
+	bool isStoryboardSelected(const std::string& event) const;
+	void enableStoryboardProperty(const std::string& name, bool enable);
 
 	// theme bindings (AmberELEC): "<property>_binding" expressions, resolved by BindingManager
 	virtual ThemeData::ThemeElement::Property getProperty(const std::string name);

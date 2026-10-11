@@ -343,6 +343,7 @@ std::string DetailedGameListView::getMetadata(FileData* file, std::string name)
 void DetailedGameListView::updateInfoPanel()
 {
 	FileData* file = (mList.size() == 0 || mList.isScrolling()) ? NULL : mList.getSelected();
+	const int moveBy = (file != nullptr) ? getMoveBy(mList.getCursorIndex()) : 0;
 
 	// IList fires CURSOR_STOPPED on key press and again on release - only replay
 	// activate storyboards when the selected game actually changes
@@ -405,14 +406,7 @@ void DetailedGameListView::updateInfoPanel()
 			mPlayCount.setValue(getMetadata(file, "playcount"));
 		}
 
-		updateThemeExtrasBindings(file);
-
-		if (restartStoryboards)
-		{
-			for (auto extra : mThemeExtras)
-				if (extra->hasStoryboard("activate"))
-					extra->startStoryboard("activate", [file](const std::string& expr) { return BindingManager::evaluateBoolean(expr, file); });
-		}
+		updateThemeExtras(file, moveBy);
 		
 		fadingOut = false;
 	}
@@ -445,10 +439,10 @@ void DetailedGameListView::updateInfoPanel()
 		GuiComponent* comp = *it;
 
 		// theme activate storyboard drives this component instead of the generic fade
-		if (comp->hasStoryboard("activate"))
+		if (hasActivationStoryboard(comp, true, false))
 		{
 			if (restartStoryboards)
-				comp->startStoryboard("activate", [file](const std::string& expr) { return BindingManager::evaluateBoolean(expr, file); });
+				handleStoryboard(comp, true, moveBy, file);
 			continue;
 		}
 

@@ -364,7 +364,7 @@ bool StoryboardAnimator::update(int elapsed)
 	return true;
 }
 
-const std::string StoryboardAnimator::getName()
+const std::string StoryboardAnimator::getName() const
 {
 	if (mStoryBoard != nullptr)
 		return mStoryBoard->eventName;

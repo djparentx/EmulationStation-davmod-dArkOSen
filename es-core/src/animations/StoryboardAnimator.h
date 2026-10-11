@@ -47,7 +47,7 @@ public:
 	void clearInitialProperties();
 	void evaluateEnabled(const std::function<bool(const std::string&)>& enabledFn);
 
-	const std::string getName();
+	const std::string getName() const;
 
 	void enableProperty(const std::string& name, bool enable);
 

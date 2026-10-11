@@ -92,7 +92,7 @@ void GuiComponent::setStoryboards(const std::map<std::string, std::shared_ptr<Th
 		startStoryboard("");
 }
 
-bool GuiComponent::startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn)
+bool GuiComponent::startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn, bool restoreInitialProperties)
 {
 	auto it = mStoryboards.find(event);
 	if (it == mStoryboards.cend())
@@ -104,14 +104,21 @@ bool GuiComponent::startStoryboard(const std::string& event, const std::function
 	{
 		if (mStoryboardAnimator != nullptr)
 		{
-			mStoryboardAnimator->reset(); // restores the properties the previous storyboard changed
+			if (restoreInitialProperties)
+				mStoryboardAnimator->reset(); // restores the properties the previous storyboard changed
+			else
+			{
+				mStoryboardAnimator->clearInitialProperties(); // keep the current values
+				mStoryboardAnimator->stop();
+			}
+
 			delete mStoryboardAnimator;
 		}
 
 		mStoryboardAnimator = new StoryboardAnimator(this, it->second, enabledFn);
 	}
 
-	mStoryboardAnimator->reset();
+	mStoryboardAnimator->reset(0, restoreInitialProperties);
 	mStoryboardAnimator->update(0); // apply begin=0 values now, avoids a 1-frame flash of the base state
 	return true;
 }
@@ -130,6 +137,17 @@ void GuiComponent::pauseStoryboard()
 {
 	if (mStoryboardAnimator != nullptr)
 		mStoryboardAnimator->pause();
+}
+
+bool GuiComponent::isStoryboardSelected(const std::string& event) const
+{
+	return mStoryboardAnimator != nullptr && mStoryboardAnimator->getName() == event;
+}
+
+void GuiComponent::enableStoryboardProperty(const std::string& name, bool enable)
+{
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->enableProperty(name, enable);
 }
 
 bool GuiComponent::isStoryboardRunning(const std::string& event)
