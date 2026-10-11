@@ -79,13 +79,6 @@ public:
 
 	Vector2f getSize() const override;
 
-	bool isVisible() {
-		return mVisible;
-	}
-	void setVisible(bool visible) {
-		mVisible = visible;
-	}
-
 	bool hasImage();
 
 	void render(const Transform4x4f& parentTrans) override;
@@ -168,7 +161,6 @@ private:
 	bool					mForceLoad;
 	bool					mDynamic;
 	bool					mRotateByTargetSize;
-	bool					mVisible;
 	bool					mAllowFading;
 	bool					mAllowAsync;
 	float					mRoundCorners;
