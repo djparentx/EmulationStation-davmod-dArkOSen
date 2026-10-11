@@ -79,22 +79,30 @@ public:
 
 	Vector2f getSize() const override;
 
-	bool isVisible() {
-		return mVisible;
-	}
-	void setVisible(bool visible) {
-		mVisible = visible;
-	}
-
 	bool hasImage();
 
 	void render(const Transform4x4f& parentTrans) override;
 
 	void setAllowAsync(bool async) { mAllowAsync = async; };
 	void setAllowFading(bool fade) { mAllowFading = fade; };
+
+	// <saturation>: 1 = unchanged, 0 = grayscale (reloads the image)
+	void setSaturation(float saturation);
+	float getSaturation() { return mSaturation; }
 	void setMirroring(Vector2f mirror) { mMirror = mirror; };
 
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
+
+	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
+	void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value) override;
+
+protected:
+	// Same as applyTheme() but looks up the theme element with theme->getElement(view, element,
+	// expectedType) instead of the hardcoded "image" - used by subclasses (BatteryIconComponent,
+	// NetworkIconComponent) whose theme element type is "batteryIcon"/"networkIcon", not "image".
+	void applyThemeWithType(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties, const std::string& expectedType);
+
+public:
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 
@@ -157,10 +165,10 @@ private:
 	bool					mForceLoad;
 	bool					mDynamic;
 	bool					mRotateByTargetSize;
-	bool					mVisible;
 	bool					mAllowFading;
 	bool					mAllowAsync;
 	float					mRoundCorners;
+	float					mSaturation = 1.0f;
 
 	Vector2f mTopLeftCrop;
 	Vector2f mBottomRightCrop;	

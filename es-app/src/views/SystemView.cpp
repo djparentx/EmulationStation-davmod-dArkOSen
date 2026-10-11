@@ -13,6 +13,7 @@
 #include "AudioManager.h"
 #include "components/VideoComponent.h"
 #include "components/VideoVlcComponent.h"
+#include "BindingManager.h"
 #include <random>
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"
@@ -295,6 +296,10 @@ void SystemView::populate()
 			}
 		}
 	
+		// resolve {system:xxx} theme bindings (AmberELEC)
+		for (auto extra : e.data.backgroundExtras)
+			BindingManager::updateBindings(extra, *it);
+
 		// sort the extras by z-index
 		std::stable_sort(e.data.backgroundExtras.begin(), e.data.backgroundExtras.end(), [](GuiComponent* a, GuiComponent* b) {
 			return b->getZIndex() > a->getZIndex();
@@ -585,6 +590,7 @@ void SystemView::update(int deltaTime)
 {
 	listUpdate(deltaTime);
 	updateExtras([this, deltaTime](GuiComponent* p) { p->update(deltaTime); });
+	mSystemInfo.update(deltaTime); // runs the theme's systemInfo storyboard
 	GuiComponent::update(deltaTime);
 }
 
@@ -647,6 +653,8 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 		if (!getSelected()->isGameSystem() && !getSelected()->isGroupSystem())
 			ss << _("CONFIGURATION");
+		else if (mCarousel.systemInfoCountOnly)
+			ss << gameCount;
 		else
 		{
 			char strbuf[256];
@@ -655,16 +663,21 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 		}
 	
 		mSystemInfo.setText(ss.str());
+		mSystemInfo.onShow(); // AmberELEC: restart the theme's systemInfo storyboard with the new text
 	}, false, 1);
 
-	Animation* infoFadeIn = new LambdaAnimation(
-		[this](float t)
+	// a theme storyboard drives the systemInfo opacity itself (AmberELEC)
+	if (!mSystemInfo.hasStoryboard(""))
 	{
-		mSystemInfo.setOpacity((unsigned char)(Math::lerp(0.f, 1.f, t) * 255));
-	}, goFast ? 10 : 300);
+		Animation* infoFadeIn = new LambdaAnimation(
+			[this](float t)
+		{
+			mSystemInfo.setOpacity((unsigned char)(Math::lerp(0.f, 1.f, t) * 255));
+		}, goFast ? 10 : 300);
 
-	// wait 600ms to fade in
-	setAnimation(infoFadeIn, goFast ? 0 : systemInfoDelay, nullptr, false, 2);
+		// wait 600ms to fade in
+		setAnimation(infoFadeIn, goFast ? 0 : systemInfoDelay, nullptr, false, 2);
+	}
 	// fake preload
 	//setAnimation(infoFadeIn, goFast ? 0 : systemInfoDelay, [this] { ViewController::get()->getGameListView(mEntries.at(mCursor).object); }, false, 2);
 
@@ -1257,6 +1270,7 @@ void  SystemView::getDefaultElements(void)
 	mCarousel.maxLogoCount = 3;
 	mCarousel.zIndex = 40;
 	mCarousel.systemInfoDelay = 2000;
+	mCarousel.systemInfoCountOnly = false;
 	mCarousel.scrollSound = "";
 	mCarousel.defaultTransition = "";
 
@@ -1342,6 +1356,8 @@ void SystemView::getCarouselFromTheme(const ThemeData::ThemeElement* elem)
 	if (elem->has("systemInfoDelay"))
 		mCarousel.systemInfoDelay = elem->get<float>("systemInfoDelay");
 
+	mCarousel.systemInfoCountOnly = elem->has("systemInfoCountOnly") && elem->get<bool>("systemInfoCountOnly");
+
 	if (elem->has("scrollSound"))
 		mCarousel.scrollSound = elem->get<std::string>("scrollSound");
 
@@ -1421,7 +1437,11 @@ void SystemView::activateExtras(int cursor, bool activate)
 	{
 		GuiComponent *extra = data.backgroundExtras[j];
 		if (show && activate)
+		{
+			// refresh bindings - {system:total}, {global:xxx} may have changed since populate()
+			BindingManager::updateBindings(extra, mEntries.at(cursor).object);
 			extra->onShow();
+		}
 		else
 			extra->onHide();
 	}

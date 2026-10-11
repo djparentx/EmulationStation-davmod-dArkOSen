@@ -25,7 +25,7 @@ Vector2f ImageComponent::getSize() const
 
 ImageComponent::ImageComponent(Window* window, bool forceLoad, bool dynamic) : GuiComponent(window),
 	mTargetIsMax(false), mTargetIsMin(false), mFlipX(false), mFlipY(false), mTargetSize(0, 0), mColorShift(0xFFFFFFFF), mColorShiftEnd(0xFFFFFFFF),
-	mForceLoad(forceLoad), mDynamic(dynamic), mFadeOpacity(0), mFading(false), mRotateByTargetSize(false), mVisible(true),
+	mForceLoad(forceLoad), mDynamic(dynamic), mFadeOpacity(0), mFading(false), mRotateByTargetSize(false),
 	mTopLeftCrop(0.0f, 0.0f), mBottomRightCrop(1.0f, 1.0f), mMirror(0.0f, 0.0f), mAllowAsync(false),
 	mPadding(Vector4f(0, 0, 0, 0))
 {
@@ -88,6 +88,7 @@ void ImageComponent::resize()
 				// we need to make sure we're not creating an image larger than max size
 				mSize[0] = Math::min((mSize[1] / textureSize.y()) * textureSize.x(), mTargetSize.x());
 			}
+
 		}else if(mTargetIsMin)
 		{
 			mSize = textureSize;
@@ -149,6 +150,22 @@ void ImageComponent::onSizeChanged()
 	updateVertices();
 }
 
+void ImageComponent::setSaturation(float saturation)
+{
+	if (mSaturation == saturation)
+		return;
+
+	mSaturation = saturation;
+
+	// reload the current image with the new saturation
+	if (!mPath.empty())
+	{
+		std::string path = mPath;
+		mPath = "";
+		setImage(path, mTexture != nullptr && mTexture->isTiled(), getMaxSizeInfo());
+	}
+}
+
 void ImageComponent::setDefaultImage(std::string path)
 {
 	mDefaultPath = path;
@@ -172,11 +189,11 @@ void ImageComponent::setImage(std::string path, bool tile, MaxSizeInfo maxSize)
 		if (mDefaultPath.empty() || !ResourceManager::getInstance()->fileExists(mDefaultPath))
 			mTexture.reset();
 		else
-			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize);
+			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
 	}
 	else
 	{
-		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize);
+		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
 
 		if (!mForceLoad && mDynamic && !mAllowFading && texture != nullptr && !texture->isLoaded())
 			mLoadingTexture = texture;
@@ -365,7 +382,7 @@ void ImageComponent::updateVertices()
 
 void ImageComponent::render(const Transform4x4f& parentTrans)
 {
-	if (!mVisible)
+	if (!isVisible())
 		return;
 
 	if (mLoadingTexture != nullptr && mLoadingTexture->isLoaded())
@@ -547,16 +564,32 @@ bool ImageComponent::hasImage()
 
 void ImageComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
 {
+	applyThemeWithType(theme, view, element, properties, "image");
+}
+
+void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties, const std::string& expectedType)
+{
 	using namespace ThemeFlags;
 
-	const ThemeData::ThemeElement* elem = theme->getElement(view, element, "image");
+	const ThemeData::ThemeElement* elem = theme->getElement(view, element, expectedType);
 	if(!elem)
 	{
 		return;
 	}
 
+	setStoryboards(elem->storyboards);
+	loadBindingExpressions(elem);
+
 	if (elem->has("linearSmooth"))
 		mLinear = elem->get<bool>("linearSmooth");
+
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.0f, 0.0f));
+
+	// before <path> so the image is loaded with it
+	setSaturation(elem->has("saturation") ? elem->get<float>("saturation") : 1.0f);
+
+	if (elem->has("autoFade"))
+		setAllowFading(elem->get<bool>("autoFade"));
 
 	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 	
@@ -564,6 +597,22 @@ void ImageComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	{
 		Vector2f denormalized = elem->get<Vector2f>("pos") * scale;
 		setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
+	}
+
+	// ImageComponent reimplements applyTheme() from scratch instead of delegating to
+	// GuiComponent::applyTheme(), so it needs its own handling of the standalone <x>/<y>
+	// tags (as opposed to the combined <pos> tag above) - previously missing here, which
+	// silently dropped image positioning for any theme using <x>/<y> instead of <pos>
+	if (properties & POSITION && elem->has("x"))
+	{
+		float x = elem->get<float>("x") * scale.x();
+		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
+	}
+
+	if (properties & POSITION && elem->has("y"))
+	{
+		float y = elem->get<float>("y") * scale.y();
+		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 	}
 
 	if(properties & ThemeFlags::SIZE)
@@ -746,4 +795,68 @@ void ImageComponent::update(int deltaTime)
 bool ImageComponent::isTiled()
 { 
 	return mTexture != nullptr && mTexture->isTiled(); 
+}
+
+// theme bindings (AmberELEC ImageComponent::getProperty / setProperty)
+ThemeData::ThemeElement::Property ImageComponent::getProperty(const std::string name)
+{
+	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (name == "maxSize" || name == "minSize")
+		return Vector2f(mSize.x() / scale.x(), mSize.y() / scale.y());
+	else if (name == "color")
+		return mColorShift;
+	else if (name == "colorEnd")
+		return mColorShiftEnd;
+	else if (name == "roundCorners")
+		return mRoundCorners;
+	else if (name == "path")
+		return mPath;
+	else if (name == "default")
+		return mDefaultPath;
+	else if (name == "autoFade")
+		return mAllowFading;
+	else if (name == "saturation")
+		return mSaturation;
+
+	return GuiComponent::getProperty(name);
+}
+
+void ImageComponent::setProperty(const std::string name, const ThemeData::ThemeElement::Property& value)
+{
+	typedef ThemeData::ThemeElement::Property::PropertyType PropType;
+
+	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (value.type == PropType::Float && name == "w")
+	{
+		mTargetSize = Vector2f(value.f * scale.x(), mTargetSize.y());
+		resize();
+	}
+	else if (value.type == PropType::Float && name == "h")
+	{
+		mTargetSize = Vector2f(mTargetSize.x(), value.f * scale.y());
+		resize();
+	}
+	else if (value.type == PropType::Pair && (name == "maxSize" || name == "minSize"))
+	{
+		mTargetSize = Vector2f(value.v.x() * scale.x(), value.v.y() * scale.y());
+		resize();
+	}
+	else if (value.type == PropType::Int && name == "color")
+		setColorShift(value.i);
+	else if (value.type == PropType::Int && name == "colorEnd")
+		setColorShiftEnd(value.i);
+	else if (value.type == PropType::Float && name == "saturation")
+		setSaturation(value.f);
+	else if (value.type == PropType::Bool && name == "autoFade")
+		setAllowFading(value.b);
+	else if (value.type == PropType::Float && name == "roundCorners")
+		setRoundCorners(value.f);
+	else if (value.type == PropType::String && name == "default")
+		setDefaultImage(value.s);
+	else if (value.type == PropType::String && name == "path")
+		setImage(value.s);
+	else
+		GuiComponent::setProperty(name, value);
 }

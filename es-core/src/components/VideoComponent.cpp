@@ -213,6 +213,11 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 		return;
 	}
 
+	setStoryboards(elem->storyboards);
+	loadBindingExpressions(elem);
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.0f, 0.0f));
+	mStaticImage.setSaturation(elem->has("saturation") ? elem->get<float>("saturation") : 1.0f);
+
 	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 
 	if ((properties & POSITION) && elem->has("pos"))
@@ -220,6 +225,21 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 		Vector2f denormalized = elem->get<Vector2f>("pos") * scale;
 		setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
 		mStaticImage.setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
+	}
+
+	// same standalone <x>/<y> gap as ImageComponent - see comment there
+	if ((properties & POSITION) && elem->has("x"))
+	{
+		float x = elem->get<float>("x") * scale.x();
+		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
+		mStaticImage.setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
+	}
+
+	if ((properties & POSITION) && elem->has("y"))
+	{
+		float y = elem->get<float>("y") * scale.y();
+		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
+		mStaticImage.setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 	}
 
 	if(properties & ThemeFlags::SIZE)
@@ -501,4 +521,26 @@ void VideoComponent::setRoundCorners(float value)
 { 
 	mRoundCorners = value; 
 	mStaticImage.setRoundCorners(value);
+}
+
+// theme bindings (AmberELEC VideoComponent::getProperty / setProperty)
+ThemeData::ThemeElement::Property VideoComponent::getProperty(const std::string name)
+{
+	if (name == "path")
+		return mVideoPath;
+
+	return GuiComponent::getProperty(name);
+}
+
+void VideoComponent::setProperty(const std::string name, const ThemeData::ThemeElement::Property& value)
+{
+	if (value.type == ThemeData::ThemeElement::Property::PropertyType::String && name == "path")
+	{
+		if (!value.s.empty() && Utils::FileSystem::exists(value.s))
+			setVideo(value.s);
+		else
+			setVideo(mConfig.defaultVideoPath);
+	}
+	else
+		GuiComponent::setProperty(name, value);
 }

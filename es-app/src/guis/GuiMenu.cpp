@@ -3,8 +3,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include "guis/GuiMenu.h"
-#include <sys/stat.h>
-#include <dirent.h>
 #include "guis/GuiTools.h"
 #include "components/OptionListComponent.h"
 #include "components/SliderComponent.h"
@@ -103,7 +101,7 @@ GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(win
 	
 	addEntry(_("QUIT"), !Settings::getInstance()->getBool("ShowOnlyExit"), [this] {openQuitMenu(); }, "iconQuit");
 
-	addEntry(_("BAT") + ": " + std::string(getShOutput(R"(cat /sys/class/power_supply/battery/capacity)")) + "%" + " | " + _("SND") + ": " + std::string(getShOutput(R"(current_volume)")) + " | " + _("BRT") + ": " + std::to_string(ApiSystem::getInstance()->getBrightnessLevel()) + "% | " + _("WIFI") + ": " + std::string(getShOutput(R"(if [ -z $(cat /sys/class/net/wlan0/operstate) ]; then echo "Off"; else cat /sys/class/net/wlan0/operstate; fi)")), true, [this] { openQuickStatusMenu(); });
+	addEntry(_("BAT") + ": " + std::string(getShOutput(R"(cat /sys/class/power_supply/battery/capacity)")) + "%" + " | " + _("SND") + ": " + std::string(getShOutput(R"(current_volume)")) + " | " + _("BRT") + ": " + std::to_string(ApiSystem::getInstance()->getBrightnessLevel()) + "% | " + _("WIFI") + ": " + std::string(getShOutput(R"(if [ -z $(cat /sys/class/net/wlan0/operstate) ]; then echo "Off"; else cat /sys/class/net/wlan0/operstate; fi)")), true, [this] {  });
 
 	addEntry(_("Distro Version") + ": " + std::string(getShOutput(R"(cat /usr/share/plymouth/themes/text.plymouth | grep title | cut -c 7-50)")), false, [this] {
 		if (access("/usr/local/bin/Update.sh", F_OK) == 0)
@@ -2316,7 +2314,6 @@ void GuiMenu::toggleZram(bool enable, const std::string& size,
         if (size == "128M") bytes = 134217728;
         else if (size == "256M") bytes = 268435456;
         else if (size == "512M") bytes = 536870912;
-		else if (size == "768M") bytes = 805306368;
         else if (size == "1024M") bytes = 1073741824;
 
         // Set size in bytes
@@ -2337,7 +2334,6 @@ void GuiMenu::saveZramConfig(const std::string& size, const std::string& compAlg
     if (size == "128M") bytes = 134217728;
     else if (size == "256M") bytes = 268435456;
     else if (size == "512M") bytes = 536870912;
-	else if (size == "768M") bytes = 805306368;
     else if (size == "1024M") bytes = 1073741824;
 
     std::string content = "ALGORITHM=" + compAlgo + "\nSIZE=" + std::to_string(bytes) + "\n";
@@ -2368,12 +2364,12 @@ void GuiMenu::openPerformanceSettings()
 	auto s = new GuiSettings(mWindow, _("PERFORMANCE SETTINGS"));
 	
 	// --- CPU Grade ---
-    std::string cpuBinning = getCpuBinning();
+    /* std::string cpuBinning = getCpuBinning();
     auto cpuText = std::make_shared<TextComponent>(mWindow,
         cpuBinning,
         ThemeData::getMenuTheme()->Text.font, ThemeData::getMenuTheme()->Text.color);
     s->addWithLabel(_("CPU GRADE"), cpuText);
-
+	*/
 	
 	// --- CPU Temp ---
     auto cpuTempText = std::make_shared<TextComponent>(mWindow,
@@ -2455,9 +2451,6 @@ void GuiMenu::openPerformanceSettings()
 	
 	// --- GPU Frequency ---
     auto gpuFreqs = getGpuAvailableFreqs();
-    std::sort(gpuFreqs.begin(), gpuFreqs.end(), [](const std::string& a, const std::string& b) {
-        return atoll(a.c_str()) < atoll(b.c_str());
-    });
     if (!gpuFreqs.empty()) {
         auto freqList = std::make_shared<OptionListComponent<std::string>>(mWindow, _("MAX FREQ"), false);
         std::string currentFreq = getGpuMaxFreq();
@@ -4583,6 +4576,7 @@ void GuiMenu::onSizeChanged()
 	mVersion.setPosition(0, mSize.y() - h); //  mVersion.getSize().y()
 }
 
+/*
 void GuiMenu::openQuickStatusMenu()
 {
 	auto s = new GuiSettings(mWindow, _("QUICK SETTINGS"));
@@ -4617,6 +4611,7 @@ void GuiMenu::openQuickStatusMenu()
 	s->updatePosition();
 	mWindow->pushGui(s);
 }
+*/
 
 void GuiMenu::addEntry(std::string name, bool add_arrow, const std::function<void()>& func, const std::string iconName)
 {

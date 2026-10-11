@@ -4,6 +4,7 @@
 #define ES_APP_COMPONENTS_TEXT_LIST_COMPONENT_H
 
 #include "components/IList.h"
+#include "components/ScrollbarComponent.h"
 #include "math/Misc.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
@@ -109,12 +110,18 @@ private:
 	unsigned int mColors[COLOR_ID_COUNT];
 
 	ImageComponent mSelectorImage;
+
+	// AmberELEC <lines> (fixed number of rows) and scrollbar
+	int mLineCount;
+	ScrollbarComponent mScrollbar;
 };
 
 template <typename T>
 TextListComponent<T>::TextListComponent(Window* window) : 
-	IList<TextListData, T>(window), mSelectorImage(window)
+	IList<TextListData, T>(window), mSelectorImage(window), mScrollbar(window)
 {
+	mLineCount = -1;
+
 	mMarqueeOffset = 0;
 	mMarqueeOffset2 = 0;
 	mMarqueeTime = 0;
@@ -157,12 +164,13 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	}
 
 
-	const float entrySize = Math::max(font->getHeight(1.0), (float)font->getSize()) * mLineSpacing;
+	// <lines>: the list height holds exactly that many rows
+	const float entrySize = mLineCount > 0 ? mSize.y() / (float)mLineCount : Math::max(font->getHeight(1.0), (float)font->getSize()) * mLineSpacing;
 
 	int startEntry = 0;
 
 	//number of entries that can fit on the screen simultaniously
-	int screenCount = Math::round(mSize.y() / entrySize); // (int)(mSize.y() / entrySize); //  + 0.5f -> avoid partial items
+	int screenCount = mLineCount > 0 ? mLineCount : Math::round(mSize.y() / entrySize); // (int)(mSize.y() / entrySize); //  + 0.5f -> avoid partial items
 	
 	if(size() >= screenCount)
 	{
@@ -215,6 +223,9 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 
 		Vector3f offset(0, y, 0);
 
+		if (mLineCount > 0) // vertical center in the row
+			offset[1] += (int)((entrySize - entry.data.textCache->metrics.size.y()) / 2);
+
 		switch(mAlignment)
 		{
 		case ALIGN_LEFT:
@@ -259,6 +270,15 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	}
 
 	Renderer::popClipRect();
+
+	if (mScrollbar.isEnabled())
+	{
+		mScrollbar.setOpacity(GuiComponent::getOpacity());
+		mScrollbar.setContainerBounds(GuiComponent::getPosition() - Vector3f(GuiComponent::getOrigin().x() * mSize.x(), GuiComponent::getOrigin().y() * mSize.y(), 0), mSize);
+		mScrollbar.setRange(0, entrySize * size(), mSize.y());
+		mScrollbar.setScrollPosition(startEntry * entrySize);
+		mScrollbar.render(parentTrans);
+	}
 
 	listRenderTitleOverlay(trans);
 
@@ -310,6 +330,7 @@ template <typename T>
 void TextListComponent<T>::update(int deltaTime)
 {
 	listUpdate(deltaTime);
+	mScrollbar.update(deltaTime);
 
 	if(!isScrolling() && size() > 0)
 	{
@@ -366,6 +387,8 @@ void TextListComponent<T>::onCursorChanged(const CursorState& state)
 	mMarqueeOffset = 0;
 	mMarqueeOffset2 = 0;
 	mMarqueeTime = 0;
+
+	mScrollbar.onCursorChanged();
 
 	if(mCursorChangedCallback)
 		mCursorChangedCallback(state);
@@ -430,8 +453,19 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 	if(properties & FORCE_UPPERCASE && elem->has("forceUppercase"))
 		setUppercase(elem->get<bool>("forceUppercase"));
 
+	mScrollbar.fromTheme(theme, view, element, "textlist");
+
 	if(properties & LINE_SPACING)
 	{
+		if (elem->has("lines"))
+		{
+			mLineCount = (int)elem->get<float>("lines");
+			if (mLineCount > 0)
+				setSelectorHeight(mSize.y() / mLineCount);
+		}
+		else
+			mLineCount = -1;
+
 		if(elem->has("lineSpacing"))
 			setLineSpacing(elem->get<float>("lineSpacing"));
 		if(elem->has("selectorHeight"))

@@ -40,12 +40,23 @@ void ComponentList::addRow(const ComponentListRow& row, bool setCursorHere)
 void ComponentList::addGroup(const std::string& label)
 {
 	auto theme = ThemeData::getMenuTheme();
+	if (!theme->Group.visible)
+		return;
 
 	ComponentListRow row;
-	auto empty = std::make_shared<TextComponent>(mWindow, label, theme->TextSmall.font, theme->TextSmall.color);
-	empty->setLineSpacing(2.5);
-	row.addElement(empty, true, false);
+	auto group = std::make_shared<TextComponent>(mWindow, label, theme->Group.font, theme->Group.color);
+	group->setLineSpacing(theme->Group.lineSpacing);
+	group->setHorizontalAlignment((Alignment)theme->Group.alignment);
+
+	if (theme->Group.backgroundColor != 0)
+	{
+		group->setBackgroundColor(theme->Group.backgroundColor);
+		group->setRenderBackground(true);
+	}
+
+	row.addElement(group, true, false);
 	row.selectable = false;
+	row.group = true;
 	addRow(row);
 }
 
@@ -262,7 +273,9 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	float y = 0;
 	for(unsigned int i = 0; i < mEntries.size(); i++)
 	{
-		Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, separatorColor);
+		// line under a group header uses the <menuGroup> separator color when set
+		const bool afterGroup = (i > 0 && mEntries.at(i - 1).data.group && menuTheme->Group.separatorColor != 0);
+		Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, afterGroup ? menuTheme->Group.separatorColor : separatorColor);
 		y += getRowHeight(mEntries.at(i).data);
 	}
 	Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, separatorColor);

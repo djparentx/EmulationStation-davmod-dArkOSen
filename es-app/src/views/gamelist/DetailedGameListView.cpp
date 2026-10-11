@@ -1,6 +1,7 @@
 #include <string>
 #include "views/gamelist/DetailedGameListView.h"
-
+#include "BindingManager.h"
+#include "Log.h"
 #include "animations/LambdaAnimation.h"
 
 #ifdef _RPI_
@@ -259,6 +260,7 @@ void DetailedGameListView::onThemeChanged(const std::shared_ptr<ThemeData>& them
 	mDescription.applyTheme(theme, getName(), "md_description", ALL ^ (POSITION | ThemeFlags::SIZE | ThemeFlags::ORIGIN | TEXT | ROTATION));
 
 	sortChildren();
+	mStoryboardFile = nullptr; // extras were rebuilt - start their storyboards
 	updateInfoPanel();
 }
 
@@ -341,6 +343,12 @@ std::string DetailedGameListView::getMetadata(FileData* file, std::string name)
 void DetailedGameListView::updateInfoPanel()
 {
 	FileData* file = (mList.size() == 0 || mList.isScrolling()) ? NULL : mList.getSelected();
+	const int moveBy = (file != nullptr) ? getMoveBy(mList.getCursorIndex()) : 0;
+
+	// IList fires CURSOR_STOPPED on key press and again on release - only replay
+	// activate storyboards when the selected game actually changes
+	const bool restartStoryboards = (file != nullptr && file != mStoryboardFile);
+	mStoryboardFile = file;
 
 	bool fadingOut;
 	if (file == NULL)
@@ -397,6 +405,8 @@ void DetailedGameListView::updateInfoPanel()
 			mLastPlayed.setValue(getMetadata(file, "lastplayed"));
 			mPlayCount.setValue(getMetadata(file, "playcount"));
 		}
+
+		updateThemeExtras(file, moveBy);
 		
 		fadingOut = false;
 	}
@@ -427,6 +437,15 @@ void DetailedGameListView::updateInfoPanel()
 	for(auto it = comps.cbegin(); it != comps.cend(); it++)
 	{
 		GuiComponent* comp = *it;
+
+		// theme activate storyboard drives this component instead of the generic fade
+		if (hasActivationStoryboard(comp, true, false))
+		{
+			if (restartStoryboards)
+				handleStoryboard(comp, true, moveBy, file);
+			continue;
+		}
+
 		// an animation is playing
 		//   then animate if reverse != fadingOut
 		// an animation is not playing
@@ -499,5 +518,6 @@ std::vector<GuiComponent*> DetailedGameListView::getMDValues()
 void DetailedGameListView::onShow()
 {
 	BasicGameListView::onShow();
+	mStoryboardFile = nullptr; // replay storyboards when the view is shown again
 	updateInfoPanel();
 }

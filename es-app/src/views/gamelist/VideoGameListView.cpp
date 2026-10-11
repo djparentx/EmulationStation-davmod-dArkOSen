@@ -292,6 +292,7 @@ void VideoGameListView::initMDValues()
 void VideoGameListView::updateInfoPanel()
 {
 	FileData* file = (mList.size() == 0 || mList.isScrolling()) ? NULL : mList.getSelected();
+	updateThemeExtras(file, file != nullptr ? getMoveBy(mList.getCursorIndex()) : 0);
 
 	Utils::FileSystem::removeFile(getTitlePath());
 
@@ -480,6 +481,8 @@ void VideoGameListView::update(int deltaTime)
 
 void VideoGameListView::onShow()
 {
+	mExtrasFile = nullptr; // replay "open" / default storyboards
+	mLastCursorIndex = -1;
 	GuiComponent::onShow();
 	updateInfoPanel();
 }

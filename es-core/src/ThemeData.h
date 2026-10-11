@@ -21,6 +21,7 @@ class TextListComponent;
 
 class GuiComponent;
 class ImageComponent;
+class ThemeStoryboard;
 class NinePatchComponent;
 class Sound;
 class TextComponent;
@@ -129,6 +130,20 @@ struct MenuBackground
 	Vector2f cornerSize;	
 };
 
+// <menuGroup> (AmberELEC): group header rows in menus. Defaults keep the previous look
+// (menuTextSmall font and color, line spacing 2.5, no background, left aligned)
+struct MenuGroupElement
+{
+	unsigned int color;
+	unsigned int backgroundColor;
+	unsigned int separatorColor;     // 0 = use the menu text separator color
+	float lineSpacing;
+	int alignment;                   // Alignment (ALIGN_LEFT / ALIGN_CENTER / ALIGN_RIGHT)
+	bool visible;
+	bool themed;                     // true when the theme defines <menuGroup>
+	std::shared_ptr<Font> font;
+};
+
 struct IconElement 
 {
 	std::string button;
@@ -155,6 +170,7 @@ public:
 		MenuElement Text{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement TextSmall{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement Footer{ 0xC6C6C6FF, 0xC6C6C6FF, 0xC6C6C6FF, 0xFFFFFFFF, 0xC6C6C6FF, true, "", nullptr };
+		MenuGroupElement Group{ 0x777777FF, 0x00000000, 0x00000000, 2.5f, 0 /*ALIGN_LEFT*/, true, false, nullptr };
 		IconElement Icons{ ":/button.png", ":/button_filled.png", ":/on.svg", ":/off.svg", ":/option_arrow.svg", ":/arrow.svg", ":/slider_knob.svg", ":/textinput_ninepatch.png", ":/textinput_ninepatch_active.png" };
 
 		std::string getMenuIcon(const std::string name)
@@ -179,14 +195,43 @@ public:
 
 		std::string type;
 
+		// Name (view element key) of the container element (e.g. a stackpanel) this
+		// element is nested under in the theme XML. Empty if this is a top-level element.
+		std::string parent;
+
+		// <storyboard event="..."> blocks, keyed by event name ("" = no event)
+		std::map<std::string, std::shared_ptr<ThemeStoryboard>> storyboards;
+
 		struct Property
 		{
-			void operator= (const Vector2f& value)     { v = value; }
-			void operator= (const std::string& value)  { s = value; }
-			void operator= (const unsigned int& value) { i = value; }
-			void operator= (const float& value)        { f = value; }
-			void operator= (const bool& value)         { b = value; }
-			void operator= (const Vector4f& value)     { r = value; v = Vector2f(value.x(), value.y()); }
+		public:
+			// AmberELEC: typed so theme bindings / storyboards can get/set component properties generically
+			enum PropertyType
+			{
+				String,
+				Int,
+				Float,
+				Bool,
+				Pair,
+				Rect,
+
+				Unknown
+			};
+
+			Property() { i = 0; f = 0; b = false; type = PropertyType::String; };
+			Property(const Vector2f& value)     { i = 0; f = 0; b = false; v = value; type = PropertyType::Pair; };
+			Property(const std::string& value)  { i = 0; f = 0; b = false; s = value; type = PropertyType::String; };
+			Property(const unsigned int& value) { i = value; f = 0; b = false; type = PropertyType::Int; };
+			Property(const float& value)        { i = 0; f = value; b = false; type = PropertyType::Float; };
+			Property(const bool& value)         { i = 0; f = 0; b = value; type = PropertyType::Bool; };
+			Property(const Vector4f& value)     { i = 0; f = 0; b = false; r = value; v = Vector2f(value.x(), value.y()); type = PropertyType::Rect; };
+
+			void operator= (const Vector2f& value)     { v = value; type = PropertyType::Pair; }
+			void operator= (const std::string& value)  { s = value; type = PropertyType::String; }
+			void operator= (const unsigned int& value) { i = value; type = PropertyType::Int; }
+			void operator= (const float& value)        { f = value; type = PropertyType::Float; }
+			void operator= (const bool& value)         { b = value; type = PropertyType::Bool; }
+			void operator= (const Vector4f& value)     { r = value; v = Vector2f(value.x(), value.y()); type = PropertyType::Rect; }
 
 			Vector2f     v;
 			std::string  s;
@@ -194,6 +239,7 @@ public:
 			float        f;
 			bool         b;
 			Vector4f     r;
+			PropertyType type;
 		};
 
 		std::map< std::string, Property > properties;

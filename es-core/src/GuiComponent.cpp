@@ -4,10 +4,14 @@
 #include "animations/Animation.h"
 #include "animations/AnimationController.h"
 #include "animations/LambdaAnimation.h"
+#include "animations/StoryboardAnimator.h"
+#include "animations/ThemeStoryboard.h"
 #include "Log.h"
+#include "Sound.h"
 #include "renderers/Renderer.h"
 #include "ThemeData.h"
 #include "Window.h"
+#include "utils/StringUtil.h"
 #include <algorithm>
 
 bool GuiComponent::ALLOWANIMATIONS = true;
@@ -24,6 +28,12 @@ GuiComponent::GuiComponent(Window* window) : mWindow(window), mParent(NULL), mOp
 GuiComponent::~GuiComponent()
 {
 	mWindow->removeGui(this);
+
+	if (mStoryboardAnimator != nullptr)
+	{
+		delete mStoryboardAnimator;
+		mStoryboardAnimator = nullptr;
+	}
 
 	cancelAllAnimations();
 
@@ -61,8 +71,99 @@ void GuiComponent::updateChildren(int deltaTime)
 
 void GuiComponent::update(int deltaTime)
 {
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->update(deltaTime);
+
 	updateSelf(deltaTime);
 	updateChildren(deltaTime);
+}
+
+void GuiComponent::setStoryboards(const std::map<std::string, std::shared_ptr<ThemeStoryboard>>& storyboards)
+{
+	if (mStoryboards.empty() && storyboards.empty())
+		return;
+
+	stopStoryboard();
+
+	mStoryboards = storyboards;
+
+	// no-event storyboard plays when the theme is applied, and again on every onShow().
+	// Started without an immediate update (AmberELEC): the values it restores are captured on the
+	// first frame, after the owner finished setting the component up (e.g. SystemView's systemInfo opacity 0)
+	if (hasStoryboard(""))
+	{
+		mStoryboardAnimator = new StoryboardAnimator(this, mStoryboards[""]);
+		mStoryboardAnimator->reset();
+	}
+}
+
+bool GuiComponent::startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn, bool restoreInitialProperties)
+{
+	auto it = mStoryboards.find(event);
+	if (it == mStoryboards.cend())
+		return false;
+
+	if (mStoryboardAnimator != nullptr && mStoryboardAnimator->getName() == event)
+		mStoryboardAnimator->evaluateEnabled(enabledFn);
+	else
+	{
+		if (mStoryboardAnimator != nullptr)
+		{
+			if (restoreInitialProperties)
+				mStoryboardAnimator->reset(); // restores the properties the previous storyboard changed
+			else
+			{
+				mStoryboardAnimator->clearInitialProperties(); // keep the current values
+				mStoryboardAnimator->stop();
+			}
+
+			delete mStoryboardAnimator;
+		}
+
+		mStoryboardAnimator = new StoryboardAnimator(this, it->second, enabledFn);
+	}
+
+	mStoryboardAnimator->reset(0, restoreInitialProperties);
+	mStoryboardAnimator->update(0); // apply begin=0 values now, avoids a 1-frame flash of the base state
+	return true;
+}
+
+void GuiComponent::stopStoryboard()
+{
+	if (mStoryboardAnimator == nullptr)
+		return;
+
+	mStoryboardAnimator->stop();
+	delete mStoryboardAnimator;
+	mStoryboardAnimator = nullptr;
+}
+
+void GuiComponent::pauseStoryboard()
+{
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->pause();
+}
+
+bool GuiComponent::isStoryboardSelected(const std::string& event) const
+{
+	return mStoryboardAnimator != nullptr && mStoryboardAnimator->getName() == event;
+}
+
+void GuiComponent::enableStoryboardProperty(const std::string& name, bool enable)
+{
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->enableProperty(name, enable);
+}
+
+bool GuiComponent::isStoryboardRunning(const std::string& event)
+{
+	if (mStoryboardAnimator == nullptr)
+		return false;
+
+	if (!event.empty() && mStoryboardAnimator->getName() != event)
+		return false;
+
+	return mStoryboardAnimator->isRunning();
 }
 
 void GuiComponent::render(const Transform4x4f& parentTrans)
@@ -274,7 +375,16 @@ const Transform4x4f& GuiComponent::getTransform()
 	mTransform.translate(mPosition);
 	if (mScale != 1.0)
 	{
+		const float xOff = mSize.x() * mScaleOrigin.x();
+		const float yOff = mSize.y() * mScaleOrigin.y();
+
+		if (xOff != 0.0f || yOff != 0.0f)
+			mTransform.translate(Vector3f(xOff, yOff, 0.0f));
+
 		mTransform.scale(mScale);
+
+		if (xOff != 0.0f || yOff != 0.0f)
+			mTransform.translate(Vector3f(-xOff, -yOff, 0.0f));
 	}
 	if (mRotation != 0.0)
 	{
@@ -435,6 +545,12 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 	if(!elem)
 		return;
 
+	setStoryboards(elem->storyboards);
+	loadBindingExpressions(elem);
+
+	// AmberELEC default scale pivot for themed components is 0.5 0.5 (image / video: 0 0)
+	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.5f, 0.5f));
+
 	using namespace ThemeFlags;
 	if(properties & POSITION && elem->has("pos"))
 	{
@@ -444,6 +560,24 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 
 	if(properties & ThemeFlags::SIZE && elem->has("size"))
 		setSize(elem->get<Vector2f>("size") * scale);
+
+	if (properties & POSITION && elem->has("x"))
+	{
+		float x = elem->get<float>("x") * scale.x();
+		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
+	}
+
+	if (properties & POSITION && elem->has("y"))
+	{
+		float y = elem->get<float>("y") * scale.y();
+		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
+	}
+
+	if (properties & ThemeFlags::SIZE && elem->has("w"))
+		setSize(Vector2f(elem->get<float>("w") * scale.x(), mSize.y()));
+
+	if (properties & ThemeFlags::SIZE && elem->has("h"))
+		setSize(Vector2f(mSize.x(), elem->get<float>("h") * scale.y()));
 
 	// position + size also implies origin
 	if((properties & ORIGIN || (properties & POSITION && properties & ThemeFlags::SIZE)) && elem->has("origin"))
@@ -465,6 +599,136 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 		setVisible(elem->get<bool>("visible"));
 	else
 		setVisible(true);
+}
+
+void GuiComponent::loadBindingExpressions(const ThemeData::ThemeElement* elem)
+{
+	mBindingExpressions.clear();
+
+	if (elem == nullptr)
+		return;
+
+	static const std::string suffix = "_binding";
+
+	for (const auto& prop : elem->properties)
+		if (prop.second.type == ThemeData::ThemeElement::Property::PropertyType::String && Utils::String::endsWith(prop.first, suffix))
+			mBindingExpressions[prop.first.substr(0, prop.first.size() - suffix.size())] = prop.second.s;
+}
+
+ThemeData::ThemeElement::Property GuiComponent::getProperty(const std::string name)
+{
+	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (name == "pos")
+		return Vector2f(mPosition.x() / scale.x(), mPosition.y() / scale.y());
+
+	if (name == "x")
+		return mPosition.x() / scale.x();
+
+	if (name == "y")
+		return mPosition.y() / scale.y();
+
+	if (name == "size")
+		return Vector2f(mSize.x() / scale.x(), mSize.y() / scale.y());
+
+	if (name == "w")
+		return mSize.x() / scale.x();
+
+	if (name == "h")
+		return mSize.y() / scale.y();
+
+	if (name == "origin")
+		return getOrigin();
+
+	if (name == "rotation")
+		return (float)ES_RAD_TO_DEG(getRotation());
+
+	if (name == "rotationOrigin")
+		return getRotationOrigin();
+
+	if (name == "scaleOrigin")
+		return getScaleOrigin();
+
+	if (name == "opacity")
+		return mOpacity / 255.0f;
+
+	if (name == "zIndex")
+		return getZIndex();
+
+	if (name == "scale")
+		return mScale.x();
+
+	if (name == "visible")
+		return mVisible;
+
+	if (name == "sound")
+		return mStoryboardSound;
+
+	ThemeData::ThemeElement::Property unk;
+	unk.type = ThemeData::ThemeElement::Property::PropertyType::Unknown;
+	return unk;
+}
+
+void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeElement::Property& value)
+{
+	typedef ThemeData::ThemeElement::Property::PropertyType PropType;
+
+	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (name == "sound" && value.type == PropType::String)
+	{
+		if (mStoryboardSound != value.s)
+		{
+			mStoryboardSound = value.s;
+			if (!mStoryboardSound.empty())
+				Sound::get(mStoryboardSound)->play();
+		}
+
+		return;
+	}
+
+	switch (value.type)
+	{
+	case PropType::Pair:
+		if (name == "pos")
+			setPosition(Vector3f(value.v.x() * scale.x(), value.v.y() * scale.y(), 0));
+		else if (name == "size")
+			setSize(Vector2f(value.v.x() * scale.x(), value.v.y() * scale.y()));
+		else if (name == "origin")
+			setOrigin(value.v);
+		else if (name == "rotationOrigin")
+			setRotationOrigin(value.v);
+		else if (name == "scaleOrigin")
+			setScaleOrigin(value.v);
+		break;
+
+	case PropType::Float:
+		if (name == "x")
+			setPosition(Vector3f(value.f * scale.x(), mPosition.y(), mPosition.z()));
+		else if (name == "y")
+			setPosition(Vector3f(mPosition.x(), value.f * scale.y(), mPosition.z()));
+		else if (name == "w")
+			setSize(Vector2f(value.f * scale.x(), mSize.y()));
+		else if (name == "h")
+			setSize(Vector2f(mSize.x(), value.f * scale.y()));
+		else if (name == "rotation")
+			setRotationDegrees(value.f);
+		else if (name == "zIndex")
+			setZIndex(value.f);
+		else if (name == "opacity")
+			setOpacity((unsigned char)(Math::clamp(value.f, 0.0f, 1.0f) * 255.0f));
+		else if (name == "scale")
+			setScale(Vector3f(value.f, value.f, 1.0f));
+		break;
+
+	case PropType::Bool:
+		if (name == "visible")
+			setVisible(value.b);
+		break;
+
+	default:
+		break;
+	}
 }
 
 void GuiComponent::updateHelpPrompts()
@@ -501,12 +765,18 @@ bool GuiComponent::isProcessing() const
 
 void GuiComponent::onShow()
 {
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->reset();
+
 	for(unsigned int i = 0; i < getChildCount(); i++)
 		getChild(i)->onShow();
 }
 
 void GuiComponent::onHide()
 {
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->pause();
+
 	for(unsigned int i = 0; i < getChildCount(); i++)
 		getChild(i)->onHide();
 }

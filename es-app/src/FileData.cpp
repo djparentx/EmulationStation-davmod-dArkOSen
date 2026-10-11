@@ -273,7 +273,7 @@ FileData* FileData::getSourceFileData()
 	return this;
 }
 
-void FileData::launchGame(Window* window, int entrySlot)
+void FileData::launchGame(Window* window)
 {
 	LOG(LogInfo) << "Attempting to launch game...";
 
@@ -325,29 +325,6 @@ void FileData::launchGame(Window* window, int entrySlot)
 	command = Utils::String::replace(command, "%SYSTEM%", getSystemName());
 	command = Utils::String::replace(command, "%HOME%", Utils::FileSystem::getHomePath());
 
-	// injection du slot de savestate demande depuis le menu des derniers joues
-	if (entrySlot >= 0)
-	{
-		// le plus long d'abord : retroarch32 contient retroarch
-		const std::string bins[2] = { "/usr/local/bin/retroarch32", "/usr/local/bin/retroarch" };
-		bool injected = false;
-		for (int i = 0; i < 2 && !injected; i++)
-		{
-			size_t pos = command.find(bins[i]);
-			if (pos == std::string::npos)
-				continue;
-			size_t end = pos + bins[i].length();
-			// le nom doit se terminer la (espace ou fin), sinon c'est un prefixe
-			if (end < command.length() && command[end] != ' ')
-				continue;
-			command.insert(end, " --entryslot " + std::to_string(entrySlot));
-			injected = true;
-		}
-		// hors RetroArch (pico8, ppsspp, drastic...) : aucune injection,
-		// ces emulateurs ont leur propre format de sauvegarde
-		(void)injected;
-	}
-
 	if (Utils::FileSystem::exists("/usr/local/bin/quickmode.sh"))
 	{
 	    FileData* gameToUpdate = getSourceFileData();
@@ -364,9 +341,10 @@ void FileData::launchGame(Window* window, int entrySlot)
 
 	Scripting::fireEvent("game-start", rom, basename);
 
-	LOG(LogInfo) << "	" << command;
+	LOG(LogInfo) << "\t" << command;
 
-	time_t esSessionStart = Utils::Time::now();
+	time_t sessionStart = Utils::Time::now();
+
 	int exitCode = runSystemCommand(command, getDisplayName(), hideWindow ? NULL : window);
 	if (exitCode != 0)
 	{
@@ -374,6 +352,16 @@ void FileData::launchGame(Window* window, int entrySlot)
 	}
 
 	Scripting::fireEvent("game-end");
+
+	{
+		int elapsed = (int)(Utils::Time::now() - sessionStart);
+		if (elapsed > 0)
+		{
+			FileData* gameToUpdate = getSourceFileData();
+			int priorGametime = gameToUpdate->getMetadata().getInt("gametime");
+			gameToUpdate->getMetadata().set("gametime", std::to_string(static_cast<long long>(priorGametime + elapsed)));
+		}
+	}
 
 	window->init(hideWindow);
 
@@ -397,17 +385,6 @@ void FileData::launchGame(Window* window, int entrySlot)
 	}
 
 	// music
-	// mise a jour du temps de jeu, commune aux deux branches de lancement
-	int esSessionTime = (int)(Utils::Time::now() - esSessionStart);
-	if (esSessionTime > 0 && esSessionTime < 86400)
-	{
-		FileData* gameToTime = getSourceFileData();
-		int totalTime = gameToTime->getMetadata().getInt("gametime") + esSessionTime;
-		gameToTime->getMetadata().set("gametime", std::to_string(static_cast<long long>(totalTime)));
-		gameToTime->getMetadata().set("lastsession", std::to_string(static_cast<long long>(esSessionTime)));
-		saveToGamelistRecovery(gameToTime);
-	}
-
 	if (Settings::getInstance()->getBool("audio.bgmusic"))
 		AudioManager::getInstance()->playRandomMusic();
 }
@@ -716,4 +693,154 @@ void FolderData::createChildrenByFilenameMap(std::unordered_map<std::string, Fil
 		else 
 			map[(*it)->getKey()] = (*it);
 	}	
+}
+
+// theme bindings {game:xxx} (AmberELEC FileData::getProperty, adapted to this fork's metadata:
+// the "unknown" / "not-a-date-time" / "0" defaults are exposed as empty values)
+BindableProperty FileData::getProperty(const std::string& name)
+{
+	if (name == "name")
+		return getName();
+
+	if (name == "rom")
+		return BindableProperty(Utils::FileSystem::getFileName(getPath()), BindablePropertyType::String);
+
+	if (name == "stem")
+		return BindableProperty(Utils::FileSystem::getStem(getPath()), BindablePropertyType::String);
+
+	if (name == "path")
+		return BindableProperty(getPath(), BindablePropertyType::Path);
+
+	if (name == "image")
+	{
+		std::string image = getImagePath();
+		if (image.empty())
+			image = getThumbnailPath();
+
+		return BindableProperty(image, BindablePropertyType::Path);
+	}
+
+	if (name == "thumbnail")
+		return BindableProperty(getThumbnailPath(), BindablePropertyType::Path);
+
+	if (name == "video")
+		return BindableProperty(getVideoPath(), BindablePropertyType::Path);
+
+	if (name == "marquee")
+		return BindableProperty(getMarqueePath(), BindablePropertyType::Path);
+
+	if (name == "favorite")
+		return (bool)getFavorite();
+
+	if (name == "hidden")
+		return (bool)getHidden();
+
+	if (name == "kidGame" || name == "kidgame")
+		return (bool)getKidGame();
+
+	if (name == "systemName")
+		return getSourceFileData()->getSystem()->getFullName();
+
+	if (name == "nameShort" || name == "nameExtra")
+	{
+		std::string fullName = getName();
+
+		for (size_t i = 0; i < fullName.size(); i++)
+			if (fullName[i] == '(' || fullName[i] == '[')
+				return name == "nameShort" ? Utils::String::trim(fullName.substr(0, i)) : fullName.substr(i);
+
+		return name == "nameShort" ? fullName : std::string();
+	}
+
+	if (name == "type")
+	{
+		switch (getType())
+		{
+		case FOLDER: return std::string("folder");
+		case PLACEHOLDER: return std::string("placeholder");
+		default: return std::string("game");
+		}
+	}
+
+	if (name == "folder" || name == "isFolder")
+		return getType() == FOLDER;
+
+	if (name == "placeHolder" || name == "isPlaceHolder" || name == "placeholder")
+		return getType() == PLACEHOLDER;
+
+	if (name == "playerCount" || name == "playercount")
+	{
+		std::string value = getMetadata().get("players");
+		auto split = value.rfind("+");
+		if (split != std::string::npos)
+			return value.substr(0, split);
+
+		split = value.rfind("-");
+		if (split != std::string::npos)
+			return value.substr(split + 1);
+
+		return (int)Math::clamp((float)Utils::String::toInteger(value), 1.0f, 9.0f);
+	}
+
+	if (name == "releaseyear" || name == "releaseYear")
+	{
+		std::string date = getMetadata().get("releasedate");
+		if (date.size() < 4 || date == "not-a-date-time")
+			return std::string();
+
+		return date.substr(0, 4);
+	}
+
+	// plain metadata - look the key up in the declarations first (MetaDataList::get() on an
+	// undeclared key would return the wrong field)
+	const MetaDataDecl* decl = nullptr;
+	for (auto& mdd : getMetadata().getMDD())
+	{
+		if (mdd.key == name)
+		{
+			decl = &mdd;
+			break;
+		}
+	}
+
+	if (decl == nullptr)
+		return BindableProperty::Null;
+
+	std::string value = getMetadata().get(name);
+	if (value == "unknown")
+		value = "";
+
+	switch (decl->type)
+	{
+	case MD_PATH:
+		return BindableProperty(value, BindablePropertyType::Path);
+	case MD_INT:
+		return Utils::String::toInteger(value);
+	case MD_FLOAT:
+	case MD_RATING:
+		return Utils::String::toFloat(value);
+	case MD_BOOL:
+		return value == "1" || value == "true";
+	case MD_DATE:
+	case MD_TIME:
+		{
+			if (value.empty() || value == "not-a-date-time" || value == "0")
+				return std::string();
+
+			time_t t = Utils::Time::stringToTime(value);
+			if (t <= 0)
+				return std::string();
+
+			return Utils::Time::timeToString(t, Utils::Time::getSystemDateFormat(decl->type == MD_TIME));
+		}
+	default:
+		break;
+	}
+
+	return value;
+}
+
+IBindable* FileData::getBindableParent()
+{
+	return getSystem();
 }

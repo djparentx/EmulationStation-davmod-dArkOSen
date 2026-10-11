@@ -3,6 +3,7 @@ project("core")
 set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/AsyncHandle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/AudioManager.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/BindingManager.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/CECInput.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/GuiComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/HelpStyle.h
@@ -27,13 +28,20 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/Animation.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/AnimationController.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/LambdaAnimation.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/ThemeStoryboard.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/StoryboardAnimator.h
 
 	# GuiComponents
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/AnimatedImageComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/AsyncNotificationComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BrightnessInfoComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ControllerActivityComponent.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryIndicatorComponent.h	
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryIndicatorComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ClockComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NetworkIconComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryIconComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryTextComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/StackPanelComponent.h	
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BusyComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ButtonComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ComponentGrid.h
@@ -47,6 +55,7 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ImageGridComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NinePatchComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollbarComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/OptionListComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollableContainer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SliderComponent.h
@@ -92,10 +101,13 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ThreadPool.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/TimeUtil.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/AsyncUtil.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/MathExpr.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/HtmlColor.h
 )
 
 set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/AudioManager.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/BindingManager.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/CECInput.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/GuiComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/HelpStyle.cpp
@@ -119,6 +131,8 @@ set(CORE_SOURCES
 
 	# Animations
 	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/AnimationController.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/ThemeStoryboard.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/animations/StoryboardAnimator.cpp
 
 	# GuiComponents
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/AnimatedImageComponent.cpp
@@ -126,6 +140,11 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BrightnessInfoComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ControllerActivityComponent.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryIndicatorComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ClockComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NetworkIconComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryIconComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BatteryTextComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/StackPanelComponent.cpp	
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/BusyComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ButtonComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ComponentGrid.cpp
@@ -137,6 +156,7 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ImageComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NinePatchComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollbarComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollableContainer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SliderComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SwitchComponent.cpp
@@ -182,6 +202,8 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/ThreadPool.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/TimeUtil.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/AsyncUtil.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/MathExpr.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/utils/HtmlColor.cpp
 )
 
 include_directories(${COMMON_INCLUDE_DIRS})

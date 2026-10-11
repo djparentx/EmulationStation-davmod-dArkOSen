@@ -13,7 +13,7 @@ TextureDataManager		TextureResource::sTextureDataManager;
 std::map< TextureResource::TextureKeyType, std::weak_ptr<TextureResource>> TextureResource::sTextureMap;
 std::set<TextureResource*> 	TextureResource::sAllTextures;
 
-TextureResource::TextureResource(const std::string& path, bool tile, bool linear, bool dynamic, bool allowAsync, MaxSizeInfo maxSize) : mTextureData(nullptr), mForceLoad(false)
+TextureResource::TextureResource(const std::string& path, bool tile, bool linear, bool dynamic, bool allowAsync, MaxSizeInfo maxSize, float saturation) : mTextureData(nullptr), mForceLoad(false)
 {
 #if _DEBUG
 	mPath = path;
@@ -29,6 +29,7 @@ TextureResource::TextureResource(const std::string& path, bool tile, bool linear
 		{			
 			data = sTextureDataManager.add(this, tile, linear);
 			data->setMaxSize(maxSize);
+			data->setSaturation(saturation);
 			data->initFromPath(path);
 
 			bool async = false;
@@ -65,6 +66,7 @@ TextureResource::TextureResource(const std::string& path, bool tile, bool linear
 			
 			data = mTextureData;
 			data->setMaxSize(maxSize);
+			data->setSaturation(saturation);
 			data->initFromPath(path);
 			// Load it so we can read the width/height
 			data->load();
@@ -181,7 +183,7 @@ void TextureResource::cancelAsync(std::shared_ptr<TextureResource> texture)
 		sTextureDataManager.cancelAsync(texture.get());
 }
 
-std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, bool tile, bool linear, bool forceLoad, bool dynamic, bool asReloadable, MaxSizeInfo maxSize)
+std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, bool tile, bool linear, bool forceLoad, bool dynamic, bool asReloadable, MaxSizeInfo maxSize, float saturation)
 {
 	std::shared_ptr<ResourceManager>& rm = ResourceManager::getInstance();
 
@@ -197,7 +199,7 @@ std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, b
 	if (canonicalPath.length() > 0 && canonicalPath[0] == ':')
 		dynamic = false;
 
-	TextureKeyType key(canonicalPath, tile, linear);
+	TextureKeyType key(canonicalPath, tile, linear, (int)(saturation * 1000.0f));
 	auto foundTexture = sTextureMap.find(key);
 	if(foundTexture != sTextureMap.cend())
 	{
@@ -230,7 +232,7 @@ std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, b
 	// need to create it
 	std::shared_ptr<TextureResource> tex;
 	
-	tex = std::shared_ptr<TextureResource>(new TextureResource(std::get<0>(key), tile, linear, dynamic, !forceLoad, maxSize));
+	tex = std::shared_ptr<TextureResource>(new TextureResource(std::get<0>(key), tile, linear, dynamic, !forceLoad, maxSize, saturation));
 	std::shared_ptr<TextureData> data = sTextureDataManager.get(tex.get(), !forceLoad);
 		
 	if (asReloadable) // // is it an SVG // if (key.first.substr(key.first.size() - 4, std::string::npos) != ".svg") // FCATMP	

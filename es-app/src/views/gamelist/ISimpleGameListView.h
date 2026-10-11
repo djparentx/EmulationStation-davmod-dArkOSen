@@ -12,7 +12,7 @@ class ISimpleGameListView : public IGameListView
 {
 public:
 	ISimpleGameListView(Window* window, FolderData* root);
-	virtual ~ISimpleGameListView() {}
+	virtual ~ISimpleGameListView();
 
 	// Called when a new file is added, a file is removed, a file's metadata changes, or a file's children are sorted.
 	// NOTE: FILE_SORTED is only reported for the topmost FileData, where the sort started.
@@ -36,11 +36,27 @@ public:
 	virtual void moveToNextLetter();
 	virtual void moveToPreviousLetter();
 
+	virtual void update(int deltaTime) override;
+	virtual void onShow() override;
+
 protected:
 
 	virtual std::string getQuickSystemSelectRightButton() = 0;
 	virtual std::string getQuickSystemSelectLeftButton() = 0;
 	virtual void populateList(const std::vector<FileData*>& files) = 0;
+
+	// resolve {game:xxx} / {system:xxx} theme bindings of the extras for the selected game
+	void updateThemeExtrasBindings(FileData* file);
+
+	// AmberELEC DetailedContainerHost: when the selected game changes, the outgoing extras play their
+	// "deactivate" storyboards while a fresh set of extras, bound to the new game, plays "activate".
+	// moveBy = cursor movement (0 = first display / refresh: "open" or the default storyboard)
+	void updateThemeExtras(FileData* file, int moveBy);
+	int  getMoveBy(int cursorIndex);
+
+	// AmberELEC DetailedContainer::handleStoryBoard / hasActivationStoryboard (recursive to children)
+	static void handleStoryboard(GuiComponent* comp, bool activate, int moveBy, FileData* file);
+	static bool hasActivationStoryboard(GuiComponent* comp, bool checkActivate = true, bool checkDeactivate = true);
 
 	TextComponent mHeaderText;
 	ImageComponent mHeaderImage;
@@ -50,6 +66,14 @@ protected:
 	std::vector<GuiComponent*> mThemeExtras;
 
 	std::stack<FileData*> mCursorStack;
+
+	FileData* mExtrasFile = nullptr;   // game the current extras are bound to
+	int       mLastCursorIndex = -1;
+
+private:
+	void clearDeactivatingExtras();
+
+	std::vector<std::vector<GuiComponent*>> mDeactivatingExtras; // outgoing extras still playing "deactivate"
 };
 
 #endif // ES_APP_VIEWS_GAME_LIST_ISIMPLE_GAME_LIST_VIEW_H

@@ -9,11 +9,15 @@
 #include "HelpStyle.h"
 #include "InputConfig.h"
 #include "EsLocale.h"
+#include "ThemeData.h"
 #include <functional>
+#include <map>
 #include <memory>
 
 class Animation;
 class AnimationController;
+class StoryboardAnimator;
+class ThemeStoryboard;
 class Font;
 class InputConfig;
 class ThemeData;
@@ -71,6 +75,10 @@ public:
 
 	//Sets the rotation origin as a percentage of this image (e.g. (0, 0) is top left, (0.5, 0.5) is the center)
 	Vector2f getRotationOrigin() const;
+
+	// scale pivot, relative to the size and offset from the origin point (AmberELEC / Batocera <scaleOrigin>)
+	Vector2f getScaleOrigin() const { return mScaleOrigin; }
+	void setScaleOrigin(const Vector2f& scaleOrigin) { mScaleOrigin = scaleOrigin; }
 	void setRotationOrigin(float originX, float originY);
 	inline void setRotationOrigin(Vector2f origin) { setRotationOrigin(origin.x(), origin.y()); }
 
@@ -168,6 +176,23 @@ public:
 	bool isStaticExtra() const { return mStaticExtra; }
 	void setIsStaticExtra(bool value) { mStaticExtra = value; }
 
+	// theme storyboards (Batocera / AmberELEC <storyboard event="...">)
+	void setStoryboards(const std::map<std::string, std::shared_ptr<ThemeStoryboard>>& storyboards);
+	bool hasStoryboard(const std::string& event) const { return mStoryboards.find(event) != mStoryboards.cend(); }
+	// restoreInitialProperties = false: the next storyboard starts from the current values (AmberELEC deselectStoryboard(false))
+	bool startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn = nullptr, bool restoreInitialProperties = true);
+	void stopStoryboard();
+	void pauseStoryboard();
+	bool isStoryboardRunning(const std::string& event = "");
+	bool isStoryboardSelected(const std::string& event) const;
+	void enableStoryboardProperty(const std::string& name, bool enable);
+
+	// theme bindings (AmberELEC): "<property>_binding" expressions, resolved by BindingManager
+	virtual ThemeData::ThemeElement::Property getProperty(const std::string name);
+	virtual void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value);
+	const std::map<std::string, std::string>& getBindingExpressions() const { return mBindingExpressions; }
+	void loadBindingExpressions(const ThemeData::ThemeElement* elem);
+
 protected:
 	void renderChildren(const Transform4x4f& transform) const;
 	void updateSelf(int deltaTime); // updates animations
@@ -184,6 +209,7 @@ protected:
 	Vector3f mPosition;
 	Vector2f mOrigin;
 	Vector2f mRotationOrigin;
+	Vector2f mScaleOrigin = Vector2f(0.0f, 0.0f); // 0 0 = scale around the origin point (non-themed components)
 	Vector2f mSize;
 
 	float mRotation = 0.0;
@@ -197,12 +223,20 @@ protected:
 
 	bool mStaticExtra;
 
+	std::map<std::string, std::string> mBindingExpressions;
+
+	std::string mStoryboardSound; // storyboard <sound> currently playing
+
 public:
 	const static unsigned char MAX_ANIMATIONS = 4;
 
 private:
 	Transform4x4f mTransform; //Don't access this directly! Use getTransform()!
 	AnimationController* mAnimationMap[MAX_ANIMATIONS];
+
+	// theme storyboards
+	std::map<std::string, std::shared_ptr<ThemeStoryboard>> mStoryboards;
+	StoryboardAnimator* mStoryboardAnimator = nullptr;
 };
 
 #endif // ES_CORE_GUI_COMPONENT_H

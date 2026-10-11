@@ -266,6 +266,12 @@ bool TextureData::load(bool updateCache)
 	// Need to load. See if there is a file
 	if (!mPath.empty())
 	{
+		bool hadData;
+		{
+			std::unique_lock<std::mutex> lock(mMutex);
+			hadData = (mDataRGBA != nullptr);
+		}
+
 		std::shared_ptr<ResourceManager>& rm = ResourceManager::getInstance();
 
 		const ResourceData& data = rm->getFileData(mPath);
@@ -280,6 +286,24 @@ bool TextureData::load(bool updateCache)
 
 		if (updateCache && retval)
 			ImageIO::updateImageCache(mPath, data.length, mBaseSize.x(), mBaseSize.y());
+
+		// saturation, once per freshly decoded image
+		if (retval && !hadData && mSaturation < 0.999f)
+		{
+			std::unique_lock<std::mutex> lock(mMutex);
+			if (mDataRGBA != nullptr)
+			{
+				const float s = mSaturation < 0.0f ? 0.0f : mSaturation;
+				unsigned char* p = mDataRGBA;
+				for (size_t i = 0; i < mWidth * mHeight; i++, p += 4)
+				{
+					const float gray = 0.299f * p[0] + 0.587f * p[1] + 0.114f * p[2];
+					p[0] = (unsigned char)(gray + (p[0] - gray) * s);
+					p[1] = (unsigned char)(gray + (p[1] - gray) * s);
+					p[2] = (unsigned char)(gray + (p[2] - gray) * s);
+				}
+			}
+		}
 	}
 
 	return retval;

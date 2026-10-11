@@ -44,6 +44,15 @@ public:
 
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
 
+protected:
+	// Same as applyTheme() but looks up the theme element with theme->getElement(view, element,
+	// expectedType) instead of the hardcoded "text" - used by subclasses (ClockComponent,
+	// BatteryTextComponent) whose theme element type is "clock"/"batteryText", not "text", so
+	// getElement()'s type check would otherwise reject them and skip every property below.
+	void applyThemeWithType(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties, const std::string& expectedType);
+
+public:
+
 	void setGlowColor(unsigned int color) { mGlowColor = color; };
 	void setGlowSize(unsigned int size) { mGlowSize = size; };
 
@@ -53,6 +62,13 @@ public:
 
 	bool getAutoScroll() { return mAutoScroll; }
 	void setAutoScroll(bool value);
+
+	// theme bindings (AmberELEC)
+	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
+	void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value) override;
+	bool getBindingDefaults() { return mBindingDefaults; }
+
+	void onShow() override;
 
 protected:
 	virtual void onTextChanged();
@@ -92,6 +108,18 @@ private:
 	int mMarqueeTime;
 
 	bool mAutoScroll;
+
+	// <emptyTextDefaults>: bound empty / "0" values display as "Unknown" / "None"
+	bool mBindingDefaults = true;
+
+	// theme <autoScroll>vertical</autoScroll> - Batocera semantics
+	void resetVerticalScroll();
+	bool  mVerticalScroll;
+	int   mAutoScrollDelay;   // ms before scrolling starts
+	int   mAutoScrollSpeed;   // ms per 1px step
+	float mVScrollOffset;     // px scrolled
+	int   mVScrollTime;       // accumulator, starts at -delay
+	int   mVScrollHold;       // ms held at bottom before reset
 };
 
 #endif // ES_CORE_COMPONENTS_TEXT_COMPONENT_H

@@ -46,6 +46,7 @@ struct SystemViewCarousel
 	Vector2f logoPos;
 	float zIndex;
 	float systemInfoDelay;
+	bool systemInfoCountOnly; // <systemInfoCountOnly>: show only the number
 
 	std::string		defaultTransition;
 	std::string		scrollSound;

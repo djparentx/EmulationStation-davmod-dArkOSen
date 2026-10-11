@@ -7,11 +7,20 @@
 #include "components/VideoVlcComponent.h"
 #include "utils/FileSystemUtil.h"
 #include "utils/StringUtil.h"
+#include "utils/MathExpr.h"
+#include "renderers/Renderer.h"
+#include <cmath>
 #include "Log.h"
 #include "platform.h"
 #include "Settings.h"
 #include <algorithm>
 #include "EsLocale.h"
+#include "components/ClockComponent.h"
+#include "components/NetworkIconComponent.h"
+#include "components/BatteryIconComponent.h"
+#include "components/BatteryTextComponent.h"
+#include "components/StackPanelComponent.h"
+#include "animations/ThemeStoryboard.h"
 
 std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" } };
 std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "z-index" }, { "visible" } };
@@ -19,6 +28,10 @@ std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carouse
 std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> ThemeData::sElementMap {
 	{ "image", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "maxSize", NORMALIZED_PAIR },
 		{ "minSize", NORMALIZED_PAIR },
@@ -40,9 +53,22 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipX", BOOLEAN },
 		{ "flipY", BOOLEAN },
 		{ "linearSmooth", BOOLEAN },
+		{ "saturation", FLOAT },
+		{ "autoFade", BOOLEAN },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "imagegrid", {
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
+		{ "maxlength", FLOAT },             // accepted, no effect (not implemented by Batocera / AmberELEC either)
+		{ "systemNameSuffix", BOOLEAN },    // accepted, no effect (not implemented by Batocera / AmberELEC either)
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "margin", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_RECT },
@@ -72,6 +98,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "imageSizeMode", STRING } } },
 	{ "text", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "origin", NORMALIZED_PAIR },
 		{ "rotation", FLOAT },
@@ -92,11 +122,126 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "glowSize", FLOAT },
 		{ "glowOffset", NORMALIZED_PAIR },
 		{ "singleLineScroll", BOOLEAN },
+		{ "autoScroll", STRING },
+		{ "autoScrollDelay", FLOAT },
+		{ "autoScrollSpeed", FLOAT },
+		{ "emptyTextDefaults", BOOLEAN },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_RECT },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
+	{ "stackpanel", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "size", NORMALIZED_PAIR },
+		{ "orientation", STRING },
+		{ "reverse", BOOLEAN },
+		{ "separator", FLOAT },
+		{ "opacity", FLOAT },
+		{ "visible", BOOLEAN },
+		{ "clipChildren", BOOLEAN },
+		{ "zIndex", FLOAT } } },
+	{ "clock", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "size", NORMALIZED_PAIR },
+		{ "origin", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "text", STRING },
+		{ "backgroundColor", COLOR },
+		{ "fontPath", PATH },
+		{ "fontSize", FLOAT },
+		{ "color", COLOR },
+		{ "alignment", STRING },
+		{ "verticalAlignment", STRING },
+		{ "forceUppercase", BOOLEAN },
+		{ "lineSpacing", FLOAT },
+		{ "padding", NORMALIZED_RECT },
+		{ "visible", BOOLEAN },
+		{ "zIndex", FLOAT } } },
+	{ "batteryText", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "size", NORMALIZED_PAIR },
+		{ "origin", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "text", STRING },
+		{ "backgroundColor", COLOR },
+		{ "fontPath", PATH },
+		{ "fontSize", FLOAT },
+		{ "color", COLOR },
+		{ "alignment", STRING },
+		{ "verticalAlignment", STRING },
+		{ "forceUppercase", BOOLEAN },
+		{ "lineSpacing", FLOAT },
+		{ "padding", NORMALIZED_RECT },
+		{ "visible", BOOLEAN },
+		{ "zIndex", FLOAT } } },
+	{ "batteryIcon", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "size", NORMALIZED_PAIR },
+		{ "maxSize", NORMALIZED_PAIR },
+		{ "minSize", NORMALIZED_PAIR },
+		{ "origin", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "path", PATH },
+		{ "color", COLOR },
+		{ "visible", BOOLEAN },
+		{ "horizontalAlignment", STRING },
+		{ "verticalAlignment", STRING },
+		{ "flipX", BOOLEAN },
+		{ "flipY", BOOLEAN },
+		{ "zIndex", FLOAT },
+		{ "incharge", PATH },
+		{ "full", PATH },
+		{ "at75", PATH },
+		{ "at50", PATH },
+		{ "at25", PATH },
+		{ "empty", PATH } } },
+	{ "networkIcon", {
+		{ "planemodeIcon", PATH },          // accepted, not used
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "size", NORMALIZED_PAIR },
+		{ "maxSize", NORMALIZED_PAIR },
+		{ "minSize", NORMALIZED_PAIR },
+		{ "origin", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "path", PATH },
+		{ "color", COLOR },
+		{ "visible", BOOLEAN },
+		{ "horizontalAlignment", STRING },
+		{ "verticalAlignment", STRING },
+		{ "flipX", BOOLEAN },
+		{ "flipY", BOOLEAN },
+		{ "zIndex", FLOAT },
+		{ "networkIcon", PATH } } },
 	{ "textlist", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "origin", NORMALIZED_PAIR },
 		{ "selectorHeight", FLOAT },
@@ -116,15 +261,28 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "horizontalMargin", FLOAT },
 		{ "forceUppercase", BOOLEAN },
 		{ "lineSpacing", FLOAT },
+		{ "lines", FLOAT },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
 		{ "zIndex", FLOAT } } },
 	{ "container", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 	 	{ "origin", NORMALIZED_PAIR },
 	 	{ "visible", BOOLEAN },
 	 	{ "zIndex", FLOAT } } },
 	{ "ninepatch", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "path", PATH },
 	 	{ "visible", BOOLEAN },
@@ -137,6 +295,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "zIndex", FLOAT } } },
 	{ "datetime", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "origin", NORMALIZED_PAIR },
 		{ "rotation", FLOAT },
@@ -155,6 +317,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 	 	{ "zIndex", FLOAT } } },
 	{ "rating", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "origin", NORMALIZED_PAIR },
 		{ "rotation", FLOAT },
@@ -169,6 +335,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "path", PATH } } },
 	{ "controllerActivity", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "itemSpacing", FLOAT },
 		{ "horizontalAlignment", STRING },
@@ -180,20 +350,30 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "zIndex", FLOAT } } },
 	{ "batteryIndicator", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },		
 		{ "itemSpacing", FLOAT },
 		{ "horizontalAlignment", STRING },
+		{ "alignment", STRING },
 		{ "incharge", PATH },
 		{ "full", PATH },
 		{ "at75", PATH },
 		{ "at50", PATH },
 		{ "at25", PATH },
 		{ "empty", PATH },
+		{ "networkIcon", PATH },
 		{ "color", COLOR },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "helpsystem", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "origin", NORMALIZED_PAIR },
 		{ "textColor", COLOR },
 		{ "iconColor", COLOR },
@@ -212,6 +392,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "iconSelect", PATH } } },
 	{ "video", {
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "size", NORMALIZED_PAIR },
 		{ "maxSize", NORMALIZED_PAIR },
 		{ "minSize", NORMALIZED_PAIR },
@@ -229,11 +413,17 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "snapshotSource", STRING }, // image, thumbnail, marquee
 		{ "loops", FLOAT }, // Number of loops to do -1 (default) is infinite 
 		{ "showSnapshotNoVideo", BOOLEAN },
-		{ "showSnapshotDelay", BOOLEAN } } },
+		{ "showSnapshotDelay", BOOLEAN },
+		{ "saturation", FLOAT },            // applied to the snapshot image only
+		{ "scaleOrigin", NORMALIZED_PAIR } } },
 	{ "carousel", {
 		{ "type", STRING },
 		{ "size", NORMALIZED_PAIR },
 		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
 		{ "origin", NORMALIZED_PAIR },
 		{ "color", COLOR },
 		{ "colorEnd", COLOR },
@@ -246,6 +436,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "logoAlignment", STRING },
 		{ "maxLogoCount", FLOAT },
 		{ "systemInfoDelay", FLOAT },	
+		{ "systemInfoCountOnly", BOOLEAN },
 		{ "defaultTransition", STRING },
 		{ "scrollSound", PATH },
 		{ "zIndex", FLOAT } } },
@@ -257,6 +448,15 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "selectorColorEnd", COLOR },
 		{ "selectorGradientType", STRING },
 		{ "selectedColor", COLOR },
+		{ "color", COLOR } } },
+	{ "menuGroup", {
+		{ "fontPath", PATH },
+		{ "fontSize", FLOAT },
+		{ "lineSpacing", FLOAT },
+		{ "alignment", STRING },
+		{ "backgroundColor", COLOR },
+		{ "separatorColor", COLOR },
+		{ "visible", BOOLEAN },
 		{ "color", COLOR } } },
 	{ "menuTextSmall", {
 		{ "fontPath", PATH },
@@ -395,6 +595,44 @@ void ThemeData::loadFile(const std::string system, std::map<std::string, std::st
 	mVariables.clear();
 	mVariables.insert(sysDataMap.cbegin(), sysDataMap.cend());
 	mVariables["lang"] = mLanguage;
+	mVariables["themePath"] = Utils::FileSystem::getParent(mPaths.back());
+	mVariables["currentPath"] = Utils::FileSystem::getParent(mPaths.back());
+	mVariables["root"] = Utils::FileSystem::getParent(mPaths.back());
+
+	// Batocera screen.* variables (used by "if" expressions, e.g. aspect-ratio auto detection)
+	{
+		const int w = Renderer::getScreenWidth();
+		const int h = Renderer::getScreenHeight();
+
+		static const std::pair<const char*, float> ratios[] =
+		{
+			{ "4/3",   4.0f / 3.0f },  { "16/9",  16.0f / 9.0f },  { "16/10", 16.0f / 10.0f },
+			{ "16/15", 16.0f / 15.0f },{ "21/9",  21.0f / 9.0f },  { "1/1",   1.0f },
+			{ "2/1",   2.0f },         { "3/2",   3.0f / 2.0f },   { "3/4",   3.0f / 4.0f },
+			{ "4/1",   4.0f },         { "9/16",  9.0f / 16.0f },  { "5/4",   5.0f / 4.0f },
+			{ "6/5",   6.0f / 5.0f },  { "7/9",   7.0f / 9.0f },   { "8/3",   8.0f / 3.0f },
+			{ "8/7",   8.0f / 7.0f },  { "19/12", 19.0f / 12.0f }, { "19/14", 19.0f / 14.0f },
+			{ "30/17", 30.0f / 17.0f },{ "32/9",  32.0f / 9.0f }
+		};
+
+		const float prop = (h == 0) ? 1.0f : (float)w / (float)h;
+		float nearDist = 9999999.0f;
+		std::string nearName;
+		for (const auto& r : ratios)
+		{
+			const float dist = std::abs(prop - r.second);
+			if (dist < nearDist)
+			{
+				nearDist = dist;
+				nearName = r.first;
+			}
+		}
+
+		mVariables["screen.width"] = std::to_string(w);
+		mVariables["screen.height"] = std::to_string(h);
+		mVariables["screen.ratio"] = nearName;
+		mVariables["screen.vertical"] = (h > w) ? "true" : "false";
+	}
 
 	pugi::xml_document doc;
 	pugi::xml_parse_result res = doc.load_file(path.c_str());
@@ -651,8 +889,9 @@ void ThemeData::parseVariables(const pugi::xml_node& root)
     
 	for (pugi::xml_node variables = root.child("variables"); variables; variables = variables.next_sibling("variables"))
 	{
+		// skip only this block - later <variables> blocks may still match (e.g. one block per color scheme)
 		if (!parseFilterAttributes(variables))
-			return;
+			continue;
 
 		for (pugi::xml_node_iterator it = variables.begin(); it != variables.end(); ++it)
 			parseVariable(*it);
@@ -703,6 +942,37 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 	if (!parseLanguage(node))
 		return false;
 
+	if (node.attribute("if"))
+	{
+		// AmberELEC/Batocera: <x if="{screen.ratio} == '4/3'">, false -> node dropped.
+		// MathExpr resolves ${var} and {var} itself from the theme variables.
+		const std::string ifAttr = node.attribute("if").as_string();
+		if (!ifAttr.empty())
+		{
+			try
+			{
+				Utils::MathExpr::ValueMap vars;
+				for (const auto& v : mVariables)
+				{
+					if (v.first == "screen.width" || v.first == "screen.height")
+						vars[v.first] = Utils::String::toFloat(v.second);
+					else if (v.second == "true" || v.second == "false")
+						vars[v.first] = (v.second == "true") ? 1.0f : 0.0f;
+					else
+						vars[v.first] = v.second;
+				}
+
+				if (Utils::MathExpr::evaluate(ifAttr.c_str(), &vars).toNumber() == 0)
+					return false;
+			}
+			catch (const std::exception& e)
+			{
+				LOG(LogWarning) << "if \"" << ifAttr << "\" expression is invalid : " << e.what();
+				return false;
+			}
+		}
+	}
+
 	if (node.attribute("tinyScreen"))
 	{
 		const std::string tinyScreenAttr = node.attribute("tinyScreen").as_string();
@@ -722,6 +992,47 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 			return false;
 		else if (help && helpVisibleAttr == "false")
 			return false;
+	}
+
+	if (node.attribute("ifSubset"))
+	{
+		const std::string ifSubsetAttr = node.attribute("ifSubset").as_string();
+		for (auto subset : Utils::String::split(ifSubsetAttr, ','))
+		{
+			auto splits = Utils::String::split(Utils::String::trim(subset), ':');
+			if (splits.size() == 2)
+			{
+				const std::string subsetToFind = Utils::String::trim(splits[0]);
+				const std::string subsetValue = Utils::String::trim(splits[1]);
+
+				std::string selectedSubset = Settings::getInstance()->getString("subset." + mSystemThemeFolder + "." + subsetToFind);
+				if (selectedSubset.empty())
+					selectedSubset = Settings::getInstance()->getString("subset." + subsetToFind);
+
+				if (selectedSubset.empty())
+				{
+					for (const auto& it : mSubsets)
+					{
+						if (it.subset == subsetToFind)
+						{
+							selectedSubset = it.name;
+							break;
+						}
+					}
+				}
+
+				if (selectedSubset.empty())
+					return true;
+
+				bool hasValue = false;
+				for (auto value : Utils::String::split(subsetValue, '|'))
+					if (selectedSubset == Utils::String::trim(value))
+						hasValue = true;
+
+				if (!hasValue)
+					return false;
+			}
+		}
 	}
 
 	return true;
@@ -953,6 +1264,45 @@ void ThemeData::parseView(const pugi::xml_node& root, ThemeView& view, bool over
 
 			if (std::find(view.orderedKeys.cbegin(), view.orderedKeys.cend(), elemKey) == view.orderedKeys.cend())
 				view.orderedKeys.push_back(elemKey);
+
+			// Container elements (e.g. stackpanel) can nest real components (clock, batteryIcon,
+			// batteryText, networkIcon, image, text, ...) as XML children rather than properties.
+			// parseElement() above already parsed the container's own properties and, since these
+			// child tags aren't in the container's typeMap, logged/skipped them as unknown
+			// properties. Parse them here as ordinary top-level view elements instead, tagged with
+			// "parent" so makeExtras() can nest their GuiComponents under the container.
+			if (node.name() == std::string("stackpanel"))
+			{
+				for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling())
+				{
+					if (!childNode.attribute("name"))
+						continue;
+
+					auto childTypeIt = sElementMap.find(childNode.name());
+					if (childTypeIt == sElementMap.cend())
+						continue;
+
+					if (!parseFilterAttributes(childNode))
+						continue;
+
+					const std::string childNameAttr = childNode.attribute("name").as_string();
+					size_t cPrevOff = childNameAttr.find_first_not_of(delim, 0);
+					size_t cOff = childNameAttr.find_first_of(delim, cPrevOff);
+					while (cOff != std::string::npos || cPrevOff != std::string::npos)
+					{
+						std::string childElemKey = childNameAttr.substr(cPrevOff, cOff - cPrevOff);
+						cPrevOff = childNameAttr.find_first_not_of(delim, cOff);
+						cOff = childNameAttr.find_first_of(delim, cPrevOff);
+
+						ThemeElement& childElement = view.elements.insert(std::pair<std::string, ThemeElement>(childElemKey, ThemeElement())).first->second;
+						parseElement(childNode, childTypeIt->second, childElement, overwriteElements);
+						childElement.parent = elemKey;
+
+						if (std::find(view.orderedKeys.cbegin(), view.orderedKeys.cend(), childElemKey) == view.orderedKeys.cend())
+							view.orderedKeys.push_back(childElemKey);
+					}
+				}
+			}
 		}		
 	}
 }
@@ -1018,6 +1368,12 @@ bool ThemeData::parseRegion(const pugi::xml_node& node)
 	return false;
 }
 
+// AmberELEC: a value containing {type:property} is a binding, resolved per selection by BindingManager
+static bool isBindingExpression(const std::string& str)
+{
+	return str.find('{') != std::string::npos && str.find(':') != std::string::npos && str.find('}') != std::string::npos;
+}
+
 void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, bool overwrite)
 {
 	// ThemeException error;
@@ -1040,11 +1396,32 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 		if (!parseFilterAttributes(node))
 			continue;
 
+		if (std::string(node.name()) == "storyboard")
+		{
+			// later storyboard for the same event replaces the earlier one; an empty one removes it
+			const std::string eventName = resolvePlaceholders(node.attribute("event").as_string());
+			auto storyboard = ThemeStoryboard::fromXml(node, typeMap, Utils::FileSystem::getParent(mPaths.back()),
+				[this](const std::string& value) { return resolvePlaceholders(value.c_str()); });
+			if (storyboard != nullptr)
+				element.storyboards[eventName] = storyboard;
+			else
+				element.storyboards.erase(eventName);
+			continue;
+		}
+
+		// stray text in the element (e.g. "<y>0.5</y>>") is not a property
+		if (node.type() != pugi::node_element)
+			continue;
+
 		ElementPropertyType type = STRING;
 
 		auto typeIt = typeMap.find(node.name());
 		if(typeIt == typeMap.cend())
 		{
+			// nested element of a container (stackpanel children) - parsed as its own element
+			if (sElementMap.find(node.name()) != sElementMap.cend())
+				continue;
+
 			// Exception for menuIcons that can be extended
 			if (element.type == "menuIcons")
 				type = PATH;
@@ -1057,7 +1434,8 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 		else
 			type = typeIt->second;
 		
-		if (!overwrite && element.properties.find(node.name()) != element.properties.cend())
+		if (!overwrite && (element.properties.find(node.name()) != element.properties.cend() ||
+			element.properties.find(std::string(node.name()) + "_binding") != element.properties.cend()))
 			continue;
 
 		std::string str = resolveSystemVariable(mSystemThemeFolder, resolvePlaceholders(node.text().as_string()));
@@ -1105,7 +1483,13 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			break;
 		}
 		case STRING:
-			element.properties[node.name()] = str;
+			if (isBindingExpression(str))
+				element.properties[std::string(node.name()) + "_binding"] = str;
+			else
+			{
+				element.properties.erase(std::string(node.name()) + "_binding");
+				element.properties[node.name()] = str;
+			}
 			break;
 		case PATH:
 		{
@@ -1130,6 +1514,16 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 
 				break;
 			}
+
+			// AmberELEC: {game:image} / {system:theme} ... bindings are resolved per selection (BindingManager)
+			if (isBindingExpression(path))
+			{
+				element.properties[std::string(node.name()) + "_binding"] = path;
+				element.properties[node.name()] = path;
+				break;
+			}
+			else
+				element.properties.erase(std::string(node.name()) + "_binding");
 
 			if (path[0] == '/')
 			{
@@ -1165,17 +1559,38 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			break;
 		}
 		case COLOR:
-			element.properties[node.name()] = getHexColor(str.c_str());
+			if (isBindingExpression(str))
+				element.properties[std::string(node.name()) + "_binding"] = str;
+			else
+			{
+				element.properties.erase(std::string(node.name()) + "_binding");
+				element.properties[node.name()] = getHexColor(str.c_str());
+			}
 			break;
 		case FLOAT:
 		{
-			//float floatVal = atof(str.c_str());  static_cast<float>(strtod(str.c_str(), 0));
-			element.properties[node.name()] = (float) atof(str.c_str()); //floatVal;
+			if (isBindingExpression(str))
+				element.properties[std::string(node.name()) + "_binding"] = str;
+			else
+			{
+				element.properties.erase(std::string(node.name()) + "_binding");
+				element.properties[node.name()] = (float) atof(str.c_str());
+			}
 			break;
 		}
 
 		case BOOLEAN:
 		{
+			// AmberELEC: binding stored as "<name>_binding", evaluated per selection (BindingManager).
+			// Plain function calls without {x:y} tokens, e.g. exists("..."), are evaluated the same way
+			if (isBindingExpression(str) || str.find('(') != std::string::npos)
+			{
+				element.properties[std::string(node.name()) + "_binding"] = str;
+				element.properties[node.name()] = true;
+				break;
+			}
+			element.properties.erase(std::string(node.name()) + "_binding");
+
 			// only look at first char
 			char first = str[0];
 			// 1*, t* (true), T* (True), y* (yes), Y* (YES)
@@ -1273,6 +1688,30 @@ const std::shared_ptr<ThemeData>& ThemeData::getDefault()
 	return theme;
 }
 
+static GuiComponent* createThemeExtraComponent(const std::string& t, Window* window)
+{
+	if(t == "image")
+		return new ImageComponent(window);
+	else if(t == "text")
+		return new TextComponent(window);
+	else if (t == "ninepatch")
+		return new NinePatchComponent(window);
+	else if (t == "video")
+		return new VideoVlcComponent(window);
+	else if (t == "stackpanel")
+		return new StackPanelComponent(window);
+	else if (t == "clock")
+		return new ClockComponent(window);
+	else if (t == "networkIcon")
+		return new NetworkIconComponent(window);
+	else if (t == "batteryIcon")
+		return new BatteryIconComponent(window);
+	else if (t == "batteryText")
+		return new BatteryTextComponent(window);
+
+	return nullptr;
+}
+
 std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window)
 {
 	std::vector<GuiComponent*> comps;
@@ -1280,24 +1719,16 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 	auto viewIt = theme->mViews.find(view);
 	if(viewIt == theme->mViews.cend())
 		return comps;
-	
+
+	// Pass 1: top-level extras (elem.parent empty) - unchanged behaviour.
+	std::map<std::string, GuiComponent*> tagToComp;
+
 	for(auto it = viewIt->second.orderedKeys.cbegin(); it != viewIt->second.orderedKeys.cend(); it++)
 	{
 		ThemeElement& elem = viewIt->second.elements.at(*it);
-		if(elem.extra)
+		if(elem.extra && elem.parent.empty())
 		{
-			GuiComponent* comp = nullptr;
-
-			const std::string& t = elem.type;
-			if(t == "image")
-				comp = new ImageComponent(window);
-			else if(t == "text")
-				comp = new TextComponent(window);
-			else if (t == "ninepatch")
-				comp = new NinePatchComponent(window);
-			else if (t == "video")
-				comp = new VideoVlcComponent(window);
-
+			GuiComponent* comp = createThemeExtraComponent(elem.type, window);
 			if (comp == nullptr)
 				continue;
 
@@ -1306,8 +1737,51 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 			comp->setDefaultZIndex(10);
 			comp->applyTheme(theme, view, *it, ThemeFlags::ALL);
 			comps.push_back(comp);
+			tagToComp[*it] = comp;
 		}
 	}
+
+	// Pass 2: elements nested inside a container (e.g. stackpanel) in the theme XML.
+	// These are NOT added to comps - they're owned/rendered/updated via the container's
+	// mChildren (the container is responsible for deleting them, see StackPanelComponent
+	// destructor) - adding them to comps as well would double-render/double-update them.
+	std::vector<GuiComponent*> touchedContainers;
+
+	for(auto it = viewIt->second.orderedKeys.cbegin(); it != viewIt->second.orderedKeys.cend(); it++)
+	{
+		ThemeElement& elem = viewIt->second.elements.at(*it);
+		if(elem.parent.empty())
+			continue;
+
+		auto parentIt = tagToComp.find(elem.parent);
+		if (parentIt == tagToComp.end())
+		{
+			LOG(LogWarning) << "Element \"" << *it << "\" declares parent \"" << elem.parent << "\" but that container was not found or is not an extra";
+			continue;
+		}
+
+		GuiComponent* comp = createThemeExtraComponent(elem.type, window);
+		if (comp == nullptr)
+			continue;
+
+		comp->setTag((*it).c_str());
+		// addChild() BEFORE applyTheme(): pos/size normalization in GuiComponent::applyTheme
+		// scales against getParent()->getSize() when a parent exists, so the child must already
+		// be parented to the stackpanel for its coordinates to resolve relative to the container
+		// instead of the full screen.
+		parentIt->second->addChild(comp);
+		comp->applyTheme(theme, view, *it, ThemeFlags::ALL);
+
+		if (std::find(touchedContainers.cbegin(), touchedContainers.cend(), parentIt->second) == touchedContainers.cend())
+			touchedContainers.push_back(parentIt->second);
+	}
+
+	// StackPanelComponent's own applyTheme() (pass 1, before any children existed) already ran
+	// performLayout() once on an empty child list. onSizeChanged() re-runs it now that the real
+	// children are in place, so they're positioned before the first render instead of waiting on
+	// a later child size change during update().
+	for (GuiComponent* container : touchedContainers)
+		container->onSizeChanged();
 
 	return comps;
 }
@@ -1485,6 +1959,40 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 	elem = theme->getElement("menu", "menuslider", "menuSlider");
 	if (elem && elem->has("path") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("path")))
 		Icons.knob = elem->get<std::string>("path");
+
+	// group headers default to the small menu text (previous look)
+	Group.font = TextSmall.font;
+	Group.color = TextSmall.color;
+
+	elem = theme->getElement("menu", "menugroup", "menuGroup");
+	if (elem)
+	{
+		Group.themed = true;
+
+		if (elem->has("fontPath") || elem->has("fontSize"))
+			Group.font = Font::getFromTheme(elem, ThemeFlags::ALL, Font::get(FONT_SIZE_SMALL));
+		if (elem->has("color"))
+			Group.color = elem->get<unsigned int>("color");
+		if (elem->has("backgroundColor"))
+			Group.backgroundColor = elem->get<unsigned int>("backgroundColor");
+		if (elem->has("separatorColor"))
+			Group.separatorColor = elem->get<unsigned int>("separatorColor");
+		if (elem->has("lineSpacing"))
+			Group.lineSpacing = elem->get<float>("lineSpacing");
+		if (elem->has("visible"))
+			Group.visible = elem->get<bool>("visible");
+
+		if (elem->has("alignment"))
+		{
+			const std::string alignment = elem->get<std::string>("alignment");
+			if (alignment == "center")
+				Group.alignment = ALIGN_CENTER;
+			else if (alignment == "right")
+				Group.alignment = ALIGN_RIGHT;
+			else
+				Group.alignment = ALIGN_LEFT;
+		}
+	}
 
 	elem = theme->getElement("menu", "menuicons", "menuIcons");
 	if (elem)
