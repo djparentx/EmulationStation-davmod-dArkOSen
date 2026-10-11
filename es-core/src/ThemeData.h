@@ -130,6 +130,20 @@ struct MenuBackground
 	Vector2f cornerSize;	
 };
 
+// <menuGroup> (AmberELEC): group header rows in menus. Defaults keep the previous look
+// (menuTextSmall font and color, line spacing 2.5, no background, left aligned)
+struct MenuGroupElement
+{
+	unsigned int color;
+	unsigned int backgroundColor;
+	unsigned int separatorColor;     // 0 = use the menu text separator color
+	float lineSpacing;
+	int alignment;                   // Alignment (ALIGN_LEFT / ALIGN_CENTER / ALIGN_RIGHT)
+	bool visible;
+	bool themed;                     // true when the theme defines <menuGroup>
+	std::shared_ptr<Font> font;
+};
+
 struct IconElement 
 {
 	std::string button;
@@ -156,6 +170,7 @@ public:
 		MenuElement Text{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement TextSmall{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement Footer{ 0xC6C6C6FF, 0xC6C6C6FF, 0xC6C6C6FF, 0xFFFFFFFF, 0xC6C6C6FF, true, "", nullptr };
+		MenuGroupElement Group{ 0x777777FF, 0x00000000, 0x00000000, 2.5f, 0 /*ALIGN_LEFT*/, true, false, nullptr };
 		IconElement Icons{ ":/button.png", ":/button_filled.png", ":/on.svg", ":/off.svg", ":/option_arrow.svg", ":/arrow.svg", ":/slider_knob.svg", ":/textinput_ninepatch.png", ":/textinput_ninepatch_active.png" };
 
 		std::string getMenuIcon(const std::string name)

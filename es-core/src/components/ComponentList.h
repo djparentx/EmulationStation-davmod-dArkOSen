@@ -20,9 +20,11 @@ struct ComponentListRow
 	ComponentListRow() 
 	{
 		selectable = true;
+		group = false;
 	};
 
 	bool selectable;
+	bool group; // menu group header row (<menuGroup>)
 	std::vector<ComponentListElement> elements;
 
 	// The input handler is called when the user enters any input while this row is highlighted (including up/down).

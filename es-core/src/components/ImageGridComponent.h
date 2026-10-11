@@ -7,6 +7,7 @@
 #include "components/IList.h"
 #include "resources/TextureResource.h"
 #include "GridTileComponent.h"
+#include "components/ScrollbarComponent.h"
 #include "animations/LambdaAnimation.h"
 #include "Settings.h"
 #include "Sound.h"
@@ -137,6 +138,8 @@ private:
 	float mCamera;
 	float mCameraDirection;
 
+	ScrollbarComponent mScrollbar; // AmberELEC scrollbarColor / scrollbarSize / scrollbarCorner / scrollbarAlignment
+
 	// MISCELLANEOUS
 	CenterSelection mCenterSelection;
 
@@ -149,7 +152,7 @@ private:
 };
 
 template<typename T>
-ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData, T>(window)
+ImageGridComponent<T>::ImageGridComponent(Window* window) : IList<ImageGridData, T>(window), mScrollbar(window)
 {
 	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 
@@ -240,6 +243,7 @@ void ImageGridComponent<T>::update(int deltaTime)
 {
 	GuiComponent::update(deltaTime);
 	listUpdate(deltaTime);
+	mScrollbar.update(deltaTime);
 	
 	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
 		(*it)->update(deltaTime);
@@ -418,6 +422,21 @@ void ImageGridComponent<T>::render(const Transform4x4f& parentTrans)
 
 	Renderer::popClipRect();
 
+	// AmberELEC scrollbar (not with scrollLoop)
+	if (mScrollbar.isEnabled() && !mScrollLoop && mEntries.size() > 0)
+	{
+		const int dimOpposite = Math::max(1, isVertical() ? mGridDimension.x() : mGridDimension.y());
+		const int visibleLines = Math::max(1, (isVertical() ? mGridDimension.y() : mGridDimension.x()) - 2 * EXTRAITEMS);
+		const int totalLines = ((int)mEntries.size() + dimOpposite - 1) / dimOpposite;
+		const float lineSize = isVertical() ? mTileSize.y() + mMargin.y() : mTileSize.x() + mMargin.x();
+
+		mScrollbar.setOpacity(GuiComponent::getOpacity());
+		mScrollbar.setContainerBounds(GuiComponent::getPosition() - Vector3f(GuiComponent::getOrigin().x() * mSize.x(), GuiComponent::getOrigin().y() * mSize.y(), 0), mSize, isVertical());
+		mScrollbar.setRange(0, totalLines * lineSize, visibleLines * lineSize);
+		mScrollbar.setScrollPosition((mStartPosition / dimOpposite) * lineSize);
+		mScrollbar.render(parentTrans);
+	}
+
 	listRenderTitleOverlay(trans);
 
 	GuiComponent::renderChildren(trans);
@@ -431,6 +450,8 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 
 	// Apply theme to GuiComponent but not size property, which will be applied at the end of this function
 	GuiComponent::applyTheme(theme, view, element, properties ^ ThemeFlags::SIZE);
+
+	mScrollbar.fromTheme(theme, view, element, "imagegrid");
 
 	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
 
@@ -591,6 +612,8 @@ void ImageGridComponent<T>::onSizeChanged()
 template<typename T>
 void ImageGridComponent<T>::onCursorChanged(const CursorState& state)
 {
+	mScrollbar.onCursorChanged();
+
 	if (mLastCursor == mCursor)
 	{
 		if (state == CURSOR_STOPPED && mCursorChangedCallback)

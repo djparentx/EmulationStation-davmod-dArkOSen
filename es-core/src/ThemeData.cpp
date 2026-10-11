@@ -58,10 +58,12 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "imagegrid", {
-		{ "scrollbarColor", COLOR },        // accepted, not rendered yet
+		{ "scrollbarColor", COLOR },
 		{ "scrollbarSize", FLOAT },
 		{ "scrollbarCorner", FLOAT },
 		{ "scrollbarAlignment", STRING },
+		{ "maxlength", FLOAT },             // accepted, no effect (not implemented by Batocera / AmberELEC either)
+		{ "systemNameSuffix", BOOLEAN },    // accepted, no effect (not implemented by Batocera / AmberELEC either)
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -445,6 +447,15 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "selectorColorEnd", COLOR },
 		{ "selectorGradientType", STRING },
 		{ "selectedColor", COLOR },
+		{ "color", COLOR } } },
+	{ "menuGroup", {
+		{ "fontPath", PATH },
+		{ "fontSize", FLOAT },
+		{ "lineSpacing", FLOAT },
+		{ "alignment", STRING },
+		{ "backgroundColor", COLOR },
+		{ "separatorColor", COLOR },
+		{ "visible", BOOLEAN },
 		{ "color", COLOR } } },
 	{ "menuTextSmall", {
 		{ "fontPath", PATH },
@@ -1947,6 +1958,40 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 	elem = theme->getElement("menu", "menuslider", "menuSlider");
 	if (elem && elem->has("path") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("path")))
 		Icons.knob = elem->get<std::string>("path");
+
+	// group headers default to the small menu text (previous look)
+	Group.font = TextSmall.font;
+	Group.color = TextSmall.color;
+
+	elem = theme->getElement("menu", "menugroup", "menuGroup");
+	if (elem)
+	{
+		Group.themed = true;
+
+		if (elem->has("fontPath") || elem->has("fontSize"))
+			Group.font = Font::getFromTheme(elem, ThemeFlags::ALL, Font::get(FONT_SIZE_SMALL));
+		if (elem->has("color"))
+			Group.color = elem->get<unsigned int>("color");
+		if (elem->has("backgroundColor"))
+			Group.backgroundColor = elem->get<unsigned int>("backgroundColor");
+		if (elem->has("separatorColor"))
+			Group.separatorColor = elem->get<unsigned int>("separatorColor");
+		if (elem->has("lineSpacing"))
+			Group.lineSpacing = elem->get<float>("lineSpacing");
+		if (elem->has("visible"))
+			Group.visible = elem->get<bool>("visible");
+
+		if (elem->has("alignment"))
+		{
+			const std::string alignment = elem->get<std::string>("alignment");
+			if (alignment == "center")
+				Group.alignment = ALIGN_CENTER;
+			else if (alignment == "right")
+				Group.alignment = ALIGN_RIGHT;
+			else
+				Group.alignment = ALIGN_LEFT;
+		}
+	}
 
 	elem = theme->getElement("menu", "menuicons", "menuIcons");
 	if (elem)
