@@ -87,9 +87,14 @@ void GuiComponent::setStoryboards(const std::map<std::string, std::shared_ptr<Th
 
 	mStoryboards = storyboards;
 
-	// no-event storyboard plays when the theme is applied, and again on every onShow()
+	// no-event storyboard plays when the theme is applied, and again on every onShow().
+	// Started without an immediate update (AmberELEC): the values it restores are captured on the
+	// first frame, after the owner finished setting the component up (e.g. SystemView's systemInfo opacity 0)
 	if (hasStoryboard(""))
-		startStoryboard("");
+	{
+		mStoryboardAnimator = new StoryboardAnimator(this, mStoryboards[""]);
+		mStoryboardAnimator->reset();
+	}
 }
 
 bool GuiComponent::startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn, bool restoreInitialProperties)
