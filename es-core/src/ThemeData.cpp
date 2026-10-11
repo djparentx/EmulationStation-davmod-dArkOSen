@@ -1371,8 +1371,9 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 		if (std::string(node.name()) == "storyboard")
 		{
 			// later storyboard for the same event replaces the earlier one; an empty one removes it
-			const std::string eventName = node.attribute("event").as_string();
-			auto storyboard = ThemeStoryboard::fromXml(node);
+			const std::string eventName = resolvePlaceholders(node.attribute("event").as_string());
+			auto storyboard = ThemeStoryboard::fromXml(node, typeMap, Utils::FileSystem::getParent(mPaths.back()),
+				[this](const std::string& value) { return resolvePlaceholders(value.c_str()); });
 			if (storyboard != nullptr)
 				element.storyboards[eventName] = storyboard;
 			else

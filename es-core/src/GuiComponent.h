@@ -17,7 +17,7 @@
 class Animation;
 class AnimationController;
 class StoryboardAnimator;
-struct ThemeStoryboard;
+class ThemeStoryboard;
 class Font;
 class InputConfig;
 class ThemeData;
@@ -172,12 +172,13 @@ public:
 	bool isStaticExtra() const { return mStaticExtra; }
 	void setIsStaticExtra(bool value) { mStaticExtra = value; }
 
-	// theme storyboards (Batocera <storyboard event="...">)
+	// theme storyboards (Batocera / AmberELEC <storyboard event="...">)
 	void setStoryboards(const std::map<std::string, std::shared_ptr<ThemeStoryboard>>& storyboards);
 	bool hasStoryboard(const std::string& event) const { return mStoryboards.find(event) != mStoryboards.cend(); }
 	bool startStoryboard(const std::string& event, const std::function<bool(const std::string&)>& enabledFn = nullptr);
 	void stopStoryboard();
-	void restoreStoryboardBase();
+	void pauseStoryboard();
+	bool isStoryboardRunning(const std::string& event = "");
 
 	// theme bindings (AmberELEC): "<property>_binding" expressions, resolved by BindingManager
 	virtual ThemeData::ThemeElement::Property getProperty(const std::string name);
@@ -216,6 +217,8 @@ protected:
 
 	std::map<std::string, std::string> mBindingExpressions;
 
+	std::string mStoryboardSound; // storyboard <sound> currently playing
+
 public:
 	const static unsigned char MAX_ANIMATIONS = 4;
 
@@ -226,11 +229,6 @@ private:
 	// theme storyboards
 	std::map<std::string, std::shared_ptr<ThemeStoryboard>> mStoryboards;
 	StoryboardAnimator* mStoryboardAnimator = nullptr;
-	bool          mStoryboardBaseCaptured = false;
-	unsigned char mBaseOpacity = 255;
-	Vector3f      mBasePosition;
-	Vector3f      mBaseScale = Vector3f(1.0, 1.0, 1.0);
-	float         mBaseRotation = 0;
 };
 
 #endif // ES_CORE_GUI_COMPONENT_H

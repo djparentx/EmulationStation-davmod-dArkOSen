@@ -2,47 +2,72 @@
 #ifndef ES_CORE_ANIMATIONS_STORYBOARD_ANIMATOR_H
 #define ES_CORE_ANIMATIONS_STORYBOARD_ANIMATOR_H
 
+// Ported from AmberELEC ES (es-core/src/anim/StoryboardAnimator.h)
+
+#include "animations/ThemeStoryboard.h"
 #include <functional>
+#include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
 class GuiComponent;
-struct ThemeStoryboard;
-struct ThemeAnimation;
 
-// Runs one ThemeStoryboard on one component. The owning GuiComponent restores its
-// base (pre-storyboard) values before starting and on every storyboard loop.
+class StoryAnimation
+{
+public:
+	StoryAnimation(ThemeAnimation* anim);
+
+	bool update(int elapsed);
+
+	ThemeData::ThemeElement::Property currentValue;
+	ThemeAnimation* animation;
+
+private:
+	int  mRepeatCount;
+	int  mCurrentTime;
+	bool mIsReversed;
+};
+
 class StoryboardAnimator
 {
 public:
+	// the storyboard is copied; enabledFn resolves <animation enabled="expression"> (nullptr = enabled)
 	StoryboardAnimator(GuiComponent* comp, const std::shared_ptr<ThemeStoryboard>& storyboard,
-		const std::function<bool(const std::string&)>& enabledFn);
+		const std::function<bool(const std::string&)>& enabledFn = nullptr);
+	~StoryboardAnimator();
 
-	void update(int deltaTime);
-	bool isFinished() const { return mFinished; }
+	void reset(int atTime = 0, bool resetInitialProperties = true);
+	void stop();
+	bool update(int elapsed);
+	void pause();
+
+	bool isRunning() { return !mPaused; }
+	void clearInitialProperties();
+	void evaluateEnabled(const std::function<bool(const std::string&)>& enabledFn);
+
+	const std::string getName();
+
+	void enableProperty(const std::string& name, bool enable);
 
 private:
-	struct Track
-	{
-		const ThemeAnimation* anim;
-		bool  enabled;
-		bool  started;
-		bool  finished;
-		float from[2];
-		float to[2];
-	};
+	void addNewAnimations();
+	void clearStories();
 
-	void resetTracks();
-	void processTrack(Track& track);
+	GuiComponent*    mComponent;
+	ThemeStoryboard* mStoryBoard;
 
-	GuiComponent* mComponent;
-	std::shared_ptr<ThemeStoryboard> mStoryboard;
-	std::vector<Track> mTracks;
+	int  mRepeatCount;
+	int  mCurrentTime;
+	bool mPaused;
 
-	int  mTime;
-	int  mLoop;
-	bool mFinished;
+	std::vector<StoryAnimation*> mCurrentStories;
+	std::vector<StoryAnimation*> mFinishedStories;
+	std::map<std::string, ThemeData::ThemeElement::Property> mInitialProperties;
+	std::set<std::string> mDisabledProperties;
+
+	bool mHasInitialProperties;
 };
 
 #endif // ES_CORE_ANIMATIONS_STORYBOARD_ANIMATOR_H

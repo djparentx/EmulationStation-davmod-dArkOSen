@@ -1,223 +1,381 @@
 #include "animations/StoryboardAnimator.h"
-#include "animations/ThemeStoryboard.h"
+
+// Ported from AmberELEC ES (es-core/src/anim/StoryboardAnimator.cpp)
+
 #include "GuiComponent.h"
-#include "renderers/Renderer.h"
-#include "math/Misc.h"
-#include "utils/StringUtil.h"
-#include "Log.h"
+#include "PowerSaver.h"
 #include <cmath>
-#include <cstdlib>
 
-static float ease(StoryboardEasing easing, float t)
+typedef ThemeData::ThemeElement::Property::PropertyType PropType;
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// StoryAnimation
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+StoryAnimation::StoryAnimation(ThemeAnimation* anim)
 {
-	switch (easing)
-	{
-	case StoryboardEasing::EaseIn:       return t * t;
-	case StoryboardEasing::EaseInCubic:  return t * t * t;
-	case StoryboardEasing::EaseInQuint:  return t * t * t * t * t;
-	case StoryboardEasing::EaseOut:      return 1.0f - (1.0f - t) * (1.0f - t);
-	case StoryboardEasing::EaseOutCubic: return 1.0f - powf(1.0f - t, 3.0f);
-	case StoryboardEasing::EaseOutQuint: return 1.0f - powf(1.0f - t, 5.0f);
-	case StoryboardEasing::EaseInOut:    return t < 0.5f ? 2.0f * t * t : 1.0f - powf(-2.0f * t + 2.0f, 2.0f) / 2.0f;
-	case StoryboardEasing::Bump:
-		{
-			// ease-out with overshoot
-			const float c1 = 1.70158f, c3 = c1 + 1.0f;
-			return 1.0f + c3 * powf(t - 1.0f, 3.0f) + c1 * powf(t - 1.0f, 2.0f);
-		}
-	default:
-		return t;
-	}
+	animation = anim;
+
+	mRepeatCount = 0;
+	mCurrentTime = 0;
+	mIsReversed = false;
 }
 
-static Vector2f parentSize(GuiComponent* comp)
+bool StoryAnimation::update(int elapsed)
 {
-	return comp->getParent() ? comp->getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
-}
+	if (animation == nullptr)
+		return false;
 
-// number of values a property takes (0 = unsupported)
-static int propertyDims(const std::string& prop)
-{
-	if (prop == "opacity" || prop == "scale" || prop == "x" || prop == "y" || prop == "rotation")
-		return 1;
-	if (prop == "pos")
-		return 2;
-	return 0;
-}
-
-static void getProperty(GuiComponent* comp, const std::string& prop, float out[2])
-{
-	Vector2f ps = parentSize(comp);
-	Vector3f pos = comp->getPosition();
-
-	if (prop == "opacity")       out[0] = comp->getOpacity() / 255.0f;
-	else if (prop == "scale")    out[0] = comp->getScale().x();
-	else if (prop == "rotation") out[0] = (float)ES_RAD_TO_DEG(comp->getRotation());
-	else if (prop == "x")        out[0] = ps.x() != 0 ? pos.x() / ps.x() : 0;
-	else if (prop == "y")        out[0] = ps.y() != 0 ? pos.y() / ps.y() : 0;
-	else if (prop == "pos")
-	{
-		out[0] = ps.x() != 0 ? pos.x() / ps.x() : 0;
-		out[1] = ps.y() != 0 ? pos.y() / ps.y() : 0;
-	}
-}
-
-static void setProperty(GuiComponent* comp, const std::string& prop, const float v[2])
-{
-	Vector2f ps = parentSize(comp);
-	Vector3f pos = comp->getPosition();
-
-	if (prop == "opacity")       comp->setOpacity((unsigned char)(Math::clamp(v[0], 0.0f, 1.0f) * 255.0f));
-	else if (prop == "scale")    comp->setScale(Vector3f(v[0], v[0], 1.0f));
-	else if (prop == "rotation") comp->setRotationDegrees(v[0]);
-	else if (prop == "x")        comp->setPosition(v[0] * ps.x(), pos.y(), pos.z());
-	else if (prop == "y")        comp->setPosition(pos.x(), v[0] * ps.y(), pos.z());
-	else if (prop == "pos")      comp->setPosition(v[0] * ps.x(), v[1] * ps.y(), pos.z());
-}
-
-static void parseValue(const std::string& str, int dims, float out[2])
-{
-	// split on spaces, skipping empty parts ("0.975  0.775")
-	std::vector<std::string> parts;
-	for (const auto& p : Utils::String::split(Utils::String::trim(str), ' '))
-		if (!p.empty())
-			parts.push_back(p);
-
-	out[0] = parts.size() > 0 ? (float)atof(parts[0].c_str()) : 0.0f;
-	out[1] = (dims == 2 && parts.size() > 1) ? (float)atof(parts[1].c_str()) : out[0];
-}
-
-StoryboardAnimator::StoryboardAnimator(GuiComponent* comp, const std::shared_ptr<ThemeStoryboard>& storyboard,
-	const std::function<bool(const std::string&)>& enabledFn)
-	: mComponent(comp), mStoryboard(storyboard), mTime(0), mLoop(0), mFinished(false)
-{
-	for (const auto& anim : mStoryboard->animations)
-	{
-		Track t;
-		t.anim = &anim;
-		t.enabled = anim.enabled && propertyDims(anim.property) > 0;
-
-		if (t.enabled && !anim.enabledExpr.empty())
-			t.enabled = enabledFn ? enabledFn(anim.enabledExpr) : true;
-
-		mTracks.push_back(t);
-	}
-
-	resetTracks();
-}
-
-void StoryboardAnimator::resetTracks()
-{
-	for (auto& t : mTracks)
-	{
-		t.started = false;
-		t.finished = false;
-	}
-}
-
-void StoryboardAnimator::processTrack(Track& t)
-{
-	if (!t.enabled || t.finished)
-		return;
-
-	const ThemeAnimation& a = *t.anim;
-	if (mTime < a.begin)
-		return;
-
-	const int dims = propertyDims(a.property);
-
-	if (!t.started)
-	{
-		t.started = true;
-
-		float cur[2] = { 0, 0 };
-		getProperty(mComponent, a.property, cur);
-
-		if (a.hasFrom) parseValue(a.from, dims, t.from); else { t.from[0] = cur[0]; t.from[1] = cur[1]; }
-		if (a.hasTo)   parseValue(a.to, dims, t.to);     else { t.to[0] = cur[0];   t.to[1] = cur[1]; }
-
-		LOG(LogInfo) << "[SBDebug] track tag=" << mComponent->getTag() << " prop=" << a.property
-			<< " begin=" << a.begin << " dur=" << a.duration << " t=" << mTime
-			<< " from=" << t.from[0] << " to=" << t.to[0];
-	}
-
-	const int local = mTime - a.begin;
-	float p;
-	bool done = false;
-
-	if (a.duration <= 0)
-	{
-		p = 1.0f;
-		done = true;
-	}
+	if (mIsReversed)
+		mCurrentTime -= elapsed;
 	else
+		mCurrentTime += elapsed;
+
+	bool ended = false;
+	bool pseudoEnd = false;
+
+	if (!mIsReversed && mCurrentTime > animation->duration)
 	{
-		const int cycleLen = a.duration * (a.autoReverse ? 2 : 1);
-		if (a.repeat > 0 && local >= cycleLen * a.repeat)
+		if (animation->autoReverse)
 		{
-			p = a.autoReverse ? 0.0f : 1.0f;
-			done = true;
+			mIsReversed = true;
+			mCurrentTime = animation->duration;
 		}
 		else
 		{
-			float q = (float)(local % cycleLen) / (float)a.duration;
-			if (q > 1.0f)
-				q = 2.0f - q;
-			p = q;
+			pseudoEnd = true;
+			mCurrentTime = 0;
+		}
+	}
+	else if (mIsReversed && mCurrentTime < 0)
+	{
+		mCurrentTime = 0;
+		mIsReversed = false;
+		pseudoEnd = true;
+	}
+
+	if (pseudoEnd)
+	{
+		if (animation->repeat == 1)
+			ended = true;
+		else if (animation->repeat > 1)
+		{
+			mRepeatCount++;
+			if (mRepeatCount >= animation->repeat)
+				ended = true;
+			else
+				mCurrentTime = 0;
 		}
 	}
 
-	const float e = ease(a.easing, p);
-	float v[2];
-	v[0] = t.from[0] + (t.to[0] - t.from[0]) * e;
-	v[1] = t.from[1] + (t.to[1] - t.from[1]) * e;
-	setProperty(mComponent, a.property, v);
+	if (ended || animation->duration == 0)
+	{
+		currentValue = animation->computeValue(animation->autoReverse ? 0.0f : 1.0f);
+		return false;
+	}
 
-	if (done)
-		t.finished = true;
+	float value = 0;
+
+	if (mCurrentTime >= animation->duration)
+		value = 1;
+	else
+	{
+		const float c = 1;
+
+		float t = mCurrentTime / (float)animation->duration;
+		if (t > 1)
+			t = 1;
+
+		switch (animation->easingMode)
+		{
+		case ThemeAnimation::EasingMode::EaseIn:
+			value = t * t;
+			break;
+
+		case ThemeAnimation::EasingMode::EaseInCubic:
+			value = t * t * t;
+			break;
+
+		case ThemeAnimation::EasingMode::EaseInQuint:
+			value = t * t * t * t * t;
+			break;
+
+		case ThemeAnimation::EasingMode::EaseOut:
+			value = (-c * t * (t - 2.0f));
+			break;
+
+		case ThemeAnimation::EasingMode::EaseOutCubic:
+			t = t - 1.0f;
+			value = t * t * t + 1.0f;
+			break;
+
+		case ThemeAnimation::EasingMode::EaseOutQuint:
+			t = t - 1.0f;
+			value = t * t * t * t * t + 1.0f;
+			break;
+
+		case ThemeAnimation::EasingMode::EaseInOut:
+			t = mCurrentTime / ((float)animation->duration / 2.0f);
+			if (t < 1)
+				value = t * t / 2.0f;
+			else
+			{
+				t--;
+				value = (-c / 2.0f * (t * (t - 2.0f) - 1.0f));
+			}
+			break;
+
+		case ThemeAnimation::EasingMode::Bump:
+			value = (float)(sin((M_PI / 2.0) * t) + sin(M_PI * t) / 2.0);
+			break;
+
+		default:
+			value = t;
+			break;
+		}
+	}
+
+	currentValue = animation->computeValue(value);
+
+	return !ended;
 }
 
-void StoryboardAnimator::update(int deltaTime)
+/////////////////////////////////////////////////////////////////////////////////////////////
+// StoryboardAnimator
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+StoryboardAnimator::StoryboardAnimator(GuiComponent* comp, const std::shared_ptr<ThemeStoryboard>& storyboard,
+	const std::function<bool(const std::string&)>& enabledFn)
 {
-	if (mFinished)
-		return;
+	mHasInitialProperties = false;
+	mPaused = true;
+	mComponent = comp;
 
-	mTime += deltaTime;
+	mStoryBoard = new ThemeStoryboard(*storyboard);
+	mRepeatCount = 0;
+	mCurrentTime = 0;
 
-	// at most 2 passes: current cycle, then (on loop) the begin=0 animations of the next cycle
-	for (int pass = 0; pass < 2; pass++)
+	evaluateEnabled(enabledFn);
+}
+
+StoryboardAnimator::~StoryboardAnimator()
+{
+	pause();
+	clearStories();
+
+	delete mStoryBoard;
+}
+
+void StoryboardAnimator::evaluateEnabled(const std::function<bool(const std::string&)>& enabledFn)
+{
+	for (auto anim : mStoryBoard->animations)
+		if (!anim->enabledExpression.empty())
+			anim->enabled = enabledFn ? enabledFn(anim->enabledExpression) : true;
+}
+
+void StoryboardAnimator::clearStories()
+{
+	for (auto story : mFinishedStories)
+		delete story;
+
+	for (auto story : mCurrentStories)
+		delete story;
+
+	mFinishedStories.clear();
+	mCurrentStories.clear();
+}
+
+void StoryboardAnimator::reset(int atTime, bool resetInitialProperties)
+{
+	if (mPaused)
 	{
-		int end = 0;
-		bool infinite = false;
-
-		for (auto& t : mTracks)
-		{
-			processTrack(t);
-
-			if (!t.enabled)
-				continue;
-
-			const ThemeAnimation& a = *t.anim;
-			if (a.repeat == 0 && a.duration > 0)
-				infinite = true;
-			else
-				end = std::max(end, a.begin + a.duration * (a.autoReverse ? 2 : 1) * std::max(a.repeat, 1));
-		}
-
-		if (infinite || mTime < end)
-			return;
-
-		mLoop++;
-		LOG(LogInfo) << "[SBDebug] cycle-end tag=" << mComponent->getTag() << " t=" << mTime << " end=" << end << " loop=" << mLoop;
-		if (end <= 0 || (mStoryboard->repeat != 0 && mLoop >= mStoryboard->repeat))
-		{
-			mFinished = true;
-			return;
-		}
-
-		// loop: restore base values and restart, carrying over the overshoot
-		mTime -= end;
-		mComponent->restoreStoryboardBase();
-		resetTracks();
+		PowerSaver::pause();
+		mPaused = false;
 	}
+
+	mCurrentTime = atTime;
+
+	clearStories();
+
+	if (atTime > 0)
+	{
+		for (auto anim : mStoryBoard->animations)
+			if (anim->enabled && (anim->begin + anim->duration <= atTime))
+				mFinishedStories.push_back(new StoryAnimation(anim));
+
+		addNewAnimations();
+	}
+	else
+	{
+		mComponent->setProperty("sound", std::string()); // make sure sound is always reset
+
+		if (mHasInitialProperties && resetInitialProperties)
+		{
+			for (auto prop : mInitialProperties)
+			{
+				if (mDisabledProperties.find(prop.first) != mDisabledProperties.cend())
+					continue;
+
+				bool hasAssignationAtZero = false;
+
+				for (auto anim : mStoryBoard->animations)
+					if (anim->enabled && anim->begin == 0 && anim->propertyName == prop.first)
+						hasAssignationAtZero = true;
+
+				if (!hasAssignationAtZero)
+					mComponent->setProperty(prop.first, prop.second);
+			}
+		}
+
+		for (auto anim : mStoryBoard->animations)
+			if (anim->enabled && anim->begin == 0)
+				mCurrentStories.push_back(new StoryAnimation(anim));
+	}
+}
+
+void StoryboardAnimator::clearInitialProperties()
+{
+	mInitialProperties.clear();
+}
+
+void StoryboardAnimator::stop()
+{
+	pause();
+
+	for (auto prop : mInitialProperties)
+		if (mDisabledProperties.find(prop.first) == mDisabledProperties.cend())
+			mComponent->setProperty(prop.first, prop.second);
+
+	clearStories();
+}
+
+void StoryboardAnimator::pause()
+{
+	if (!mPaused)
+	{
+		PowerSaver::resume();
+		mPaused = true;
+	}
+}
+
+void StoryboardAnimator::addNewAnimations()
+{
+	for (auto anim : mStoryBoard->animations)
+	{
+		if (!anim->enabled)
+			continue;
+
+		bool exists = false;
+
+		for (auto story : mCurrentStories)
+			if (story->animation == anim) { exists = true; break; }
+
+		if (!exists)
+		{
+			for (auto story : mFinishedStories)
+				if (story->animation == anim) { exists = true; break; }
+		}
+
+		if (exists)
+			continue;
+
+		if (mCurrentTime >= anim->begin)
+		{
+			anim->ensureInitialValue(mComponent->getProperty(anim->propertyName));
+			mCurrentStories.push_back(new StoryAnimation(anim));
+		}
+	}
+}
+
+bool StoryboardAnimator::update(int elapsed)
+{
+	if (mPaused || elapsed > 500)
+		return true;
+
+	if (!mHasInitialProperties)
+	{
+		mHasInitialProperties = true;
+
+		for (auto anim : mStoryBoard->animations)
+			if (anim->enabled && anim->propertyName != "sound") // sound is always initially empty
+				mInitialProperties[anim->propertyName] = mComponent->getProperty(anim->propertyName);
+
+		for (auto anim : mStoryBoard->animations)
+		{
+			if (anim->begin == 0 && anim->enabled)
+			{
+				if (anim->to.type == PropType::Unknown)
+					anim->to = anim->propertyName == "sound" ? ThemeData::ThemeElement::Property(std::string()) : mComponent->getProperty(anim->propertyName);
+
+				if (anim->from.type == PropType::Unknown)
+					anim->from = anim->propertyName == "sound" ? ThemeData::ThemeElement::Property(std::string()) : mComponent->getProperty(anim->propertyName);
+				else if (mDisabledProperties.find(anim->propertyName) == mDisabledProperties.cend())
+					mComponent->setProperty(anim->propertyName, anim->from);
+			}
+		}
+	}
+
+	mCurrentTime += elapsed;
+
+	addNewAnimations();
+
+	for (int i = (int)mCurrentStories.size() - 1; i >= 0; i--)
+	{
+		auto story = mCurrentStories[i];
+		bool ended = !story->update(elapsed);
+
+		if (mDisabledProperties.find(story->animation->propertyName) == mDisabledProperties.cend())
+			mComponent->setProperty(story->animation->propertyName, story->currentValue);
+
+		if (ended)
+		{
+			if (story->animation->propertyName == "sound")
+				mComponent->setProperty("sound", std::string());
+
+			mFinishedStories.push_back(story);
+			mCurrentStories.erase(mCurrentStories.begin() + i);
+		}
+	}
+
+	// AmberELEC / Batocera: a storyboard holding a disabled animation never completes (and never repeats)
+	if (mFinishedStories.size() == mStoryBoard->animations.size())
+	{
+		if (mStoryBoard->repeat == 1)
+		{
+			clearStories();
+			pause();
+			return false;
+		}
+		else if (mStoryBoard->repeat > 0)
+		{
+			mRepeatCount++;
+			if (mRepeatCount >= mStoryBoard->repeat)
+			{
+				clearStories();
+				pause();
+				return false;
+			}
+		}
+
+		reset(mStoryBoard->repeatAt, mStoryBoard->repeatAt == 0); // it's a repeat
+		return true;
+	}
+
+	return true;
+}
+
+const std::string StoryboardAnimator::getName()
+{
+	if (mStoryBoard != nullptr)
+		return mStoryBoard->eventName;
+
+	return "";
+}
+
+void StoryboardAnimator::enableProperty(const std::string& name, bool enable)
+{
+	mDisabledProperties.erase(name);
+
+	if (!enable)
+		mDisabledProperties.insert(name);
 }

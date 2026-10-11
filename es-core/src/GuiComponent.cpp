@@ -7,6 +7,7 @@
 #include "animations/StoryboardAnimator.h"
 #include "animations/ThemeStoryboard.h"
 #include "Log.h"
+#include "Sound.h"
 #include "renderers/Renderer.h"
 #include "ThemeData.h"
 #include "Window.h"
@@ -71,14 +72,7 @@ void GuiComponent::updateChildren(int deltaTime)
 void GuiComponent::update(int deltaTime)
 {
 	if (mStoryboardAnimator != nullptr)
-	{
 		mStoryboardAnimator->update(deltaTime);
-		if (mStoryboardAnimator->isFinished())
-		{
-			delete mStoryboardAnimator;
-			mStoryboardAnimator = nullptr;
-		}
-	}
 
 	updateSelf(deltaTime);
 	updateChildren(deltaTime);
@@ -92,9 +86,8 @@ void GuiComponent::setStoryboards(const std::map<std::string, std::shared_ptr<Th
 	stopStoryboard();
 
 	mStoryboards = storyboards;
-	mStoryboardBaseCaptured = false;
 
-	// no-event storyboard plays once when the theme is applied
+	// no-event storyboard plays when the theme is applied, and again on every onShow()
 	if (hasStoryboard(""))
 		startStoryboard("");
 }
@@ -105,23 +98,20 @@ bool GuiComponent::startStoryboard(const std::string& event, const std::function
 	if (it == mStoryboards.cend())
 		return false;
 
-	LOG(LogInfo) << "[SBDebug] start tag=" << getTag() << " event=" << event;
-
-	if (!mStoryboardBaseCaptured)
+	if (mStoryboardAnimator != nullptr && mStoryboardAnimator->getName() == event)
+		mStoryboardAnimator->evaluateEnabled(enabledFn);
+	else
 	{
-		mBaseOpacity = mOpacity;
-		mBasePosition = mPosition;
-		mBaseScale = mScale;
-		mBaseRotation = mRotation;
-		mStoryboardBaseCaptured = true;
+		if (mStoryboardAnimator != nullptr)
+		{
+			mStoryboardAnimator->reset(); // restores the properties the previous storyboard changed
+			delete mStoryboardAnimator;
+		}
+
+		mStoryboardAnimator = new StoryboardAnimator(this, it->second, enabledFn);
 	}
 
-	if (mStoryboardAnimator != nullptr)
-		delete mStoryboardAnimator;
-
-	restoreStoryboardBase();
-
-	mStoryboardAnimator = new StoryboardAnimator(this, it->second, enabledFn);
+	mStoryboardAnimator->reset();
 	mStoryboardAnimator->update(0); // apply begin=0 values now, avoids a 1-frame flash of the base state
 	return true;
 }
@@ -131,21 +121,26 @@ void GuiComponent::stopStoryboard()
 	if (mStoryboardAnimator == nullptr)
 		return;
 
+	mStoryboardAnimator->stop();
 	delete mStoryboardAnimator;
 	mStoryboardAnimator = nullptr;
-
-	restoreStoryboardBase();
 }
 
-void GuiComponent::restoreStoryboardBase()
+void GuiComponent::pauseStoryboard()
 {
-	if (!mStoryboardBaseCaptured)
-		return;
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->pause();
+}
 
-	setOpacity(mBaseOpacity);
-	setPosition(mBasePosition);
-	setScale(mBaseScale);
-	setRotation(mBaseRotation);
+bool GuiComponent::isStoryboardRunning(const std::string& event)
+{
+	if (mStoryboardAnimator == nullptr)
+		return false;
+
+	if (!event.empty() && mStoryboardAnimator->getName() != event)
+		return false;
+
+	return mStoryboardAnimator->isRunning();
 }
 
 void GuiComponent::render(const Transform4x4f& parentTrans)
@@ -628,6 +623,9 @@ ThemeData::ThemeElement::Property GuiComponent::getProperty(const std::string na
 	if (name == "visible")
 		return mVisible;
 
+	if (name == "sound")
+		return mStoryboardSound;
+
 	ThemeData::ThemeElement::Property unk;
 	unk.type = ThemeData::ThemeElement::Property::PropertyType::Unknown;
 	return unk;
@@ -638,6 +636,18 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 	typedef ThemeData::ThemeElement::Property::PropertyType PropType;
 
 	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	if (name == "sound" && value.type == PropType::String)
+	{
+		if (mStoryboardSound != value.s)
+		{
+			mStoryboardSound = value.s;
+			if (!mStoryboardSound.empty())
+				Sound::get(mStoryboardSound)->play();
+		}
+
+		return;
+	}
 
 	switch (value.type)
 	{
@@ -715,12 +725,18 @@ bool GuiComponent::isProcessing() const
 
 void GuiComponent::onShow()
 {
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->reset();
+
 	for(unsigned int i = 0; i < getChildCount(); i++)
 		getChild(i)->onShow();
 }
 
 void GuiComponent::onHide()
 {
+	if (mStoryboardAnimator != nullptr)
+		mStoryboardAnimator->pause();
+
 	for(unsigned int i = 0; i < getChildCount(); i++)
 		getChild(i)->onHide();
 }

@@ -21,7 +21,7 @@ class TextListComponent;
 
 class GuiComponent;
 class ImageComponent;
-struct ThemeStoryboard;
+class ThemeStoryboard;
 class NinePatchComponent;
 class Sound;
 class TextComponent;
