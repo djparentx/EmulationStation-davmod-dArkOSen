@@ -88,7 +88,7 @@ const std::map<PlatformId, unsigned short> screenscraper_platformid_map{
 	{ PLAYSTATION, 57 },
 	{ PLAYSTATION_2, 58 },
 	{ PLAYSTATION_3, 59 },
-	{ PLAYSTATION_4, 60 }
+	{ PLAYSTATION_4, 60 },
 	{ PLAYSTATION_VITA, 62 },
 	{ PLAYSTATION_PORTABLE, 61 },
 	{ SUPER_NINTENDO, 4 },
@@ -244,7 +244,9 @@ void screenscraper_generate_scraper_requests(const ScraperSearchParams& params,
 	  return;
 
 	// FCA Fix for names override not working on Retropie
-	if (params.nameOverride.length() == 0)
+	if (params.nameOverride.length() == 0 && params.system->getName() == "ports")
+		path = ssConfig.getGameSearchUrl(params.game->getDisplayName(), true);
+	else if (params.nameOverride.length() == 0)
 	{
 		if (Utils::FileSystem::isDirectory(params.game->getPath()))
 			path = ssConfig.getGameSearchUrl(params.game->getDisplayName());
