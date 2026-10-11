@@ -2406,3 +2406,30 @@ msgstr "QUÉT TRÒ CHƠI SD1?\nMÁY SẼ KHỞI ĐỘNG LẠI ĐỂ HOÀN TẤT 
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "QUÉT SD2?\nMÁY SẼ KHỞI ĐỘNG LẠI ĐỂ HOÀN TẤT VIỆC QUÉT."
+
+msgid "BENCHMARKING"
+msgstr "ĐO HIỆU NĂNG"
+
+msgid "BENCHMARK"
+msgstr "ĐO HIỆU NĂNG"
+
+msgid "BENCHMARK FAILED"
+msgstr "ĐO HIỆU NĂNG THẤT BẠI"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "ĐANG CHẠY, VUI LÒNG CHỜ"
+
+msgid "LOG IS EMPTY."
+msgstr "NHẬT KÝ TRỐNG."
+
+msgid "%d d"
+msgstr "%d ngày"
+
+msgid "%d h"
+msgstr "%d giờ"
+
+msgid "%d mn"
+msgstr "%d phút"
+
+msgid "%d sec"
+msgstr "%d giây"

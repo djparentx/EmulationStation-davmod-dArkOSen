@@ -4099,3 +4099,27 @@ msgstr "扫描SD1游戏？\n主机将重新启动以完成扫描。"
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "扫描SD2？\n主机将重新启动以完成扫描。"
+
+msgid "BENCHMARKING"
+msgstr "性能测试"
+
+msgid "BENCHMARK"
+msgstr "基准测试"
+
+msgid "BENCHMARK FAILED"
+msgstr "基准测试失败"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "运行中，请稍候"
+
+msgid "LOG IS EMPTY."
+msgstr "日志为空。"
+
+msgid "%d d"
+msgstr "%d 天"
+
+msgid "%d mn"
+msgstr "%d 分钟"
+
+msgid "%d sec"
+msgstr "%d 秒"

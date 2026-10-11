@@ -4103,3 +4103,27 @@ msgstr "掃描SD1遊戲？\n主機將重新啟動以完成掃描。"
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "掃描SD2？\n主機將重新啟動以完成掃描。"
+
+msgid "BENCHMARKING"
+msgstr "效能測試"
+
+msgid "BENCHMARK"
+msgstr "基準測試"
+
+msgid "BENCHMARK FAILED"
+msgstr "基準測試失敗"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "執行中，請稍候"
+
+msgid "LOG IS EMPTY."
+msgstr "日誌為空。"
+
+msgid "%d d"
+msgstr "%d 天"
+
+msgid "%d mn"
+msgstr "%d 分鐘"
+
+msgid "%d sec"
+msgstr "%d 秒"

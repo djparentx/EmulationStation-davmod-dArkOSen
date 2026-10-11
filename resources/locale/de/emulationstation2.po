@@ -3061,3 +3061,30 @@ msgstr "SD1-SPIELE PRÜFEN?\nDIE KONSOLE WIRD NEU GESTARTET, UM DIE PRÜFUNG ABZ
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SD2 PRÜFEN?\nDIE KONSOLE WIRD NEU GESTARTET, UM DIE PRÜFUNG ABZUSCHLIESSEN."
+
+msgid "BENCHMARKING"
+msgstr "BENCHMARKS"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK FEHLGESCHLAGEN"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "LÄUFT, BITTE WARTEN"
+
+msgid "LOG IS EMPTY."
+msgstr "PROTOKOLL IST LEER."
+
+msgid "%d d"
+msgstr "%d T"
+
+msgid "%d h"
+msgstr "%d Std"
+
+msgid "%d mn"
+msgstr "%d Min"
+
+msgid "%d sec"
+msgstr "%d Sek"

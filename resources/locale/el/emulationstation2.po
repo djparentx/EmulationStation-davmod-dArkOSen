@@ -2880,3 +2880,30 @@ msgstr "ΣΑΡΩΣΗ ΠΑΙΧΝΙΔΙΩΝ SD1;\nΗ ΚΟΝΣΟΛΑ ΘΑ ΕΠΑΝ�
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "ΣΑΡΩΣΗ SD2;\nΗ ΚΟΝΣΟΛΑ ΘΑ ΕΠΑΝΕΚΚΙΝΗΣΕΙ ΓΙΑ ΝΑ ΟΛΟΚΛΗΡΩΘΕΙ Η ΣΑΡΩΣΗ."
+
+msgid "BENCHMARKING"
+msgstr "ΜΕΤΡΗΣΕΙΣ ΑΠΟΔΟΣΗΣ"
+
+msgid "BENCHMARK"
+msgstr "ΜΕΤΡΗΣΗ ΑΠΟΔΟΣΗΣ"
+
+msgid "BENCHMARK FAILED"
+msgstr "Η ΜΕΤΡΗΣΗ ΑΠΟΔΟΣΗΣ ΑΠΕΤΥΧΕ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "ΕΚΤΕΛΕΙΤΑΙ, ΠΑΡΑΚΑΛΩ ΠΕΡΙΜΕΝΕΤΕ"
+
+msgid "LOG IS EMPTY."
+msgstr "Η ΚΑΤΑΓΡΑΦΗ ΕΙΝΑΙ ΚΕΝΗ."
+
+msgid "%d d"
+msgstr "%d ημ."
+
+msgid "%d h"
+msgstr "%d ώρ."
+
+msgid "%d mn"
+msgstr "%d λεπ."
+
+msgid "%d sec"
+msgstr "%d δευτ."

@@ -3849,3 +3849,30 @@ msgstr "SKANNA SD1-SPEL?\nKONSOLEN STARTAR OM FÖR ATT SLUTFÖRA SKANNINGEN."
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SKANNA SD2?\nKONSOLEN STARTAR OM FÖR ATT SLUTFÖRA SKANNINGEN."
+
+msgid "BENCHMARKING"
+msgstr "PRESTANDATESTER"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK MISSLYCKADES"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "KÖRS, VÄNTA"
+
+msgid "LOG IS EMPTY."
+msgstr "LOGGEN ÄR TOM."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d tim"
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"

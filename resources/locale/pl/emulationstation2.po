@@ -3386,3 +3386,30 @@ msgstr "SKANOWAĆ GRY SD1?\nKONSOLA URUCHOMI SIĘ PONOWNIE, ABY ZAKOŃCZYĆ SKAN
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SKANOWAĆ SD2?\nKONSOLA URUCHOMI SIĘ PONOWNIE, ABY ZAKOŃCZYĆ SKANOWANIE."
+
+msgid "BENCHMARKING"
+msgstr "TESTY WYDAJNOŚCI"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK NIE POWIÓDŁ SIĘ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "TRWA, PROSZĘ CZEKAĆ"
+
+msgid "LOG IS EMPTY."
+msgstr "DZIENNIK JEST PUSTY."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d godz."
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"

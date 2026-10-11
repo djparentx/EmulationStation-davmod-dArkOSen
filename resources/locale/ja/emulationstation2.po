@@ -1941,3 +1941,30 @@ msgstr "SD1ゲームをスキャンしますか?\nスキャンを完了するた
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SD2をスキャンしますか?\nスキャンを完了するためにコンソールが再起動します。"
+
+msgid "BENCHMARKING"
+msgstr "ベンチマーク"
+
+msgid "BENCHMARK"
+msgstr "ベンチマーク"
+
+msgid "BENCHMARK FAILED"
+msgstr "ベンチマークに失敗しました"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "実行中、しばらくお待ちください"
+
+msgid "LOG IS EMPTY."
+msgstr "ログは空です。"
+
+msgid "%d d"
+msgstr "%d日"
+
+msgid "%d h"
+msgstr "%d時間"
+
+msgid "%d mn"
+msgstr "%d分"
+
+msgid "%d sec"
+msgstr "%d秒"

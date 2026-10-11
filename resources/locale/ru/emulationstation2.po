@@ -4105,3 +4105,27 @@ msgstr "ПРОВЕРИТЬ ИГРЫ SD1?\nКОНСОЛЬ ПЕРЕЗАГРУЗИ�
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "ПРОВЕРИТЬ SD2?\nКОНСОЛЬ ПЕРЕЗАГРУЗИТСЯ ДЛЯ ЗАВЕРШЕНИЯ ПРОВЕРКИ."
+
+msgid "BENCHMARKING"
+msgstr "ТЕСТЫ ПРОИЗВОДИТЕЛЬНОСТИ"
+
+msgid "BENCHMARK"
+msgstr "ТЕСТ"
+
+msgid "BENCHMARK FAILED"
+msgstr "ТЕСТ НЕ УДАЛСЯ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "ВЫПОЛНЯЕТСЯ, ПОДОЖДИТЕ"
+
+msgid "LOG IS EMPTY."
+msgstr "ЖУРНАЛ ПУСТ."
+
+msgid "%d d"
+msgstr "%d д"
+
+msgid "%d mn"
+msgstr "%d м"
+
+msgid "%d sec"
+msgstr "%d с"

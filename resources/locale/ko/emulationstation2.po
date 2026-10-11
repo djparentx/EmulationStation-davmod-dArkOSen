@@ -2196,3 +2196,30 @@ msgstr "SD1 게임을 검사하시겠습니까?\n검사를 완료하기 위해 �
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SD2를 검사하시겠습니까?\n검사를 완료하기 위해 콘솔이 재부팅됩니다."
+
+msgid "BENCHMARKING"
+msgstr "벤치마크"
+
+msgid "BENCHMARK"
+msgstr "벤치마크"
+
+msgid "BENCHMARK FAILED"
+msgstr "벤치마크 실패"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "실행 중, 기다려주십시오"
+
+msgid "LOG IS EMPTY."
+msgstr "로그가 비어 있습니다."
+
+msgid "%d d"
+msgstr "%d일"
+
+msgid "%d h"
+msgstr "%d시간"
+
+msgid "%d mn"
+msgstr "%d분"
+
+msgid "%d sec"
+msgstr "%d초"

@@ -3197,3 +3197,30 @@ msgstr "¿ANALIZAR JUEGOS SD1?\nLA CONSOLA SE REINICIARÁ PARA COMPLETAR EL ANÁ
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "¿ANALIZAR SD2?\nLA CONSOLA SE REINICIARÁ PARA COMPLETAR EL ANÁLISIS."
+
+msgid "BENCHMARKING"
+msgstr "PRUEBAS DE RENDIMIENTO"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK FALLIDO"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "EJECUTANDO, POR FAVOR ESPERE"
+
+msgid "LOG IS EMPTY."
+msgstr "EL REGISTRO ESTÁ VACÍO."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"

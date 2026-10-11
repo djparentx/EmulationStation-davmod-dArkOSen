@@ -4316,3 +4316,27 @@ msgstr "ПЕРЕВІРИТИ ІГРИ SD1?\nКОНСОЛЬ ПЕРЕЗАВАНТ�
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "ПЕРЕВІРИТИ SD2?\nКОНСОЛЬ ПЕРЕЗАВАНТАЖИТЬСЯ ДЛЯ ЗАВЕРШЕННЯ ПЕРЕВІРКИ."
+
+msgid "BENCHMARKING"
+msgstr "ТЕСТИ ПРОДУКТИВНОСТІ"
+
+msgid "BENCHMARK"
+msgstr "ТЕСТ"
+
+msgid "BENCHMARK FAILED"
+msgstr "ТЕСТ НЕ ВДАВСЯ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "ВИКОНУЄТЬСЯ, БУДЬ ЛАСКА, ЗАЧЕКАЙТЕ"
+
+msgid "LOG IS EMPTY."
+msgstr "ЖУРНАЛ ПОРОЖНІЙ."
+
+msgid "%d d"
+msgstr "%d д"
+
+msgid "%d mn"
+msgstr "%d хв"
+
+msgid "%d sec"
+msgstr "%d с"

@@ -3015,3 +3015,30 @@ msgstr "VERIFICAR JOGOS SD1?\nO CONSOLE SERÁ REINICIADO PARA CONCLUIR A VERIFIC
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "VERIFICAR SD2?\nO CONSOLE SERÁ REINICIADO PARA CONCLUIR A VERIFICAÇÃO."
+
+msgid "BENCHMARKING"
+msgstr "TESTES DE DESEMPENHO"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "FALHA NO BENCHMARK"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "EXECUTANDO, POR FAVOR ESPERE"
+
+msgid "LOG IS EMPTY."
+msgstr "O REGISTRO ESTÁ VAZIO."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"
