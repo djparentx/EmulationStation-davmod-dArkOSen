@@ -167,6 +167,7 @@ namespace PlatformIds
 		{ "crvision",       VTECH_CREATIVISION },
 		{ "creativision",   VTECH_CREATIVISION },
 		{ "vsmile",         VTECH_VSMILE },
+		{ "android",        ANDROID },
 
 		{ "ignore",         PLATFORM_IGNORE },
 		{ "invalid",        PLATFORM_COUNT }

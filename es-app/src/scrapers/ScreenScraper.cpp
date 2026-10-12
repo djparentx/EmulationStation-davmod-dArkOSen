@@ -165,7 +165,8 @@ const std::map<PlatformId, unsigned short> screenscraper_platformid_map{
 	{ ENTEX_ADVENTURE_VISION, 78 },
 	{ EMERSON_ARCADIA_2001, 94 },
 	{ VTECH_CREATIVISION, 241 },
-	{ VTECH_VSMILE, 120 }
+	{ VTECH_VSMILE, 120 },
+	{ ANDROID, 63 }
 };
 
 const std::map<unsigned short, std::string> screenscraper_arcadesystemid_map{
