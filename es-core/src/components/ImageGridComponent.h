@@ -1,4 +1,5 @@
 #include <string>
+#include <cmath>
 #pragma once
 #ifndef ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 #define ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
@@ -462,10 +463,42 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 			mMargin = elem->get<Vector2f>("margin") * screen;
 
 		if (elem->has("padding"))
-			mPadding = elem->get<Vector4f>("padding") * Vector4f(screen.x(), screen.y(), screen.x(), screen.y());
+		{
+			auto padding = elem->get<Vector4f>("padding");
+			if (std::fabs(padding.x()) < 1 && std::fabs(padding.y()) < 1 && std::fabs(padding.z()) < 1 && std::fabs(padding.w()) < 1)
+				mPadding = padding * Vector4f(screen.x(), screen.y(), screen.x(), screen.y());
+			else
+				mPadding = padding; // AmberELEC: values >= 1 are pixels
+		}
 
 		if (elem->has("autoLayout"))
-			mAutoLayout = elem->get<Vector2f>("autoLayout");		
+		{
+			mAutoLayout = elem->get<Vector2f>("autoLayout");
+
+			// AmberELEC: a 0 column/row count is computed from the grid proportion and <cellProportion>
+			float screenProportion = (float)Renderer::getScreenWidth() / (float)Renderer::getScreenHeight();
+
+			if (properties & ThemeFlags::SIZE && elem->has("size"))
+			{
+				Vector2f scale = GuiComponent::getParent() ? GuiComponent::getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+				auto size = elem->get<Vector2f>("size") * scale;
+				if (size.y() != 0)
+					screenProportion = size.x() / size.y();
+			}
+
+			float cellProportion = 1;
+			if (elem->has("cellProportion"))
+			{
+				cellProportion = elem->get<float>("cellProportion");
+				if (cellProportion == 0)
+					cellProportion = 1;
+			}
+
+			if (mAutoLayout.y() == 0)
+				mAutoLayout.y() = Math::round(mAutoLayout.x() / screenProportion * cellProportion);
+			else if (mAutoLayout.x() == 0)
+				mAutoLayout.x() = Math::round(mAutoLayout.y() * screenProportion / cellProportion);
+		}
 
 		if (elem->has("animateSelection"))
 			mAnimateSelection = elem->get<bool>("animateSelection");

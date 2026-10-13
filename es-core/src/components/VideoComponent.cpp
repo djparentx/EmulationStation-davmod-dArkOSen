@@ -296,6 +296,8 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	else
 		setVisible(true);
 
+	applyThemeOpacityAndScale(elem, properties);
+
 	if (elem->has("path"))
 	{
 		if (Utils::FileSystem::exists(elem->get<std::string>("path")))

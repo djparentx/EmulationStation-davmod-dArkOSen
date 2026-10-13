@@ -56,6 +56,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "saturation", FLOAT },
 		{ "autoFade", BOOLEAN },
 		{ "scaleOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
 		{ "zIndex", FLOAT } } },
 	{ "imagegrid", {
 		{ "scrollbarColor", COLOR },
@@ -74,6 +76,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "padding", NORMALIZED_RECT },
 		{ "autoLayout", NORMALIZED_PAIR },
 		{ "autoLayoutSelectedZoom", FLOAT },
+		{ "cellProportion", FLOAT },
 		{ "animateSelection", BOOLEAN },
 		{ "imageSource", STRING }, // image, thumbnail, marquee
 		{ "zIndex", FLOAT },
@@ -129,6 +132,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_RECT },
 		{ "visible", BOOLEAN },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
 		{ "zIndex", FLOAT } } },
 	{ "stackpanel", {
 		{ "pos", NORMALIZED_PAIR },
@@ -266,6 +271,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scrollbarSize", FLOAT },
 		{ "scrollbarCorner", FLOAT },
 		{ "scrollbarAlignment", STRING },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "container", {
 		{ "pos", NORMALIZED_PAIR },
@@ -292,6 +300,11 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "edgeColor", COLOR },
 		{ "animateColor", COLOR },
 		{ "animateColorTime", FLOAT },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "datetime", {
 		{ "pos", NORMALIZED_PAIR },
@@ -314,6 +327,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "format", STRING },
 		{ "displayRelative", BOOLEAN },
 	 	{ "visible", BOOLEAN },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 	 	{ "zIndex", FLOAT } } },
 	{ "rating", {
 		{ "pos", NORMALIZED_PAIR },
@@ -330,6 +346,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "filledPath", PATH },
 		{ "unfilledPath", PATH },
 		{ "visible", BOOLEAN },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "sound", {
 		{ "path", PATH } } },
@@ -415,6 +434,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "showSnapshotNoVideo", BOOLEAN },
 		{ "showSnapshotDelay", BOOLEAN },
 		{ "saturation", FLOAT },            // applied to the snapshot image only
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
 		{ "scaleOrigin", NORMALIZED_PAIR } } },
 	{ "carousel", {
 		{ "type", STRING },

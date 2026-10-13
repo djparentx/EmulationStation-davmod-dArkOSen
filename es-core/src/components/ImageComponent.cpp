@@ -730,6 +730,8 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 		setVisible(elem->get<bool>("visible"));
 	else
 		setVisible(true);
+
+	applyThemeOpacityAndScale(elem, properties);
 }
 
 std::vector<HelpPrompt> ImageComponent::getHelpPrompts()

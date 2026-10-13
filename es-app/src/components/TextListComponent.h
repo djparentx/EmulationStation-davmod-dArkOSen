@@ -187,16 +187,21 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	if(listCutoff > size())
 		listCutoff = size();
 
+	// AmberELEC: <opacity> (theme / storyboards) applies to the selector and the entries
+	const float opacity = GuiComponent::getOpacity() / 255.0f;
+	auto applyOpacity = [opacity](unsigned int color) { return (color & 0xFFFFFF00) | (unsigned int)((color & 0xFF) * opacity); };
+
 	// draw selector bar
 	if(startEntry < listCutoff)
 	{
 		if (mSelectorImage.hasImage()) {
 			mSelectorImage.setPosition(0.f, (mCursor - startEntry)*entrySize + mSelectorOffsetY, 0.f);
+			mSelectorImage.setOpacity(GuiComponent::getOpacity());
 			mSelectorImage.render(trans);
 		} else {
 			Renderer::setMatrix(trans);
 			Renderer::drawRect(0.0f, (mCursor - startEntry)*entrySize + mSelectorOffsetY, mSize.x(),
-					mSelectorHeight, mSelectorColor, mSelectorColorEnd, mSelectorColorGradientHorizontal);
+					mSelectorHeight, applyOpacity(mSelectorColor), applyOpacity(mSelectorColorEnd), mSelectorColorGradientHorizontal);
 		}
 	}
 
@@ -219,7 +224,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		if(!entry.data.textCache)
 			entry.data.textCache = std::unique_ptr<TextCache>(font->buildTextCache(mUppercase ? Utils::String::toUpper(entry.name) : entry.name, 0, 0, 0x000000FF));
 
-		entry.data.textCache->setColor(color);
+		entry.data.textCache->setColor(applyOpacity(color));
 
 		Vector3f offset(0, y, 0);
 

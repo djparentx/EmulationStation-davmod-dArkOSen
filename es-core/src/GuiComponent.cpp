@@ -599,6 +599,24 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 		setVisible(elem->get<bool>("visible"));
 	else
 		setVisible(true);
+
+	applyThemeOpacityAndScale(elem, properties);
+}
+
+// AmberELEC: <opacity> and <scale> (scale with the ROTATION flag, like rotation)
+void GuiComponent::applyThemeOpacityAndScale(const ThemeData::ThemeElement* elem, unsigned int properties)
+{
+	if (elem == nullptr)
+		return;
+
+	if ((properties & ThemeFlags::ROTATION) && elem->has("scale"))
+	{
+		float scale = elem->get<float>("scale");
+		setScale(Vector3f(scale, scale, 1.0f));
+	}
+
+	if (elem->has("opacity"))
+		setOpacity((unsigned char)(Math::clamp(elem->get<float>("opacity"), 0.0f, 1.0f) * 255.0f));
 }
 
 void GuiComponent::loadBindingExpressions(const ThemeData::ThemeElement* elem)

@@ -158,6 +158,7 @@ public:
 	// Default implementation just handles <pos> and <size> tags as normalized float pairs.
 	// You probably want to keep this behavior for any derived classes as well as add your own.
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties);
+	void applyThemeOpacityAndScale(const ThemeData::ThemeElement* elem, unsigned int properties);
 
 	// Returns a list of help prompts.
 	virtual std::vector<HelpPrompt> getHelpPrompts() { return std::vector<HelpPrompt>(); };
