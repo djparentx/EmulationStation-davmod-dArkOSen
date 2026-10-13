@@ -518,6 +518,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "systemInfoDelay", FLOAT },	
 		{ "systemInfoCountOnly", BOOLEAN },
 		{ "defaultTransition", STRING },
+		{ "transitionSpeed", FLOAT },
+		{ "minLogoOpacity", FLOAT },
+		{ "scaledLogoSpacing", FLOAT },
 		{ "scrollSound", PATH },
 		{ "zIndex", FLOAT } } },
 	{ "menuText", {
@@ -678,6 +681,19 @@ void ThemeData::loadFile(const std::string system, std::map<std::string, std::st
 	mVariables["themePath"] = Utils::FileSystem::getParent(mPaths.back());
 	mVariables["currentPath"] = Utils::FileSystem::getParent(mPaths.back());
 	mVariables["root"] = Utils::FileSystem::getParent(mPaths.back());
+	mVariables["region"] = mRegion;
+	mVariables["global.language"] = EsLocale::getLanguage();
+	mEvaluatedVariables.clear();
+
+	// AmberELEC: ${settings.<name>} for every ES setting
+	for (const auto& it : Settings::getInstance()->getStringMap())
+		mVariables["settings." + it.first] = it.second;
+	for (const auto& it : Settings::getInstance()->getBoolMap())
+		mVariables["settings." + it.first] = it.second ? "true" : "false";
+	for (const auto& it : Settings::getInstance()->getIntMap())
+		mVariables["settings." + it.first] = std::to_string(it.second);
+	for (const auto& it : Settings::getInstance()->getFloatMap())
+		mVariables["settings." + it.first] = std::to_string(it.second);
 
 	// Batocera screen.* variables (used by "if" expressions, e.g. aspect-ratio auto detection)
 	{
@@ -892,12 +908,32 @@ void ThemeData::parseInclude(const pugi::xml_node& node)
 	if (!parseSubset(node))
 		return;
 
+	// AmberELEC: ${subset.<name>} = the selected include
+	if (node.attribute("subset"))
+	{
+		const std::string subsetAttr = resolvePlaceholders(node.attribute("subset").as_string());
+		if (!subsetAttr.empty())
+			mVariables["subset." + subsetAttr] = resolvePlaceholders(node.attribute("name").as_string());
+	}
+
 	std::string relPath = resolvePlaceholders(node.text().as_string());
 	if (relPath.empty())
 		return;
 
 	std::string path = Utils::FileSystem::resolveRelativePath(relPath, Utils::FileSystem::getParent(mPaths.back()), true);
 	path = resolveSystemVariable(mSystemThemeFolder, path);
+
+	// AmberELEC: a missing ./$system/theme.xml falls back to ./default/theme.xml
+	if (!ResourceManager::getInstance()->fileExists(path) && relPath.find("$system") != std::string::npos)
+	{
+		std::string defaultPath = resolveSystemVariable("default", Utils::FileSystem::resolveRelativePath(relPath, Utils::FileSystem::getParent(mPaths.back()), true));
+		if (ResourceManager::getInstance()->fileExists(defaultPath))
+		{
+			path = defaultPath;
+			if (mPaths.size() == 1)
+				mSystemThemeFolder = "default";
+		}
+	}
 
 	if (!ResourceManager::getInstance()->fileExists(path))
 	{
@@ -955,11 +991,84 @@ void ThemeData::parseVariable(const pugi::xml_node& node)
 		return;
 
 	std::string val = node.text().as_string();
-	if (val.empty())
+
+	// Batocera: <variable name="x" value="y" />
+	if (key == "variable" && node.attribute("name") && node.attribute("value"))
+	{
+		key = node.attribute("name").as_string();
+		val = resolvePlaceholders(node.attribute("value").as_string());
+	}
+	else if (val.empty())
 		return;
-	
+
+	mEvaluatedVariables.erase(key);
+
+	// AmberELEC: expressions (e.g. "${screen.width} > 1000") are evaluated when the variable is defined
+	if (val != "true" && val != "false" &&
+		(val.find("${") != std::string::npos || val.find("=") != std::string::npos || val.find(">") != std::string::npos || val.find("<") != std::string::npos))
+	{
+		try
+		{
+			Utils::MathExpr::ValueMap vars = getEvaluatorVariables();
+			auto ret = Utils::MathExpr::evaluate(val.c_str(), &vars);
+			mEvaluatedVariables[key] = ret;
+			mVariables[key] = ret.isString() ? ret.toString() : std::to_string(ret.toNumber());
+			return;
+		}
+		catch (const std::exception&)
+		{
+			val = resolvePlaceholders(val.c_str()); // not an expression - plain text with variables
+		}
+	}
+
 	mVariables.erase(key);
 	mVariables.insert(std::pair<std::string, std::string>(key, val));	
+}
+
+// variables for "if" / variable expressions: numbers for screen sizes, 1/0 for booleans, evaluated results
+Utils::MathExpr::ValueMap ThemeData::getEvaluatorVariables()
+{
+	Utils::MathExpr::ValueMap vars;
+	for (const auto& v : mVariables)
+	{
+		if (v.first == "screen.width" || v.first == "screen.height")
+			vars[v.first] = Utils::String::toFloat(v.second);
+		else if (v.second == "true" || v.second == "false")
+			vars[v.first] = (v.second == "true") ? 1.0f : 0.0f;
+		else
+			vars[v.first] = v.second;
+	}
+
+	for (const auto& v : mEvaluatedVariables)
+		vars[v.first] = v.second;
+
+	return vars;
+}
+
+std::string ThemeData::getArchString()
+{
+	static std::string arch;
+	if (arch.empty())
+	{
+		// Batocera writes the board name here; dArkOSen devices are RK3326 boards
+		arch = Utils::String::toLower(Utils::String::trim(Utils::FileSystem::readAllText("/usr/share/batocera/batocera.arch")));
+		if (arch.empty())
+			arch = "rk3326";
+	}
+
+	return arch;
+}
+
+bool ThemeData::getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction)
+{
+	auto viewIt = mViews.find(view);
+	if (viewIt == mViews.cend())
+		return false;
+
+	type = viewIt->second.extraTransition;
+	speed = viewIt->second.extraTransitionSpeed;
+	direction = viewIt->second.extraTransitionDirection;
+	return true;
 }
 
 void ThemeData::parseVariables(const pugi::xml_node& root)
@@ -1031,16 +1140,7 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 		{
 			try
 			{
-				Utils::MathExpr::ValueMap vars;
-				for (const auto& v : mVariables)
-				{
-					if (v.first == "screen.width" || v.first == "screen.height")
-						vars[v.first] = Utils::String::toFloat(v.second);
-					else if (v.second == "true" || v.second == "false")
-						vars[v.first] = (v.second == "true") ? 1.0f : 0.0f;
-					else
-						vars[v.first] = v.second;
-				}
+				Utils::MathExpr::ValueMap vars = getEvaluatorVariables();
 
 				if (Utils::MathExpr::evaluate(ifAttr.c_str(), &vars).toNumber() == 0)
 					return false;
@@ -1072,6 +1172,55 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 			return false;
 		else if (help && helpVisibleAttr == "false")
 			return false;
+	}
+
+	// AmberELEC: verticalScreen="true|false"
+	if (node.attribute("verticalScreen"))
+	{
+		const std::string verticalAttr = node.attribute("verticalScreen").as_string();
+		bool verticalScreen = Renderer::getScreenHeight() > Renderer::getScreenWidth();
+
+		if (!verticalScreen && verticalAttr == "true")
+			return false;
+		else if (verticalScreen && verticalAttr == "false")
+			return false;
+	}
+
+	// AmberELEC: ifCheevos="true|false" (RetroAchievements of the system, ${system.cheevos})
+	if (node.attribute("ifCheevos"))
+	{
+		const std::string hasCheevosAttr = node.attribute("ifCheevos").as_string();
+
+		auto cheevos = mVariables.find("system.cheevos");
+		bool hasCheevos = cheevos != mVariables.cend() && cheevos->second == "true";
+
+		if (!hasCheevos && hasCheevosAttr == "true")
+			return false;
+		else if (hasCheevos && hasCheevosAttr == "false")
+			return false;
+	}
+
+	// AmberELEC: ifArch="a|b" / ifNotArch="a,b" (Batocera board names)
+	if (node.attribute("ifArch"))
+	{
+		const std::string arch = getArchString();
+		bool hasValue = false;
+
+		for (auto value : Utils::String::splitAny(Utils::String::toLower(Utils::String::trim(node.attribute("ifArch").as_string())), ",|"))
+			if (Utils::String::trim(value) == arch)
+				hasValue = true;
+
+		if (!hasValue)
+			return false;
+	}
+
+	if (node.attribute("ifNotArch"))
+	{
+		const std::string arch = getArchString();
+
+		for (auto value : Utils::String::splitAny(Utils::String::toLower(Utils::String::trim(node.attribute("ifNotArch").as_string())), ",|"))
+			if (Utils::String::trim(value) == arch)
+				return false;
 	}
 
 	if (node.attribute("ifSubset"))
@@ -1310,6 +1459,16 @@ void ThemeData::parseView(const pugi::xml_node& root, ThemeView& view, bool over
 
 	if (!parseFilterAttributes(root))
 		return;
+
+	// AmberELEC: system view extras transition overrides
+	if (root.attribute("extraTransition"))
+		view.extraTransition = resolvePlaceholders(root.attribute("extraTransition").as_string());
+
+	if (root.attribute("extraTransitionSpeed"))
+		view.extraTransitionSpeed = Utils::String::toFloat(resolvePlaceholders(root.attribute("extraTransitionSpeed").as_string()));
+
+	if (root.attribute("extraTransitionDirection"))
+		view.extraTransitionDirection = resolvePlaceholders(root.attribute("extraTransitionDirection").as_string());
 
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling())
 	{

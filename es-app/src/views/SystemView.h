@@ -50,6 +50,10 @@ struct SystemViewCarousel
 
 	std::string		defaultTransition;
 	std::string		scrollSound;
+
+	float transitionSpeed;   // AmberELEC <transitionSpeed> (ms)
+	float minLogoOpacity;    // AmberELEC <minLogoOpacity> of the unselected logos
+	float scaledLogoSpacing; // AmberELEC <scaledLogoSpacing> (horizontal carousel with logoScale)
 };
 
 class SystemView : public IList<SystemViewData, SystemData*>
@@ -107,7 +111,14 @@ private:
 	float mCamOffset;
 	float mExtrasCamOffset;
 	float mExtrasFadeOpacity;
+	float mExtrasFadeMove;     // "fade & slide" offset
 	int	  mExtrasFadeOldCursor;
+
+	// extras transition (AmberELEC): carousel defaultTransition / transitionSpeed / direction,
+	// overridden by <view name="system" extraTransition="" extraTransitionSpeed="" extraTransitionDirection="">
+	std::string mExtraTransitionType;
+	float mExtraTransitionSpeed;
+	bool mExtraTransitionHorizontal;
 
 	bool mViewNeedsReload;
 	bool mShowing;

@@ -27,6 +27,9 @@ public:
 	bool setString(const std::string& name, const std::string& value);
 
 	std::map<std::string, std::string>& getStringMap() { return mStringMap; }
+	const std::map<std::string, bool>& getBoolMap() { return mBoolMap; }
+	const std::map<std::string, int>& getIntMap() { return mIntMap; }
+	const std::map<std::string, float>& getFloatMap() { return mFloatMap; }
 
 	// AmberELEC theme bindings: {settings:xxx}
 	enum class SettingType { Unknown, Bool, Int, Float, String };

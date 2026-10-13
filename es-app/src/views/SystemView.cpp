@@ -29,6 +29,10 @@ SystemView::SystemView(Window* window) : IList<SystemViewData, SystemData*>(wind
 	mCamOffset = 0;
 	mExtrasCamOffset = 0;
 	mExtrasFadeOpacity = 0.0f;
+	mExtrasFadeMove = 0.0f;
+	mExtraTransitionType = "";
+	mExtraTransitionSpeed = 500.0f;
+	mExtraTransitionHorizontal = true;
 	mLastSystem = nullptr;
 	mScreensaverActive = false;
 	mDisable = false;
@@ -628,11 +632,13 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 	std::string transition_style = Settings::getInstance()->getString("TransitionStyle");
 	if (transition_style == "auto")
 	{
-		if (mCarousel.defaultTransition == "instant" || mCarousel.defaultTransition == "fade" || mCarousel.defaultTransition == "slide")
-			transition_style = mCarousel.defaultTransition;
+		if (mExtraTransitionType == "instant" || mExtraTransitionType == "fade" || mExtraTransitionType == "slide" || mExtraTransitionType == "fade & slide")
+			transition_style = mExtraTransitionType;
 		else
 			transition_style = "slide";
 	}
+
+	const int transitionSpeed = Math::max(1, (int)mExtraTransitionSpeed);
 
 	int systemInfoDelay = mCarousel.systemInfoDelay;
 
@@ -696,13 +702,18 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 	Animation* anim;
 	bool move_carousel = Settings::getInstance()->getBool("MoveCarousel");
-	if(transition_style == "fade")
+	if(transition_style == "fade" || transition_style == "fade & slide")
 	{
 		float startExtrasFade = mExtrasFadeOpacity;
+		const bool fadeAndSlide = (transition_style == "fade & slide");
 		anim = new LambdaAnimation(
-			[this, startExtrasFade, startPos, endPos, posMax, move_carousel, oldCursor](float t)
+			[this, startExtrasFade, startPos, endPos, posMax, move_carousel, oldCursor, fadeAndSlide](float t)
 		{
 			mExtrasFadeOldCursor = oldCursor;
+
+			// AmberELEC "fade & slide": the new extras also move in a little
+			if (fadeAndSlide)
+				this->mExtrasFadeMove = 1.0f - (1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t));
 
 			t -= 1;
 			float f = Math::lerp(startPos, endPos, t*t*t + 1);
@@ -732,7 +743,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 			this->mExtrasCamOffset = endPos;
 
-		}, 500);
+		}, transitionSpeed);
 	} else if (transition_style == "slide") {
 		// slide
 		anim = new LambdaAnimation(
@@ -747,7 +758,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 			this->mCamOffset = move_carousel ? f : endPos;
 			this->mExtrasCamOffset = f;
-		}, 500);
+		}, transitionSpeed);
 	} else {
 		// instant
 		anim = new LambdaAnimation(
@@ -762,7 +773,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 			this->mCamOffset = move_carousel ? f : endPos;
 			this->mExtrasCamOffset = endPos;
-		}, move_carousel ? 500 : 1);
+		}, move_carousel ? transitionSpeed : 1);
 	}
 
 	for (int i = 0; i < mEntries.size(); i++)
@@ -774,6 +785,7 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 	setAnimation(anim, 0, [this]
 	{
 		mExtrasFadeOldCursor = -1;
+		mExtrasFadeMove = 0.0f;
 
 		for (int i = 0; i < mEntries.size(); i++)
 			if (i != mCursor)
@@ -867,6 +879,25 @@ void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 	const ThemeData::ThemeElement* carouselElem = theme->getElement("system", "systemcarousel", "carousel");
 	if (carouselElem)
 		getCarouselFromTheme(carouselElem);
+
+	// extras transition: carousel values, then the system view's attributes (AmberELEC)
+	mExtraTransitionType = mCarousel.defaultTransition;
+	mExtraTransitionSpeed = mCarousel.transitionSpeed;
+	mExtraTransitionHorizontal = (mCarousel.type == HORIZONTAL || mCarousel.type == HORIZONTAL_WHEEL);
+
+	std::string extraTransition, extraTransitionDirection;
+	float extraTransitionSpeed = -1.0f;
+	if (theme->getViewExtraTransition("system", extraTransition, extraTransitionSpeed, extraTransitionDirection))
+	{
+		if (!extraTransition.empty())
+			mExtraTransitionType = extraTransition;
+
+		if (extraTransitionSpeed >= 0.0f)
+			mExtraTransitionSpeed = extraTransitionSpeed;
+
+		if (!extraTransitionDirection.empty())
+			mExtraTransitionHorizontal = (extraTransitionDirection != "vertical");
+	}
 
 	const ThemeData::ThemeElement* sysInfoElem = theme->getElement("system", "systemInfo", "text");
 	if (sysInfoElem)
@@ -999,7 +1030,21 @@ void SystemView::renderCarousel(const Transform4x4f& trans)
 			index -= (int)mEntries.size();
 
 		Transform4x4f logoTrans = carouselTrans;
-		logoTrans.translate(Vector3f(i * logoSpacing[0] + xOff, i * logoSpacing[1] + yOff, 0));
+
+		// AmberELEC <scaledLogoSpacing>: push the neighbours away from the zoomed selected logo
+		if (mCarousel.type == HORIZONTAL && mCarousel.logoScale != 1.0f && mCarousel.scaledLogoSpacing != 0.0f)
+		{
+			float logoDiffX = ((logoSpacing[0] * mCarousel.logoScale) - logoSpacing[0]) / 2.0f * mCarousel.scaledLogoSpacing;
+
+			if (index == mCursor)
+				logoTrans.translate(Vector3f(i * logoSpacing[0] + xOff, i * logoSpacing[1] + yOff, 0));
+			else if (i < mCursor || (mCursor == 0 && index > mCarousel.maxLogoCount))
+				logoTrans.translate(Vector3f(i * logoSpacing[0] + xOff - logoDiffX, i * logoSpacing[1] + yOff, 0));
+			else
+				logoTrans.translate(Vector3f(i * logoSpacing[0] + xOff + logoDiffX, i * logoSpacing[1] + yOff, 0));
+		}
+		else
+			logoTrans.translate(Vector3f(i * logoSpacing[0] + xOff, i * logoSpacing[1] + yOff, 0));
 
 		float distance = i - mCamOffset;
 
@@ -1007,8 +1052,10 @@ void SystemView::renderCarousel(const Transform4x4f& trans)
 		scale = Math::min(mCarousel.logoScale, Math::max(1.0f, scale));
 		scale /= mCarousel.logoScale;
 
-		int opacity = (int)Math::round(0x80 + ((0xFF - 0x80) * (1.0f - fabs(distance))));
-		opacity = Math::max((int) 0x80, opacity);
+		// AmberELEC <minLogoOpacity> (default 0.5)
+		const int opref = (int)Math::round(Math::clamp(mCarousel.minLogoOpacity, 0.0f, 1.0f) * 255);
+		int opacity = (int)Math::round(opref + ((0xFF - opref) * (1.0f - fabs(distance))));
+		opacity = Math::max(opref, opacity);
 
 		const std::shared_ptr<GuiComponent> &comp = mEntries.at(index).data.logo;
 		if (mCarousel.type == VERTICAL_WHEEL || mCarousel.type == HORIZONTAL_WHEEL) {
@@ -1131,7 +1178,7 @@ void SystemView::renderExtras(const Transform4x4f& trans, float lower, float upp
 		Vector2i size = Vector2i(Math::round(mSize.x()), Math::round(mSize.y()));
 
 		Transform4x4f extrasTrans = trans;
-		if (mCarousel.type == HORIZONTAL || mCarousel.type == HORIZONTAL_WHEEL)
+		if (mExtraTransitionHorizontal)
 		{
 			extrasTrans.translate(Vector3f((i - mExtrasCamOffset) * mSize.x(), 0, 0));
 		
@@ -1162,6 +1209,21 @@ void SystemView::renderExtras(const Transform4x4f& trans, float lower, float upp
 			// ExtrasFadeOpacity : Apply opacity only on elements that are not common with the original view
 			if (mExtrasFadeOpacity && !extra->isStaticExtra())
 			{
+				Transform4x4f xt = extrasTrans;
+
+				// AmberELEC "fade & slide": move in from the navigation direction
+				if (mExtrasFadeMove)
+				{
+					const float mvs = 48.0f;
+					const bool forward = (mExtrasFadeOldCursor < mCursor && !(mExtrasFadeOldCursor == 0 && mCursor == (int)mEntries.size() - 1)) ||
+						(mCursor == 0 && mExtrasFadeOldCursor == (int)mEntries.size() - 1);
+
+					if (mExtraTransitionHorizontal)
+						xt.translate(Vector3f((forward ? 1.0f : -1.0f) * (mExtrasFadeMove / mvs) * mSize.x(), 0, 0));
+					else
+						xt.translate(Vector3f(0, (forward ? 1.0f : -1.0f) * (mExtrasFadeMove / mvs) * mSize.y(), 0));
+				}
+
 				std::string value = extra->getValue();
 				if (extra->isKindOf<ImageComponent>())
 				{
@@ -1169,7 +1231,7 @@ void SystemView::renderExtras(const Transform4x4f& trans, float lower, float upp
 					{							
 						auto opa = extra->getOpacity();
 						extra->setOpacity((1.0f - mExtrasFadeOpacity) * opa);
-						extra->render(extra->isStaticExtra() ? trans : extrasTrans);
+						extra->render(xt);
 						extra->setOpacity(opa);
 						continue;
 					}								
@@ -1177,7 +1239,7 @@ void SystemView::renderExtras(const Transform4x4f& trans, float lower, float upp
 					{
 						auto opa = extra->getOpacity();
 						extra->setOpacity((1.0f - mExtrasFadeOpacity) * opa);
-						extra->render(extra->isStaticExtra() ? trans : extrasTrans);
+						extra->render(xt);
 						extra->setOpacity(opa);
 						continue;
 					}
@@ -1186,7 +1248,7 @@ void SystemView::renderExtras(const Transform4x4f& trans, float lower, float upp
 				{
 					auto opa = extra->getOpacity();
 					extra->setOpacity((1.0f - mExtrasFadeOpacity) * opa);
-					extra->render(extra->isStaticExtra() ? trans : extrasTrans);
+					extra->render(xt);
 					extra->setOpacity(opa);
 					continue;
 				}
@@ -1273,6 +1335,9 @@ void  SystemView::getDefaultElements(void)
 	mCarousel.systemInfoCountOnly = false;
 	mCarousel.scrollSound = "";
 	mCarousel.defaultTransition = "";
+	mCarousel.transitionSpeed = 500.0f;
+	mCarousel.minLogoOpacity = 0.5f;
+	mCarousel.scaledLogoSpacing = 0.0f;
 
 	// System Info Bar
 	mSystemInfo.setSize(mSize.x(), mSystemInfo.getFont()->getLetterHeight()*2.2f);
@@ -1363,6 +1428,15 @@ void SystemView::getCarouselFromTheme(const ThemeData::ThemeElement* elem)
 
 	if (elem->has("defaultTransition"))
 		mCarousel.defaultTransition = elem->get<std::string>("defaultTransition");
+
+	if (elem->has("transitionSpeed"))
+		mCarousel.transitionSpeed = elem->get<float>("transitionSpeed");
+
+	if (elem->has("minLogoOpacity"))
+		mCarousel.minLogoOpacity = elem->get<float>("minLogoOpacity");
+
+	if (elem->has("scaledLogoSpacing"))
+		mCarousel.scaledLogoSpacing = elem->get<float>("scaledLogoSpacing");
 }
 
 void SystemView::onShow()

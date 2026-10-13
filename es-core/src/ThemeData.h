@@ -6,6 +6,7 @@
 #include "math/Vector2f.h"
 #include "math/Vector4f.h"
 #include "utils/FileSystemUtil.h"
+#include "utils/MathExpr.h"
 #include <deque>
 #include <map>
 #include <unordered_map>
@@ -276,6 +277,11 @@ private:
 		std::string displayName;
 
 		bool isCustomView;
+
+		// AmberELEC <view name="system" extraTransition="" extraTransitionSpeed="" extraTransitionDirection="">
+		std::string extraTransition;
+		float extraTransitionSpeed = -1.0f;
+		std::string extraTransitionDirection;
 	};
 
 public:
@@ -305,6 +311,12 @@ public:
 	const ThemeElement* getElement(const std::string& view, const std::string& element, const std::string& expectedType) const;
 
 	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window);
+
+	// AmberELEC view attributes extraTransition / extraTransitionSpeed (-1 = not set) / extraTransitionDirection
+	bool getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction);
+
+	// board name for ifArch / ifNotArch / ${global.architecture} (Batocera batocera.arch)
+	static std::string getArchString();
 
 	// component for a theme element type (extras and nested elements), nullptr if not supported
 	static GuiComponent* createExtraComponent(Window* window, const std::string& type);
@@ -389,6 +401,9 @@ private:
 	std::string mRegion;
 
 	std::map<std::string, std::string> mVariables;
+	// AmberELEC: values of <variables> computed from expressions, typed for "if" expressions
+	Utils::MathExpr::ValueMap mEvaluatedVariables;
+	Utils::MathExpr::ValueMap getEvaluatorVariables();
 	
 	class UnsortedViewMap : public std::vector<std::pair<std::string, ThemeView>>
 	{
