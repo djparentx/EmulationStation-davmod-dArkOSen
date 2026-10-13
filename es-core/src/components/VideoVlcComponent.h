@@ -80,6 +80,8 @@ public:
 
 	void	setColorShift(unsigned int color);
 
+	void onPaddingChanged() override;
+
 private:
 	// Calculates the correct mSize from our resizing information (set by setResize/setMaxSize).
 	// Used internally whenever the resizing parameters or texture change.

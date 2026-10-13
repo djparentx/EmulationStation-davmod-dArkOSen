@@ -9,10 +9,12 @@
 #include "Log.h"
 #include "Sound.h"
 #include "renderers/Renderer.h"
+#include "math/Vector2i.h"
 #include "ThemeData.h"
 #include "Window.h"
 #include "utils/StringUtil.h"
 #include <algorithm>
+#include <cmath>
 
 bool GuiComponent::ALLOWANIMATIONS = true;
 
@@ -40,8 +42,15 @@ GuiComponent::~GuiComponent()
 	if(mParent)
 		mParent->removeChild(this);
 
-	for(unsigned int i = 0; i < getChildCount(); i++)
-		getChild(i)->setParent(NULL);
+	// children created from nested theme elements are owned by this component (AmberELEC)
+	for (int i = (int)getChildCount() - 1; i >= 0; i--)
+	{
+		GuiComponent* child = getChild(i);
+		if (child->mThemedChild)
+			delete child; // its destructor removes it from mChildren
+		else
+			child->setParent(NULL);
+	}
 }
 
 bool GuiComponent::input(InputConfig* config, Input input)
@@ -168,11 +177,29 @@ bool GuiComponent::isStoryboardRunning(const std::string& event)
 
 void GuiComponent::render(const Transform4x4f& parentTrans)
 {
-	if (!isVisible())
+	if (!isVisible() || mChildren.empty())
 		return;
 
 	Transform4x4f trans = parentTrans * getTransform();
+
+	// AmberELEC <clipChildren> / <clipRect> (containers)
+	bool clip = false;
+	if (mClipChildren)
+	{
+		Vector3f dim = trans * Vector3f(mSize.x(), mSize.y(), 0) - trans.translation();
+		Renderer::pushClipRect(Vector2i((int)Math::round(trans.translation().x()), (int)Math::round(trans.translation().y())), Vector2i((int)Math::round(dim.x()), (int)Math::round(dim.y())));
+		clip = true;
+	}
+	else if (mClipRect.z() > 0 && mClipRect.w() > 0)
+	{
+		Renderer::pushClipRect(Vector2i((int)mClipRect.x(), (int)mClipRect.y()), Vector2i((int)mClipRect.z(), (int)mClipRect.w()));
+		clip = true;
+	}
+
 	renderChildren(trans);
+
+	if (clip)
+		Renderer::popClipRect();
 }
 
 void GuiComponent::renderChildren(const Transform4x4f& transform) const
@@ -222,8 +249,65 @@ Vector2f GuiComponent::getSize() const
 
 void GuiComponent::setSize(float w, float h)
 {
+	Vector4f oldClientRect = getClientRect();
+
 	mSize = Vector2f(w, h);
 	onSizeChanged();
+
+	if (!mChildren.empty() && oldClientRect != getClientRect())
+		recalcChildrenLayout();
+}
+
+void GuiComponent::setPadding(const Vector4f padding)
+{
+	if (mPadding == padding)
+		return;
+
+	Vector4f oldClientRect = getClientRect();
+
+	mPadding = padding;
+	onPaddingChanged();
+
+	if (!mChildren.empty() && oldClientRect != getClientRect())
+		recalcChildrenLayout();
+}
+
+Vector4f GuiComponent::getClientRect()
+{
+	return Vector4f(mPadding.x(), mPadding.y(),
+		getSize().x() - mPadding.x() - mPadding.z(),
+		getSize().y() - mPadding.y() - mPadding.w());
+}
+
+Vector4f GuiComponent::getParentClientRect() const
+{
+	if (mParent != nullptr)
+		return mParent->getClientRect();
+
+	return Vector4f(0, 0, (float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+}
+
+void GuiComponent::recalcChildrenLayout()
+{
+	for (auto child : mChildren)
+		child->recalcLayout();
+}
+
+// nested theme elements follow their parent's client area (AmberELEC)
+void GuiComponent::recalcLayout()
+{
+	if (!mThemedChild || mParent == nullptr)
+		return;
+
+	Vector4f clientRect = mParent->getClientRect();
+	Vector2f newPos = Vector2f(mSourceBounds.x() * clientRect.z() + clientRect.x(), mSourceBounds.y() * clientRect.w() + clientRect.y());
+	Vector2f newSize = Vector2f(mSourceBounds.z() * clientRect.z(), mSourceBounds.w() * clientRect.w());
+
+	if (Vector2f(mPosition.x(), mPosition.y()) != newPos)
+		setPosition(newPos.x(), newPos.y(), mPosition.z());
+
+	if (mSize != newSize)
+		setSize(newSize);
 }
 
 float GuiComponent::getRotation() const
@@ -365,7 +449,11 @@ void GuiComponent::setOpacity(unsigned char opacity)
 	mOpacity = opacity;
 	for(auto it = mChildren.cbegin(); it != mChildren.cend(); it++)
 	{
-		(*it)->setOpacity(opacity);
+		// nested theme elements keep their own <opacity>, multiplied by the parent's (AmberELEC)
+		if ((*it)->mThemedChild)
+			(*it)->setOpacity((unsigned char)(((int)(*it)->mThemeOpacity * (int)opacity) / 255));
+		else
+			(*it)->setOpacity(opacity);
 	}
 }
 
@@ -373,6 +461,10 @@ const Transform4x4f& GuiComponent::getTransform()
 {
 	mTransform = Transform4x4f::Identity();
 	mTransform.translate(mPosition);
+
+	if (mScreenOffset.x() != 0.0f || mScreenOffset.y() != 0.0f)
+		mTransform.translate(Vector3f(mScreenOffset.x(), mScreenOffset.y(), 0.0f));
+
 	if (mScale != 1.0)
 	{
 		const float xOff = mSize.x() * mScaleOrigin.x();
@@ -539,7 +631,10 @@ int GuiComponent::getAnimationTime(unsigned char slot) const
 
 void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
 {
-	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	// normalized coordinates are relative to the parent's client area (AmberELEC)
+	Vector4f clientRect = getParentClientRect();
+	Vector2f scale = Vector2f(clientRect.z(), clientRect.w());
+	Vector2f offset = Vector2f(clientRect.x(), clientRect.y());
 
 	const ThemeData::ThemeElement* elem = theme->getElement(view, element, "");
 	if(!elem)
@@ -554,30 +649,44 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 	using namespace ThemeFlags;
 	if(properties & POSITION && elem->has("pos"))
 	{
-		Vector2f denormalized = elem->get<Vector2f>("pos") * scale;
+		Vector2f pos = elem->get<Vector2f>("pos");
+		mSourceBounds.x() = pos.x(); mSourceBounds.y() = pos.y();
+		Vector2f denormalized = pos * scale + offset;
 		setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
 	}
 
 	if(properties & ThemeFlags::SIZE && elem->has("size"))
-		setSize(elem->get<Vector2f>("size") * scale);
+	{
+		Vector2f size = elem->get<Vector2f>("size");
+		mSourceBounds.z() = size.x(); mSourceBounds.w() = size.y();
+		setSize(size * scale);
+	}
 
 	if (properties & POSITION && elem->has("x"))
 	{
-		float x = elem->get<float>("x") * scale.x();
+		mSourceBounds.x() = elem->get<float>("x");
+		float x = mSourceBounds.x() * scale.x() + offset.x();
 		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
 	}
 
 	if (properties & POSITION && elem->has("y"))
 	{
-		float y = elem->get<float>("y") * scale.y();
+		mSourceBounds.y() = elem->get<float>("y");
+		float y = mSourceBounds.y() * scale.y() + offset.y();
 		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 	}
 
 	if (properties & ThemeFlags::SIZE && elem->has("w"))
-		setSize(Vector2f(elem->get<float>("w") * scale.x(), mSize.y()));
+	{
+		mSourceBounds.z() = elem->get<float>("w");
+		setSize(Vector2f(mSourceBounds.z() * scale.x(), mSize.y()));
+	}
 
 	if (properties & ThemeFlags::SIZE && elem->has("h"))
-		setSize(Vector2f(mSize.x(), elem->get<float>("h") * scale.y()));
+	{
+		mSourceBounds.w() = elem->get<float>("h");
+		setSize(Vector2f(mSize.x(), mSourceBounds.w() * scale.y()));
+	}
 
 	// position + size also implies origin
 	if((properties & ORIGIN || (properties & POSITION && properties & ThemeFlags::SIZE)) && elem->has("origin"))
@@ -601,6 +710,103 @@ void GuiComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std
 		setVisible(true);
 
 	applyThemeOpacityAndScale(elem, properties);
+	applyThemeLayout(elem, properties);
+}
+
+void GuiComponent::applyThemeLayout(const ThemeData::ThemeElement* elem, unsigned int properties)
+{
+	if (elem == nullptr)
+		return;
+
+	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+
+	applyThemePadding(elem);
+
+	if (properties & ThemeFlags::POSITION)
+	{
+		Vector2f screenOffset = Vector2f::Zero();
+
+		if (elem->has("offset"))
+			screenOffset = elem->get<Vector2f>("offset") * screen;
+
+		if (elem->has("offsetX"))
+			screenOffset.x() = elem->get<float>("offsetX") * screen.x();
+
+		if (elem->has("offsetY"))
+			screenOffset.y() = elem->get<float>("offsetY") * screen.y();
+
+		setScreenOffset(screenOffset);
+
+		if (elem->has("clipRect"))
+		{
+			Vector4f rect = elem->get<Vector4f>("clipRect");
+			setClipRect(Vector4f(rect.x() * screen.x(), rect.y() * screen.y(), rect.z() * screen.x(), rect.w() * screen.y()));
+		}
+		else
+			setClipRect(Vector4f(0, 0, 0, 0));
+	}
+
+	if (elem->has("clipChildren"))
+		setClipChildren(elem->get<bool>("clipChildren"));
+
+	loadThemedChildren(elem);
+}
+
+void GuiComponent::applyThemePadding(const ThemeData::ThemeElement* elem)
+{
+	if (elem == nullptr || !elem->has("padding"))
+		return;
+
+	Vector4f clientRect = getParentClientRect();
+	Vector4f padding = elem->get<Vector4f>("padding");
+
+	// values below 1 are relative to the parent's client area, others are pixels
+	if (std::abs(padding.x()) < 1 && std::abs(padding.y()) < 1 && std::abs(padding.z()) < 1 && std::abs(padding.w()) < 1)
+		setPadding(Vector4f(padding.x() * clientRect.z(), padding.y() * clientRect.w(), padding.z() * clientRect.z(), padding.w() * clientRect.w()));
+	else
+		setPadding(padding);
+}
+
+// nested theme elements: <container name="x"><image name="y">...</image></container> (AmberELEC)
+void GuiComponent::loadThemedChildren(const ThemeData::ThemeElement* elem)
+{
+	for (int i = (int)mChildren.size() - 1; i >= 0; i--)
+	{
+		GuiComponent* child = mChildren[i];
+		if (child->mThemedChild)
+			delete child; // its destructor removes it from mChildren
+	}
+
+	if (elem == nullptr || elem->children.empty())
+		return;
+
+	for (const auto& child : elem->children)
+	{
+		GuiComponent* comp = ThemeData::createExtraComponent(mWindow, child.second.type);
+		if (comp == nullptr)
+			continue;
+
+		ThemeData::ThemeElement childElem = child.second;
+
+		// default to the parent's whole client area
+		if (!childElem.has("pos") && !childElem.has("x") && !childElem.has("y"))
+			childElem.properties["pos"] = Vector2f(0, 0);
+
+		if (!childElem.has("size") && !childElem.has("minSize") && !childElem.has("maxSize") && !childElem.has("w") && !childElem.has("h"))
+			childElem.properties["size"] = Vector2f(1, 1);
+
+		comp->mThemedChild = true;
+		comp->setTag(child.first);
+		comp->setDefaultZIndex(10);
+		addChild(comp);
+		ThemeData::applySelfTheme(comp, childElem);
+
+		// combine with this component's opacity
+		if (mOpacity != 255)
+			comp->setOpacity((unsigned char)(((int)comp->mThemeOpacity * (int)mOpacity) / 255));
+	}
+
+	sortChildren();
 }
 
 // AmberELEC: <opacity> and <scale> (scale with the ROTATION flag, like rotation)
@@ -616,7 +822,12 @@ void GuiComponent::applyThemeOpacityAndScale(const ThemeData::ThemeElement* elem
 	}
 
 	if (elem->has("opacity"))
-		setOpacity((unsigned char)(Math::clamp(elem->get<float>("opacity"), 0.0f, 1.0f) * 255.0f));
+	{
+		mThemeOpacity = (unsigned char)(Math::clamp(elem->get<float>("opacity"), 0.0f, 1.0f) * 255.0f);
+		setOpacity(mThemeOpacity);
+	}
+	else
+		mThemeOpacity = 255;
 }
 
 void GuiComponent::loadBindingExpressions(const ThemeData::ThemeElement* elem)
@@ -635,16 +846,30 @@ void GuiComponent::loadBindingExpressions(const ThemeData::ThemeElement* elem)
 
 ThemeData::ThemeElement::Property GuiComponent::getProperty(const std::string name)
 {
-	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	Vector4f clientRect = getParentClientRect();
+	Vector2f scale = Vector2f(clientRect.z(), clientRect.w());
 
 	if (name == "pos")
-		return Vector2f(mPosition.x() / scale.x(), mPosition.y() / scale.y());
+		return Vector2f((mPosition.x() - clientRect.x()) / scale.x(), (mPosition.y() - clientRect.y()) / scale.y());
 
 	if (name == "x")
-		return mPosition.x() / scale.x();
+		return (mPosition.x() - clientRect.x()) / scale.x();
 
 	if (name == "y")
-		return mPosition.y() / scale.y();
+		return (mPosition.y() - clientRect.y()) / scale.y();
+
+	if (name == "offset")
+		return Vector2f(mScreenOffset.x() / screen.x(), mScreenOffset.y() / screen.y());
+
+	if (name == "offsetX")
+		return mScreenOffset.x() / screen.x();
+
+	if (name == "offsetY")
+		return mScreenOffset.y() / screen.y();
+
+	if (name == "padding")
+		return mPadding;
 
 	if (name == "size")
 		return Vector2f(mSize.x() / scale.x(), mSize.y() / scale.y());
@@ -691,7 +916,9 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 {
 	typedef ThemeData::ThemeElement::Property::PropertyType PropType;
 
-	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	Vector2f screen = Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	Vector4f clientRect = getParentClientRect();
+	Vector2f scale = Vector2f(clientRect.z(), clientRect.w());
 
 	if (name == "sound" && value.type == PropType::String)
 	{
@@ -709,7 +936,9 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 	{
 	case PropType::Pair:
 		if (name == "pos")
-			setPosition(Vector3f(value.v.x() * scale.x(), value.v.y() * scale.y(), 0));
+			setPosition(Vector3f(value.v.x() * scale.x() + clientRect.x(), value.v.y() * scale.y() + clientRect.y(), 0));
+		else if (name == "offset")
+			setScreenOffset(Vector2f(value.v.x() * screen.x(), value.v.y() * screen.y()));
 		else if (name == "size")
 			setSize(Vector2f(value.v.x() * scale.x(), value.v.y() * scale.y()));
 		else if (name == "origin")
@@ -722,9 +951,13 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 
 	case PropType::Float:
 		if (name == "x")
-			setPosition(Vector3f(value.f * scale.x(), mPosition.y(), mPosition.z()));
+			setPosition(Vector3f(value.f * scale.x() + clientRect.x(), mPosition.y(), mPosition.z()));
 		else if (name == "y")
-			setPosition(Vector3f(mPosition.x(), value.f * scale.y(), mPosition.z()));
+			setPosition(Vector3f(mPosition.x(), value.f * scale.y() + clientRect.y(), mPosition.z()));
+		else if (name == "offsetX")
+			setScreenOffset(Vector2f(value.f * screen.x(), mScreenOffset.y()));
+		else if (name == "offsetY")
+			setScreenOffset(Vector2f(mScreenOffset.x(), value.f * screen.y()));
 		else if (name == "w")
 			setSize(Vector2f(value.f * scale.x(), mSize.y()));
 		else if (name == "h")
@@ -742,6 +975,11 @@ void GuiComponent::setProperty(const std::string name, const ThemeData::ThemeEle
 	case PropType::Bool:
 		if (name == "visible")
 			setVisible(value.b);
+		break;
+
+	case PropType::Rect:
+		if (name == "padding")
+			setPadding(value.r);
 		break;
 
 	default:

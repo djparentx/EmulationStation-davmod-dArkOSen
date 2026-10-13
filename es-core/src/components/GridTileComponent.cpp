@@ -204,7 +204,7 @@ void GridTileComponent::resize()
 		mLabel.setColor(0xFFFFFFFF);
 		mLabel.setGlowColor(0x00000010);
 		mLabel.setGlowSize(2);
-		mLabel.setOpacity(255);
+		mLabel.setOpacity(mOpacity);
 		mLabel.setPosition(mSize.x() * 0.1, mSize.y() * 0.2);
 		mLabel.setSize(mSize.x() - mSize.x() * 0.2, mSize.y() - mSize.y() * 0.3);
 	}
@@ -284,9 +284,32 @@ void GridTileComponent::resize()
 	mBackground.setImagePath(currentProperties.Background.path);
 	*/
 	if (mSelected && mAnimPosition == Vector3f(0, 0, 0) && mSelectedZoomPercent != 1.0)
-		mBackground.setOpacity(mSelectedZoomPercent * 255);
+		mBackground.setOpacity(mSelectedZoomPercent * mOpacity);
 	else
-		mBackground.setOpacity(255);
+		mBackground.setOpacity(mOpacity);
+}
+
+// the grid's opacity (AmberELEC imagegrid <opacity>)
+void GridTileComponent::setOpacity(unsigned char opacity)
+{
+	if (mOpacity == opacity)
+		return;
+
+	GuiComponent::setOpacity(opacity); // background, image, label
+
+	if (mMarquee != nullptr)
+		mMarquee->setOpacity(opacity);
+
+	if (mFavorite != nullptr)
+		mFavorite->setOpacity(opacity);
+
+	if (mImageOverlay != nullptr)
+		mImageOverlay->setOpacity(opacity);
+
+	if (mVideo != nullptr)
+		mVideo->setOpacity(opacity);
+
+	resize();
 }
 
 void GridTileComponent::update(int deltaTime)

@@ -37,6 +37,10 @@ public:
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 
+	// AmberELEC: <value> / {game:rating} binding (normalized 0..1)
+	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
+	void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value) override;
+
 private:
 	void updateVertices();
 	void updateColors();

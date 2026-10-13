@@ -29,6 +29,7 @@ public:
 	void update(int deltaTime) override;
 
 	void onSizeChanged() override;
+	void onPaddingChanged() override { buildVertices(); }
 
 	void fitTo(Vector2f size, Vector3f position = Vector3f::Zero(), Vector2f padding = Vector2f::Zero());
 

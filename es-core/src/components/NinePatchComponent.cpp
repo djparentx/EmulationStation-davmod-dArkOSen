@@ -93,10 +93,11 @@ void NinePatchComponent::buildVertices()
 	if (texSize.x() <= 0 || texSize.y() <= 0)
 		return;
 
-	const float imgSizeX[3] = { mCornerSize.x(), mSize.x() - mCornerSize.x() * 2, mCornerSize.x() };
-	const float imgSizeY[3] = { mCornerSize.y(), mSize.y() - mCornerSize.y() * 2, mCornerSize.y() };
-	const float imgPosX[3] = { 0, imgSizeX[0], imgSizeX[0] + imgSizeX[1] };
-	const float imgPosY[3] = { 0, imgSizeY[0], imgSizeY[0] + imgSizeY[1] };
+	// AmberELEC <padding>: the frame is drawn inside the padded area
+	const float imgSizeX[3] = { mCornerSize.x(), mSize.x() - mCornerSize.x() * 2 - mPadding.x() - mPadding.z(), mCornerSize.x() };
+	const float imgSizeY[3] = { mCornerSize.y(), mSize.y() - mCornerSize.y() * 2 - mPadding.y() - mPadding.w(), mCornerSize.y() };
+	const float imgPosX[3] = { mPadding.x(), mPadding.x() + imgSizeX[0], mPadding.x() + imgSizeX[0] + imgSizeX[1] };
+	const float imgPosY[3] = { mPadding.y(), mPadding.y() + imgSizeY[0], mPadding.y() + imgSizeY[0] + imgSizeY[1] };
 
 	//the "1 +" in posY and "-" in sizeY is to deal with texture coordinates having a bottom left corner origin vs. verticies having a top left origin
 	const float texSizeX[3] = { mCornerSize.x() / texSize.x(),  (texSize.x() - mCornerSize.x() * 2) / texSize.x(),  mCornerSize.x() / texSize.x() };

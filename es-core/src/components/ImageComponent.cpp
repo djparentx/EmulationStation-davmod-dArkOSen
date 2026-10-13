@@ -20,14 +20,24 @@ Vector2i ImageComponent::getTextureSize() const
 
 Vector2f ImageComponent::getSize() const
 {
+	// AmberELEC: with <padding>, a max-size image reports its padded size on the constrained axis
+	if (mTargetIsMax && mPadding != Vector4f::Zero())
+	{
+		Vector2f targetSize = mTargetSize - Vector2f(mPadding.x() + mPadding.z(), mPadding.y() + mPadding.w());
+
+		if (mSize.x() == targetSize.x())
+			return Vector2f(mSize.x() + mPadding.x() + mPadding.z(), mSize.y());
+		else if (mSize.y() == targetSize.y())
+			return Vector2f(mSize.x(), mSize.y() + mPadding.y() + mPadding.w());
+	}
+
 	return GuiComponent::getSize() * (mBottomRightCrop - mTopLeftCrop);
 }
 
 ImageComponent::ImageComponent(Window* window, bool forceLoad, bool dynamic) : GuiComponent(window),
 	mTargetIsMax(false), mTargetIsMin(false), mFlipX(false), mFlipY(false), mTargetSize(0, 0), mColorShift(0xFFFFFFFF), mColorShiftEnd(0xFFFFFFFF),
 	mForceLoad(forceLoad), mDynamic(dynamic), mFadeOpacity(0), mFading(false), mRotateByTargetSize(false),
-	mTopLeftCrop(0.0f, 0.0f), mBottomRightCrop(1.0f, 1.0f), mMirror(0.0f, 0.0f), mAllowAsync(false),
-	mPadding(Vector4f(0, 0, 0, 0))
+	mTopLeftCrop(0.0f, 0.0f), mBottomRightCrop(1.0f, 1.0f), mMirror(0.0f, 0.0f), mAllowAsync(false)
 {
 	mLinear = false;
 	mHorizontalAlignment = ALIGN_CENTER;
@@ -53,13 +63,16 @@ void ImageComponent::resize()
 	if (textureSize == Vector2f::Zero())
 		return;
 
+	// AmberELEC <padding>: fit inside the target size minus the padding
+	const Vector2f targetSize = mTargetSize - Vector2f(mPadding.x() + mPadding.z(), mPadding.y() + mPadding.w());
+
 	int ox = mSize.x();
 	int oy = mSize.y();
 
 	if (mTexture->isTiled())
 	{
 		uncrop();
-		mSize = mTargetSize;
+		mSize = targetSize;
 	}
 	else
 	{
@@ -74,46 +87,46 @@ void ImageComponent::resize()
 			uncrop();
 			mSize = textureSize;
 
-			Vector2f resizeScale((mTargetSize.x() / mSize.x()), (mTargetSize.y() / mSize.y()));
+			Vector2f resizeScale((targetSize.x() / mSize.x()), (targetSize.y() / mSize.y()));
 
 			if(resizeScale.x() < resizeScale.y())
 			{
-				mSize[0] *= resizeScale.x(); // this will be mTargetSize.x(). We can't exceed it, nor be lower than it.
+				mSize[0] *= resizeScale.x(); // this will be targetSize.x(). We can't exceed it, nor be lower than it.
 				// we need to make sure we're not creating an image larger than max size
-				mSize[1] = Math::min(Math::round(mSize[1] *= resizeScale.x()), mTargetSize.y());
+				mSize[1] = Math::min(Math::round(mSize[1] *= resizeScale.x()), targetSize.y());
 			}else{
-				mSize[1] = Math::round(mSize[1] * resizeScale.y()); // this will be mTargetSize.y(). We can't exceed it.
+				mSize[1] = Math::round(mSize[1] * resizeScale.y()); // this will be targetSize.y(). We can't exceed it.
 				
 				// for SVG rasterization, always calculate width from rounded height (see comment above)
 				// we need to make sure we're not creating an image larger than max size
-				mSize[0] = Math::min((mSize[1] / textureSize.y()) * textureSize.x(), mTargetSize.x());
+				mSize[0] = Math::min((mSize[1] / textureSize.y()) * textureSize.x(), targetSize.x());
 			}
 
 		}else if(mTargetIsMin)
 		{
 			mSize = textureSize;
 
-			Vector2f resizeScale((mTargetSize.x() / mSize.x()), (mTargetSize.y() / mSize.y()));
+			Vector2f resizeScale((targetSize.x() / mSize.x()), (targetSize.y() / mSize.y()));
 
 			if(resizeScale.x() > resizeScale.y())
 			{
 				mSize[0] *= resizeScale.x();
 				mSize[1] *= resizeScale.x();
 
-				float cropPercent = (mSize.y() - mTargetSize.y()) / (mSize.y() * 2);
+				float cropPercent = (mSize.y() - targetSize.y()) / (mSize.y() * 2);
 				crop(0, cropPercent, 0, cropPercent);
 			}else{
 				mSize[0] *= resizeScale.y();
 				mSize[1] *= resizeScale.y();
 
-				float cropPercent = (mSize.x() - mTargetSize.x()) / (mSize.x() * 2);
+				float cropPercent = (mSize.x() - targetSize.x()) / (mSize.x() * 2);
 				crop(cropPercent, 0, cropPercent, 0);
 			}
 
 			// for SVG rasterization, always calculate width from rounded height (see comment above)
 			// we need to make sure we're not creating an image smaller than min size
-			mSize[1] = Math::max(Math::round(mSize[1]), mTargetSize.y());
-			mSize[0] = Math::max((mSize[1] / textureSize.y()) * textureSize.x(), mTargetSize.x());
+			mSize[1] = Math::max(Math::round(mSize[1]), targetSize.y());
+			mSize[0] = Math::max((mSize[1] / textureSize.y()) * textureSize.x(), targetSize.x());
 
 		}
 		else
@@ -121,17 +134,17 @@ void ImageComponent::resize()
 			uncrop();
 			// if both components are set, we just stretch
 			// if no components are set, we don't resize at all
-			mSize = mTargetSize == Vector2f::Zero() ? textureSize : mTargetSize;
+			mSize = targetSize == Vector2f::Zero() ? textureSize : targetSize;
 
 			// if only one component is set, we resize in a way that maintains aspect ratio
 			// for SVG rasterization, we always calculate width from rounded height (see comment above)
-			if(!mTargetSize.x() && mTargetSize.y())
+			if(!targetSize.x() && targetSize.y())
 			{
-				mSize[1] = Math::round(mTargetSize.y());
+				mSize[1] = Math::round(targetSize.y());
 				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
-			}else if(mTargetSize.x() && !mTargetSize.y())
+			}else if(targetSize.x() && !targetSize.y())
 			{
-				mSize[1] = Math::round((mTargetSize.x() / textureSize.x()) * textureSize.y());
+				mSize[1] = Math::round((targetSize.x() / textureSize.x()) * textureSize.y());
 				mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
 			}
 		}
@@ -345,23 +358,32 @@ void ImageComponent::updateVertices()
 
 	// we go through this mess to make sure everything is properly rounded
 	// if we just round vertices at the end, edge cases occur near sizes of 0.5
-	const Vector2f     topLeft     = { mSize * mTopLeftCrop };
-	const Vector2f     bottomRight = { mSize * mBottomRightCrop };
+	Vector2f           topLeft     = { mSize * mTopLeftCrop };
+	Vector2f           bottomRight = { mSize * mBottomRightCrop };
+
+	// AmberELEC <padding>: the image sits inside the padded area
+	if (mPadding != Vector4f::Zero())
+	{
+		Vector2f paddingOffset = Vector2f(mPadding.x() - (mPadding.x() + mPadding.z()) * mOrigin.x(), mPadding.y() - (mPadding.y() + mPadding.w()) * mOrigin.y());
+		topLeft = topLeft + paddingOffset;
+		bottomRight = bottomRight + paddingOffset;
+	}
+
 	const float        px          = mTexture->isTiled() ? mSize.x() / getTextureSize().x() : 1.0f;
 	const float        py          = mTexture->isTiled() ? mSize.y() / getTextureSize().y() : 1.0f;
 	const unsigned int color       = Renderer::convertColor(mColorShift);
 	const unsigned int colorEnd    = Renderer::convertColor(mColorShiftEnd);
 
-	mVertices[0] = { { topLeft.x() + mPadding.x(),     topLeft.y() + mPadding.y()     },
+	mVertices[0] = { { topLeft.x(),     topLeft.y()     },
 		{ mTopLeftCrop.x(),          py - mTopLeftCrop.y()     }, color };
 
-	mVertices[1] = { { topLeft.x() + mPadding.x(),     bottomRight.y() - mPadding.w() },
+	mVertices[1] = { { topLeft.x(),     bottomRight.y() },
 		{ mTopLeftCrop.x(),          1.0f - mBottomRightCrop.y() }, mColorGradientHorizontal ? colorEnd : color };
 
-	mVertices[2] = { { bottomRight.x() - mPadding.z(), topLeft.y() + mPadding.y()	},
+	mVertices[2] = { { bottomRight.x(), topLeft.y()	},
 		{ mBottomRightCrop.x() * px, py - mTopLeftCrop.y()     }, mColorGradientHorizontal ? color : colorEnd };
 
-	mVertices[3] = { { bottomRight.x() - mPadding.z(), bottomRight.y() - mPadding.w() },
+	mVertices[3] = { { bottomRight.x(), bottomRight.y() },
 	{ mBottomRightCrop.x() * px, 1.0f - mBottomRightCrop.y() }, color };
 
 	// round vertices
@@ -591,11 +613,16 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 	if (elem->has("autoFade"))
 		setAllowFading(elem->get<bool>("autoFade"));
 
-	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	// normalized coordinates are relative to the parent's client area (AmberELEC)
+	Vector4f clientRect = getParentClientRect();
+	Vector2f scale = Vector2f(clientRect.z(), clientRect.w());
+	Vector2f offset = Vector2f(clientRect.x(), clientRect.y());
 	
 	if(properties & POSITION && elem->has("pos"))
 	{
-		Vector2f denormalized = elem->get<Vector2f>("pos") * scale;
+		Vector2f pos = elem->get<Vector2f>("pos");
+		mSourceBounds.x() = pos.x(); mSourceBounds.y() = pos.y();
+		Vector2f denormalized = pos * scale + offset;
 		setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
 	}
 
@@ -605,21 +632,27 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 	// silently dropped image positioning for any theme using <x>/<y> instead of <pos>
 	if (properties & POSITION && elem->has("x"))
 	{
-		float x = elem->get<float>("x") * scale.x();
+		mSourceBounds.x() = elem->get<float>("x");
+		float x = mSourceBounds.x() * scale.x() + offset.x();
 		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
 	}
 
 	if (properties & POSITION && elem->has("y"))
 	{
-		float y = elem->get<float>("y") * scale.y();
+		mSourceBounds.y() = elem->get<float>("y");
+		float y = mSourceBounds.y() * scale.y() + offset.y();
 		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 	}
+
+	// padding before sizing, the image is fitted inside it
+	applyThemePadding(elem);
 
 	if(properties & ThemeFlags::SIZE)
 	{
 		if(elem->has("size"))
 		{
 			auto sz = elem->get<Vector2f>("size");
+			mSourceBounds.z() = sz.x(); mSourceBounds.w() = sz.y();
 			if (sz.x() == 0 && sz.y() != 0 && Settings::getInstance()->getInt("ScreenRotate") != 0)
 			{
 				sz.x() = sz.y();
@@ -634,9 +667,17 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 				setResize(sz * scale);
 		}
 		else if(elem->has("maxSize"))
-			setMaxSize(elem->get<Vector2f>("maxSize") * scale);
+		{
+			Vector2f sz = elem->get<Vector2f>("maxSize");
+			mSourceBounds.z() = sz.x(); mSourceBounds.w() = sz.y();
+			setMaxSize(sz * scale);
+		}
 		else if(elem->has("minSize"))
-			setMinSize(elem->get<Vector2f>("minSize") * scale);
+		{
+			Vector2f sz = elem->get<Vector2f>("minSize");
+			mSourceBounds.z() = sz.x(); mSourceBounds.w() = sz.y();
+			setMinSize(sz * scale);
+		}
 	}
 	
 	// position + size also implies origin
@@ -732,6 +773,31 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 		setVisible(true);
 
 	applyThemeOpacityAndScale(elem, properties);
+	applyThemeLayout(elem, properties);
+}
+
+// nested theme element: follow the parent's client area (AmberELEC)
+void ImageComponent::recalcLayout()
+{
+	if (!mThemedChild || getParent() == nullptr)
+		return;
+
+	Vector4f clientRect = getParent()->getClientRect();
+	Vector2f newPos = Vector2f(mSourceBounds.x() * clientRect.z() + clientRect.x(), mSourceBounds.y() * clientRect.w() + clientRect.y());
+	Vector2f newSize = Vector2f(mSourceBounds.z() * clientRect.z(), mSourceBounds.w() * clientRect.w());
+
+	if (Vector2f(mPosition.x(), mPosition.y()) != newPos)
+		setPosition(newPos.x(), newPos.y(), mPosition.z());
+
+	if (mTargetSize != newSize)
+	{
+		if (mTargetIsMax)
+			setMaxSize(newSize);
+		else if (mTargetIsMin)
+			setMinSize(newSize);
+		else
+			setResize(newSize);
+	}
 }
 
 std::vector<HelpPrompt> ImageComponent::getHelpPrompts()

@@ -1,21 +1,17 @@
 #include "components/StackPanelComponent.h"
+
+// Ported from AmberELEC ES (es-core/src/components/StackPanelComponent.cpp)
+
 #include "Window.h"
 #include "renderers/Renderer.h"
+#include "components/ImageComponent.h"
+#include "components/TextComponent.h"
 #include "math/Vector2i.h"
 #include "math/Misc.h"
 
-StackPanelComponent::StackPanelComponent(Window* window) : GuiComponent(window), mHorizontal(true), mReverse(false), mClipChildren(true), mSeparator(0.0f)
+StackPanelComponent::StackPanelComponent(Window* window) : GuiComponent(window), mHorizontal(true), mReverse(false), mSeparator(0.0f)
 {
-}
-
-StackPanelComponent::~StackPanelComponent()
-{
-	// mChildren was populated by ThemeData::makeExtras() with components created solely for
-	// this stackpanel; nothing else owns/tracks them, so this container is responsible for
-	// deleting them. Each child's own destructor calls mParent->removeChild(this), which erases
-	// it from mChildren - deleting front-to-back keeps that mutation-during-iteration safe.
-	while (getChildCount() > 0)
-		delete getChild(0);
+	mClipChildren = true;
 }
 
 void StackPanelComponent::render(const Transform4x4f& parentTrans)
@@ -24,6 +20,9 @@ void StackPanelComponent::render(const Transform4x4f& parentTrans)
 		return;
 
 	Transform4x4f trans = parentTrans * getTransform();
+
+	if (!Renderer::isVisibleOnScreen(trans.translation().x(), trans.translation().y(), mSize.x(), mSize.y()))
+		return;
 
 	if (mClipChildren)
 		Renderer::pushClipRect(Vector2i((int)trans.translation().x(), (int)trans.translation().y()), Vector2i((int)mSize.x(), (int)mSize.y()));
@@ -48,9 +47,6 @@ void StackPanelComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, co
 	if (elem->has("reverse"))
 		mReverse = elem->get<bool>("reverse");
 
-	if (elem->has("clipChildren"))
-		mClipChildren = elem->get<bool>("clipChildren");
-
 	if (elem->has("separator"))
 	{
 		mSeparator = elem->get<float>("separator");
@@ -64,6 +60,12 @@ void StackPanelComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, co
 	performLayout();
 }
 
+void StackPanelComponent::recalcLayout()
+{
+	GuiComponent::recalcLayout();
+	performLayout();
+}
+
 void StackPanelComponent::onSizeChanged()
 {
 	performLayout();
@@ -71,45 +73,119 @@ void StackPanelComponent::onSizeChanged()
 
 void StackPanelComponent::performLayout()
 {
-	float pos = mReverse ? (mHorizontal ? mSize.x() : mSize.y()) : 0.0f;
+	float pos = 0;
+
+	if (mReverse)
+		pos = mHorizontal ? mSize.x() : mSize.y();
+
+	// back to each child's own theme position / size, then stack them
+	recalcChildrenLayout();
+
+	bool aligned = false;
 
 	for (auto child : mChildren)
 	{
 		if (!child->isVisible())
 			continue;
 
+		bool maxSize = false;
+
+		ImageComponent* image = dynamic_cast<ImageComponent*>(child);
+		if (image != nullptr)
+			maxSize = image->getTargetIsMax();
+
+		TextComponent* text = dynamic_cast<TextComponent*>(child);
+
 		if (mHorizontal)
 		{
-			child->setSize(child->getSize().x(), mSize.y());
+			float sz = child->getSize().x();
+
+			bool wasAligned = aligned;
+
+			if (!wasAligned)
+			{
+				if (mReverse && pos - sz < 0)
+				{
+					wasAligned = true;
+					sz = Math::max(0.0f, pos);
+				}
+				else if (!mReverse && pos + sz >= mSize.x())
+				{
+					wasAligned = true;
+					sz = Math::max(0.0f, mSize.x() - pos);
+				}
+			}
+
+			if (image != nullptr && maxSize)
+				image->setMaxSize(child->getSize().x(), mSize.y());
+			else if (text != nullptr)
+			{
+				child->setSize(0, mSize.y());
+				child->setSize(Math::min(sz, child->getSize().x()), mSize.y());
+
+				if (wasAligned && child->getSize().x() < sz)
+					wasAligned = false;
+			}
+			else if (child->getSize() != Vector2f(sz, mSize.y()))
+				child->setSize(sz, mSize.y());
+
+			aligned |= wasAligned;
 
 			if (mReverse)
 			{
 				float childpos = pos - child->getSize().x() + child->getSize().x() * child->getOrigin().x();
-				child->setPosition(childpos, child->getPosition().y());
-				pos -= child->getSize().x() + mSeparator;
+
+				if (image != nullptr && maxSize)
+					child->setPosition(childpos, child->getPosition().y() - child->getSize().y() * child->getOrigin().y() + mSize.y() * child->getOrigin().y());
+				else
+					child->setPosition(childpos, child->getPosition().y());
+
+				if (child->getSize().x() > 0)
+					pos -= child->getSize().x() + mSeparator;
 			}
 			else
 			{
 				float childpos = pos + child->getSize().x() * child->getOrigin().x();
-				child->setPosition(childpos, child->getPosition().y());
-				pos += child->getSize().x() + mSeparator;
+
+				if (image != nullptr && maxSize)
+					child->setPosition(childpos, child->getPosition().y() - child->getSize().y() * child->getOrigin().y() + mSize.y() * child->getOrigin().y());
+				else
+					child->setPosition(childpos, child->getPosition().y());
+
+				if (child->getSize().x() > 0)
+					pos += child->getSize().x() + mSeparator;
 			}
 		}
 		else
 		{
-			child->setSize(mSize.x(), child->getSize().y());
-			
+			if (image != nullptr && maxSize)
+				image->setMaxSize(mSize.x(), child->getSize().y());
+			else if (child->getSize() != Vector2f(mSize.x(), child->getSize().y()))
+				child->setSize(mSize.x(), child->getSize().y());
+
 			if (mReverse)
 			{
 				float childpos = pos - child->getSize().y() + child->getSize().y() * child->getOrigin().y();
-				child->setPosition(child->getPosition().x(), childpos);
-				pos -= child->getSize().y() + mSeparator;
+
+				if (image != nullptr && maxSize)
+					child->setPosition(child->getPosition().x() - child->getSize().x() * child->getOrigin().x() + mSize.y() * child->getOrigin().x(), childpos);
+				else
+					child->setPosition(child->getPosition().x(), childpos);
+
+				if (child->getSize().y() > 0)
+					pos -= child->getSize().y() + mSeparator;
 			}
 			else
 			{
 				float childpos = pos + child->getSize().y() * child->getOrigin().y();
-				child->setPosition(child->getPosition().x(), childpos);
-				pos += child->getSize().y() + mSeparator;
+
+				if (image != nullptr && maxSize)
+					child->setPosition(child->getPosition().x() - child->getSize().x() * child->getOrigin().x() + mSize.x() * child->getOrigin().x(), childpos);
+				else
+					child->setPosition(child->getPosition().x(), childpos);
+
+				if (child->getSize().y() > 0)
+					pos += child->getSize().y() + mSeparator;
 			}
 		}
 	}
@@ -129,8 +205,6 @@ void StackPanelComponent::update(int deltaTime)
 		if (child->isVisible())
 			szAfter = szAfter + child->getSize();
 
-	if (szBefore != szAfter || (mLastSize != Vector2f::Zero() && mLastSize != szAfter))
+	if (szBefore != szAfter)
 		performLayout();
-
-	mLastSize = szAfter;
 }

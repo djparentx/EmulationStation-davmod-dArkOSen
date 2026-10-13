@@ -82,6 +82,7 @@ public:
 	void setThemeName(std::string name) { mName = name; };
 
 	virtual void topWindow(bool isTop);
+	void setOpacity(unsigned char opacity) override; // AmberELEC: theme / storyboard <opacity> also fades the tiles
 	virtual void onShow();
 	virtual void onHide();
 	virtual void onScreenSaverActivate();
@@ -248,6 +249,15 @@ void ImageGridComponent<T>::update(int deltaTime)
 	
 	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
 		(*it)->update(deltaTime);
+}
+
+template<typename T>
+void ImageGridComponent<T>::setOpacity(unsigned char opacity)
+{
+	GuiComponent::setOpacity(opacity);
+
+	for (auto tile : mTiles)
+		tile->setOpacity(opacity);
 }
 
 template<typename T>
@@ -1052,6 +1062,9 @@ void ImageGridComponent<T>::buildTiles()
 
 			if (mAutoLayout.x() != 0 && mAutoLayout.y() != 0)
 				tile->forceSize(mTileSize, mAutoLayoutZoom);
+
+			if (GuiComponent::getOpacity() != 255)
+				tile->setOpacity(GuiComponent::getOpacity());
 
 			mTiles.push_back(tile);
 		}

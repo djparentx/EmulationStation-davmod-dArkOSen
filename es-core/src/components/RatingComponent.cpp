@@ -190,8 +190,34 @@ void RatingComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const 
 			mUnfilledColor = mColorShift;
 	}
 
+	// AmberELEC <value> (normalized 0..1)
+	if (elem->has("value"))
+	{
+		mValue = Math::clamp(elem->get<float>("value"), 0.0f, 1.0f);
+		updateVertices();
+	}
+
 	if(imgChanged)
 		onSizeChanged();
+}
+
+ThemeData::ThemeElement::Property RatingComponent::getProperty(const std::string name)
+{
+	if (name == "value")
+		return mValue;
+
+	return GuiComponent::getProperty(name);
+}
+
+void RatingComponent::setProperty(const std::string name, const ThemeData::ThemeElement::Property& value)
+{
+	if (name == "value" && value.type == ThemeData::ThemeElement::Property::PropertyType::Float)
+	{
+		mValue = Math::clamp(value.f, 0.0f, 1.0f);
+		updateVertices();
+	}
+	else
+		GuiComponent::setProperty(name, value);
 }
 
 std::vector<HelpPrompt> RatingComponent::getHelpPrompts()

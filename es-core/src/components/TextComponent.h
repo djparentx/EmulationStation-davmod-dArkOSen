@@ -56,7 +56,6 @@ public:
 	void setGlowColor(unsigned int color) { mGlowColor = color; };
 	void setGlowSize(unsigned int size) { mGlowSize = size; };
 
-	void setPadding(const Vector4f padding) { mPadding = padding; }
 
 	virtual void update(int deltaTime);
 
@@ -98,7 +97,6 @@ private:
 	unsigned int mGlowColor;
 	unsigned int mGlowSize;
 	Vector2f	 mGlowOffset;
-	Vector4f	 mPadding;
 	
 	Vector2f	mReflection;
 	bool		mReflectOnBorders;

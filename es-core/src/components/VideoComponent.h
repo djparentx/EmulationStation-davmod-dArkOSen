@@ -66,6 +66,8 @@ public:
 
 	void onOriginChanged() override;
 	void onSizeChanged() override;
+	void onPaddingChanged() override;
+	void recalcLayout() override;
 	void setOpacity(unsigned char opacity) override;
 
 	void render(const Transform4x4f& parentTrans) override;

@@ -13,7 +13,7 @@
 TextComponent::TextComponent(Window* window) : GuiComponent(window),
 	mFont(Font::get(FONT_SIZE_MEDIUM)), mUppercase(false), mColor(0x000000FF), mAutoCalcExtent(true, true),
 	mHorizontalAlignment(ALIGN_LEFT), mVerticalAlignment(ALIGN_CENTER), mLineSpacing(1.5f), mBgColor(0),
-	mRenderBackground(false), mGlowColor(0), mGlowSize(2), mPadding(Vector4f(0, 0, 0, 0)), mGlowOffset(Vector2f(0, 0)),
+	mRenderBackground(false), mGlowColor(0), mGlowSize(2), mGlowOffset(Vector2f(0, 0)),
 	mReflection(0.0f, 0.0f), mReflectOnBorders(false)
 {	
 	mMarqueeOffset = 0;
@@ -31,7 +31,7 @@ TextComponent::TextComponent(Window* window, const std::string& text, const std:
 	Vector3f pos, Vector2f size, unsigned int bgcolor) : GuiComponent(window),
 	mFont(NULL), mUppercase(false), mColor(0x000000FF), mAutoCalcExtent(true, true),
 	mHorizontalAlignment(align), mVerticalAlignment(ALIGN_CENTER), mLineSpacing(1.5f), mBgColor(0),
-	mRenderBackground(false), mGlowColor(0), mGlowSize(2), mPadding(Vector4f(0, 0, 0, 0)), mGlowOffset(Vector2f(0, 0)),
+	mRenderBackground(false), mGlowColor(0), mGlowSize(2), mGlowOffset(Vector2f(0, 0)),
 	mReflection(0.0f, 0.0f), mReflectOnBorders(false)
 {
 	setFont(font);
@@ -303,6 +303,9 @@ void TextComponent::render(const Transform4x4f& parentTrans)
 
 	if (clip)
 		Renderer::popClipRect();
+
+	// nested theme elements (AmberELEC)
+	GuiComponent::renderChildren(parentTrans * getTransform());
 }
 
 void TextComponent::calculateExtent()
@@ -533,13 +536,9 @@ void TextComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme, 
 				LOG(LogError) << "Unknown text alignment string: " << str;
 		}
 
-		if (elem->has("padding"))
-		{
-			Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
-			mPadding = elem->get<Vector4f>("padding") * Vector4f(scale.x(), scale.y(), scale.x(), scale.y());
-		}
-		else
-			mPadding = Vector4f::Zero();
+		// <padding> is applied by GuiComponent::applyTheme (AmberELEC: values >= 1 are pixels)
+		if (!elem->has("padding"))
+			setPadding(Vector4f::Zero());
 	}
 
 	if (properties & TEXT && elem->has("text"))

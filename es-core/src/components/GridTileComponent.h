@@ -188,6 +188,7 @@ public:
 	~GridTileComponent();
 
 	void render(const Transform4x4f& parentTrans) override;
+	void setOpacity(unsigned char opacity) override;
 
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties);
 

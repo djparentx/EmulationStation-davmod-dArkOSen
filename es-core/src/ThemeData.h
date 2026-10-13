@@ -195,9 +195,9 @@ public:
 
 		std::string type;
 
-		// Name (view element key) of the container element (e.g. a stackpanel) this
-		// element is nested under in the theme XML. Empty if this is a top-level element.
-		std::string parent;
+		// nested theme elements (AmberELEC): <container name="x"><image name="y"/></container>,
+		// created as child components of this element's component (GuiComponent::loadThemedChildren)
+		std::vector<std::pair<std::string, ThemeElement>> children;
 
 		// <storyboard event="..."> blocks, keyed by event name ("" = no event)
 		std::map<std::string, std::shared_ptr<ThemeStoryboard>> storyboards;
@@ -306,6 +306,11 @@ public:
 
 	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window);
 
+	// component for a theme element type (extras and nested elements), nullptr if not supported
+	static GuiComponent* createExtraComponent(Window* window, const std::string& type);
+	// applies a standalone element (e.g. a nested child) to a component
+	static void applySelfTheme(GuiComponent* comp, const ThemeElement& elem);
+
 	static const std::shared_ptr<ThemeData>& getDefault();
 
 	static std::map<std::string, ThemeSet> getThemeSets();
@@ -358,7 +363,10 @@ private:
 	void parseCustomView(const pugi::xml_node& node, const pugi::xml_node& root);	
 	void parseViewElement(const pugi::xml_node& node);
 	void parseView(const pugi::xml_node& viewNode, ThemeView& view, bool overwriteElements = true);
-	void parseElement(const pugi::xml_node& elementNode, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, bool overwrite = true);
+	void parseElement(const pugi::xml_node& elementNode, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, ThemeView& view, bool overwrite = true);
+	void processElement(const pugi::xml_node& root, ThemeElement& element, const std::string& name, const std::string& value, ElementPropertyType type, const std::string& rawValue);
+	static bool findPropertyFromBaseClass(const std::string& typeName, const std::string& propertyName, ElementPropertyType& type);
+	static std::map<std::string, std::string> sBaseClasses;
 	bool parseRegion(const pugi::xml_node& node);
 	bool parseSubset(const pugi::xml_node& node);
 	bool isFirstSubset(const pugi::xml_node& node);
