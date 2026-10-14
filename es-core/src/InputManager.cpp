@@ -88,6 +88,11 @@ void InputManager::addJoystickByDeviceIndex(int id)
 	SDL_JoystickID joyId = SDL_JoystickInstanceID(joy);
 	mJoysticks[joyId] = joy;
 
+	// built-in joypad = bus type BUS_HOST (0x0019), stored in the first two GUID bytes
+	SDL_JoystickGUID joyGuid = SDL_JoystickGetGUID(joy);
+	if ((joyGuid.data[0] | (joyGuid.data[1] << 8)) == 0x0019)
+		mBuiltInJoysticks.insert(joyId);
+	
 	char guid[65];
 	SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(joy), guid, 65);
 
@@ -119,7 +124,8 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 	auto it = mInputConfigs.find(joyId);
 	delete it->second;
 	mInputConfigs.erase(it);
-
+	mBuiltInJoysticks.erase(joyId);
+	
 	// close the joystick
 	auto joyIt = mJoysticks.find(joyId);
 	if(joyIt != mJoysticks.cend())
@@ -128,6 +134,21 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 		mJoysticks.erase(joyIt);
 	}else{
 		LOG(LogError) << "Could not find joystick to close (instance ID: " << joyId << ")";
+	}
+}
+
+// Haptic feedback on built-in joypads only. level 1-5 (same scale as stock sdl_rumble), SDL stops the motor after durationMs
+void InputManager::rumble(int level, int durationMs)
+{
+	if (level < 1) level = 1;
+	if (level > 5) level = 5;
+	Uint16 strength = (Uint16)(level * 13107);
+
+	for (auto id : mBuiltInJoysticks)
+	{
+		auto it = mJoysticks.find(id);
+		if (it != mJoysticks.cend())
+			SDL_JoystickRumble(it->second, strength, strength, (Uint32)durationMs);
 	}
 }
 
@@ -141,7 +162,8 @@ void InputManager::deinit()
 		SDL_JoystickClose(iter->second);
 	}
 	mJoysticks.clear();
-
+	mBuiltInJoysticks.clear();
+	
 	for(auto iter = mInputConfigs.cbegin(); iter != mInputConfigs.cend(); iter++)
 	{
 		delete iter->second;
@@ -230,10 +252,16 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
+		if (ev.type == SDL_JOYBUTTONDOWN && Settings::getInstance()->getBool("EnableVibration"))
+			rumble(2, 40);
+		
 		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
 		return true;
 
 	case SDL_JOYHATMOTION:
+		if (ev.jhat.value != SDL_HAT_CENTERED && Settings::getInstance()->getBool("EnableVibration"))
+			rumble(2, 40);
+		
 		window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));
 		return true;
 
@@ -253,6 +281,9 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 			SDL_PushEvent(quit);
 			return false;
 		}
+
+		if (Settings::getInstance()->getBool("EnableVibration"))
+			rumble(2, 40);
 
 		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 1, false));
 		return true;

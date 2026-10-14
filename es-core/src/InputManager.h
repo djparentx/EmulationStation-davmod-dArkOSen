@@ -5,6 +5,7 @@
 
 #include <SDL_joystick.h>
 #include <map>
+#include <set>
 
 class InputConfig;
 class Window;
@@ -28,7 +29,8 @@ private:
 	InputConfig* mCECInputConfig;
 
 	std::map<SDL_JoystickID, int*> mPrevAxisValues;
-
+	std::set<SDL_JoystickID> mBuiltInJoysticks;
+	
 	bool initialized() const;
 
 	void addJoystickByDeviceIndex(int id);
@@ -58,6 +60,7 @@ public:
 	InputConfig* getInputConfigByDevice(int deviceId);
 
 	bool parseEvent(const SDL_Event& ev, Window* window);
+	void rumble(int level, int durationMs);
 };
 
 #endif // ES_CORE_INPUT_MANAGER_H

@@ -4062,6 +4062,12 @@ void GuiMenu::openOtherSettings()
 		}
 	});
 
+	// Haptic feedback on button press
+	auto vibration = std::make_shared<SwitchComponent>(mWindow);
+	vibration->setState(Settings::getInstance()->getBool("EnableVibration"));
+	s->addWithLabel(_("ENABLE VIBRATION FEEDBACK"), vibration);
+	s->addSaveFunc([vibration] { Settings::getInstance()->setBool("EnableVibration", vibration->getState()); });
+
     //Flip power button suspend/poweroff function
     
 	auto powerBtn = std::make_shared<SwitchComponent>(mWindow);
