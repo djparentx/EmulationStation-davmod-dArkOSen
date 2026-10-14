@@ -10,12 +10,13 @@
 GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, const char* title) : GuiScreensaverOptions(window, title)
 {
 	auto settings = Settings::getInstance();
+	typedef std::vector<std::pair<std::string, std::string>> OptionPairs;
 	std::string clockType = settings->getString("DateTimeScreenSaverClockType");
 	std::string bgMode = settings->getString("DateTimeScreenSaverBackgroundMode");
 
 	// CLOCK TYPE (changing it rebuilds the menu)
 	auto clock_type = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK TYPE"), false);
-	clock_type->addRange({ { "Number", "Number" }, { "Clock", "Clock" } }, clockType);
+	clock_type->addRange(OptionPairs{ { "Number", "Number" }, { "Clock", "Clock" } }, clockType);
 	addWithLabel(_("CLOCK TYPE"), clock_type);
 	addSaveFunc([clock_type] { Settings::getInstance()->setString("DateTimeScreenSaverClockType", clock_type->getSelected()); });
 	clock_type->setSelectedChangedCallback([this](const std::string& value)
@@ -28,14 +29,14 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 	if (clockType == "Clock")
 	{
 		auto clock_style = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK STYLE"), false);
-		clock_style->addRange({ { "Style 1", "style1" }, { "Style 2", "style2" }, { "Style 3", "style3" } }, settings->getString("DateTimeScreenSaverClockStyle"));
+		clock_style->addRange(OptionPairs{ { "Style 1", "style1" }, { "Style 2", "style2" }, { "Style 3", "style3" } }, settings->getString("DateTimeScreenSaverClockStyle"));
 		addWithLabel(_("CLOCK STYLE"), clock_style);
 		addSaveFunc([clock_style] { Settings::getInstance()->setString("DateTimeScreenSaverClockStyle", clock_style->getSelected()); });
 	}
 
 	// BACKGROUND MODE (changing it rebuilds the menu)
 	auto bg_mode = std::make_shared< OptionListComponent<std::string> >(mWindow, _("BACKGROUND MODE"), false);
-	bg_mode->addRange({ { "Color", "Color" }, { "Image", "Image" } }, bgMode);
+	bg_mode->addRange(OptionPairs{ { "Color", "Color" }, { "Image", "Image" } }, bgMode);
 	addWithLabel(_("BACKGROUND MODE"), bg_mode);
 	addSaveFunc([bg_mode] { Settings::getInstance()->setString("DateTimeScreenSaverBackgroundMode", bg_mode->getSelected()); });
 	bg_mode->setSelectedChangedCallback([this](const std::string& value)
@@ -48,7 +49,7 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 	if (bgMode == "Color")
 	{
 		auto bg_color = std::make_shared< OptionListComponent<std::string> >(mWindow, _("BACKGROUND COLOR"), false);
-		bg_color->addRange({ { "Night", "Night" }, { "Bistre", "Bistre" }, { "Garnet", "Garnet" }, { "Beaver", "Beaver" }, { "Black Olive", "Black Olive" } },
+		bg_color->addRange(OptionPairs{ { "Night", "Night" }, { "Bistre", "Bistre" }, { "Garnet", "Garnet" }, { "Beaver", "Beaver" }, { "Black Olive", "Black Olive" } },
 			settings->getString("DateTimeScreenSaverBackgroundColor"));
 		addWithLabel(_("BACKGROUND COLOR"), bg_color);
 		addSaveFunc([bg_color] { Settings::getInstance()->setString("DateTimeScreenSaverBackgroundColor", bg_color->getSelected()); });
