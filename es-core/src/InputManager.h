@@ -5,7 +5,8 @@
 
 #include <SDL_joystick.h>
 #include <map>
-#include <SDL_haptic.h>
+#include <vector>
+#include <sys/types.h>
 
 class InputConfig;
 class Window;
@@ -29,12 +30,7 @@ private:
 	InputConfig* mCECInputConfig;
 
 	std::map<SDL_JoystickID, int*> mPrevAxisValues;
-	struct BuiltInHaptic
-	{
-		SDL_Haptic* haptic;
-		std::map<std::pair<int, int>, int> effects; // (level, durationMs) -> SDL haptic effect id
-	};
-	std::map<SDL_JoystickID, BuiltInHaptic> mBuiltInHaptics;
+	std::vector<pid_t> mRumblePids;
 	
 	bool initialized() const;
 

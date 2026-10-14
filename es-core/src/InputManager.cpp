@@ -11,6 +11,14 @@
 #include <SDL.h>
 #include <iostream>
 #include <assert.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define RUMBLE_BIN "/usr/local/bin/sdl_rumble"
+
+extern char** environ;
 
 #define KEYBOARD_GUID_STRING "-1"
 #define CEC_GUID_STRING      "-2"
@@ -57,7 +65,6 @@ void InputManager::init()
 	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS,
 		Settings::getInstance()->getBool("BackgroundJoystickInput") ? "1" : "0");
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-	SDL_InitSubSystem(SDL_INIT_HAPTIC);
 	SDL_JoystickEventState(SDL_ENABLE);
 
 	// first, open all currently present joysticks
@@ -89,24 +96,6 @@ void InputManager::addJoystickByDeviceIndex(int id)
 	SDL_JoystickID joyId = SDL_JoystickInstanceID(joy);
 	mJoysticks[joyId] = joy;
 
-	// built-in joypad = bus type BUS_HOST (0x0019), stored in the first two GUID bytes
-	SDL_JoystickGUID joyGuid = SDL_JoystickGetGUID(joy);
-	if ((joyGuid.data[0] | (joyGuid.data[1] << 8)) == 0x0019 && SDL_JoystickIsHaptic(joy) == 1)
-	{
-		SDL_Haptic* haptic = SDL_HapticOpenFromJoystick(joy);
-		if (haptic != nullptr && (SDL_HapticQuery(haptic) & SDL_HAPTIC_LEFTRIGHT))
-		{
-			mBuiltInHaptics[joyId].haptic = haptic;
-			LOG(LogInfo) << "Rumble: haptic opened on built-in joypad " << SDL_JoystickName(joy);
-		}
-		else
-		{
-			if (haptic != nullptr)
-				SDL_HapticClose(haptic);
-			LOG(LogWarning) << "Rumble: built-in joypad has no usable rumble: " << SDL_GetError();
-		}
-	}
-	
 	char guid[65];
 	SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(joy), guid, 65);
 
@@ -138,14 +127,6 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 	auto it = mInputConfigs.find(joyId);
 	delete it->second;
 	mInputConfigs.erase(it);
-
-	// close the built-in haptic device (also frees its effects)
-	auto hapIt = mBuiltInHaptics.find(joyId);
-	if (hapIt != mBuiltInHaptics.cend())
-	{
-		SDL_HapticClose(hapIt->second.haptic);
-		mBuiltInHaptics.erase(hapIt);
-	}
 	
 	// close the joystick
 	auto joyIt = mJoysticks.find(joyId);
@@ -158,53 +139,43 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 	}
 }
 
-// Haptic feedback on built-in joypads only. level 1-5 (same scale as stock sdl_rumble).
-// The kernel ends the effect after durationMs; one effect per (level, duration) is uploaded once and reused.
+// Haptic feedback, same method as stock ES: run /usr/local/bin/sdl_rumble <level 1-5> <durationMs>.
+// Spawned directly (no shell), output to /dev/null; finished children are reaped so no zombies build up.
 void InputManager::rumble(int level, int durationMs)
 {
+	// reap rumble processes that have finished
+	for (auto it = mRumblePids.begin(); it != mRumblePids.end(); )
+	{
+		if (waitpid(*it, nullptr, WNOHANG) != 0)
+			it = mRumblePids.erase(it);
+		else
+			++it;
+	}
+
 	if (level < 1) level = 1;
 	if (level > 5) level = 5;
-	Uint16 strength = (Uint16)(level * 13107);
-	auto key = std::make_pair(level, durationMs);
+	if (durationMs < 1) durationMs = 1;
 
-	for (auto& entry : mBuiltInHaptics)
-	{
-		BuiltInHaptic& bh = entry.second;
+	std::string levelArg = std::to_string(level);
+	std::string durationArg = std::to_string(durationMs);
+	char* argv[] = { (char*)RUMBLE_BIN, (char*)levelArg.c_str(), (char*)durationArg.c_str(), nullptr };
 
-		auto fx = bh.effects.find(key);
-		if (fx == bh.effects.cend())
-		{
-			SDL_HapticEffect effect;
-			SDL_memset(&effect, 0, sizeof(effect));
-			effect.type = SDL_HAPTIC_LEFTRIGHT;
-			effect.leftright.length = (Uint32)durationMs;
-			effect.leftright.large_magnitude = strength;
-			effect.leftright.small_magnitude = strength;
+	posix_spawn_file_actions_t actions;
+	posix_spawn_file_actions_init(&actions);
+	posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
+	posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
 
-			int id = SDL_HapticNewEffect(bh.haptic, &effect);
-			if (id < 0)
-			{
-				LOG(LogWarning) << "Rumble: SDL_HapticNewEffect failed: " << SDL_GetError();
-				continue;
-			}
-			fx = bh.effects.insert(std::make_pair(key, id)).first;
-		}
+	pid_t pid;
+	if (posix_spawn(&pid, RUMBLE_BIN, &actions, nullptr, argv, environ) == 0)
+		mRumblePids.push_back(pid);
 
-		if (SDL_HapticRunEffect(bh.haptic, fx->second, 1) < 0)
-			LOG(LogWarning) << "Rumble: SDL_HapticRunEffect failed: " << SDL_GetError();
-	}
+	posix_spawn_file_actions_destroy(&actions);
 }
 
 void InputManager::deinit()
 {
 	if(!initialized())
 		return;
-
-	for(auto iter = mBuiltInHaptics.cbegin(); iter != mBuiltInHaptics.cend(); iter++)
-	{
-		SDL_HapticClose(iter->second.haptic);
-	}
-	mBuiltInHaptics.clear();
 
 	for(auto iter = mJoysticks.cbegin(); iter != mJoysticks.cend(); iter++)
 	{
@@ -240,7 +211,6 @@ void InputManager::deinit()
 
 	SDL_JoystickEventState(SDL_DISABLE);
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-	SDL_QuitSubSystem(SDL_INIT_HAPTIC);
 }
 
 int InputManager::getNumJoysticks() { return (int)mJoysticks.size(); }
