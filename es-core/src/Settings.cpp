@@ -184,6 +184,13 @@ void Settings::setDefaults()
 	mStringMap["SlideshowScreenSaverImageFilter"] = ".png,.jpg";
 	mBoolMap["SlideshowScreenSaverRecurse"] = false;
 	mBoolMap["SlideshowScreenSaverGameName"] = true;
+	mStringMap["DateTimeScreenSaverClockType"] = "Number";
+	mStringMap["DateTimeScreenSaverClockStyle"] = "style2";
+	mStringMap["DateTimeScreenSaverBackgroundMode"] = "Color";
+	mStringMap["DateTimeScreenSaverBackgroundColor"] = "Night";
+	mStringMap["DateTimeScreenSaverBackgroundPath"] = "None";
+	mBoolMap["DateTimeScreenSaverShowDate"] = true;
+	mBoolMap["DateTimeScreenSaverShowSeconds"] = true;
 	
 	mBoolMap["ShowFilenames"] = false;
 
