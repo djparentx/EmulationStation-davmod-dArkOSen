@@ -4063,10 +4063,32 @@ void GuiMenu::openOtherSettings()
 	});
 
 	// Haptic feedback on button press
+	bool vibrationOn = Settings::getInstance()->getBool("EnableVibration");
 	auto vibration = std::make_shared<SwitchComponent>(mWindow);
-	vibration->setState(Settings::getInstance()->getBool("EnableVibration"));
+	vibration->setState(vibrationOn);
 	s->addWithLabel(_("ENABLE VIBRATION FEEDBACK"), vibration);
 	s->addSaveFunc([vibration] { Settings::getInstance()->setBool("EnableVibration", vibration->getState()); });
+
+	// Vibration intensity (only while vibration is enabled)
+	if (vibrationOn)
+	{
+		auto intensity = std::make_shared< OptionListComponent<std::string> >(mWindow, _("VIBRATION INTENSITY"), false);
+		intensity->addRange({ "1", "2", "3", "4", "5" }, std::to_string(Settings::getInstance()->getInt("VibrationIntensity")));
+		s->addWithLabel(_("VIBRATION INTENSITY"), intensity);
+		s->addSaveFunc([intensity] { Settings::getInstance()->setInt("VibrationIntensity", std::stoi(intensity->getSelected())); });
+	}
+
+	// Toggling vibration saves and rebuilds the menu so VIBRATION INTENSITY shows/hides
+	vibration->setOnChangedCallback([this, s] {
+		s->save();
+		if (s->getVariable("reloadGuiMenu"))
+		{
+			s->close();
+			return;
+		}
+		delete s;
+		openOtherSettings();
+	});
 
     //Flip power button suspend/poweroff function
     

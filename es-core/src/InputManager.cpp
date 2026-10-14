@@ -272,14 +272,14 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
 		if (ev.type == SDL_JOYBUTTONDOWN && Settings::getInstance()->getBool("EnableVibration"))
-			rumble(2, 40);
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
 		
 		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
 		return true;
 
 	case SDL_JOYHATMOTION:
 		if (ev.jhat.value != SDL_HAT_CENTERED && Settings::getInstance()->getBool("EnableVibration"))
-			rumble(2, 40);
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
 		
 		window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));
 		return true;
@@ -302,7 +302,7 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 		}
 
 		if (Settings::getInstance()->getBool("EnableVibration"))
-			rumble(2, 40);
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
 
 		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 1, false));
 		return true;
