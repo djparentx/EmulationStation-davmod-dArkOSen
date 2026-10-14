@@ -41,18 +41,20 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --fix-broken || true
           # libcurl4 is Multi-Arch: same -> amd64 and arm64 versions must be identical.
-          # Align amd64 to whatever version the arm64 (ports) mirror currently offers.
-          CURL_ARM64_VER=$(apt-cache policy libcurl4:arm64 | awk '/Candidate:/{print $2}')
+          # The amd64 copy is preinstalled on the runner and cannot be upgraded here,
+          # so pin the arm64 packages to the runner's amd64 version when ports still has it.
           CURL_AMD64_VER=$(dpkg-query -W -f='${Version}' libcurl4:amd64 2>/dev/null || true)
-          echo "libcurl4 amd64 installed: ${CURL_AMD64_VER:-none}   arm64 candidate: ${CURL_ARM64_VER:-none}"
-          if [ -n "$CURL_ARM64_VER" ] && [ "$CURL_ARM64_VER" != "(none)" ] && [ "$CURL_AMD64_VER" != "$CURL_ARM64_VER" ]; then
-            sudo apt-get install -y --allow-downgrades libcurl4:amd64="$CURL_ARM64_VER" curl:amd64="$CURL_ARM64_VER"
+          echo "libcurl4 amd64 installed: ${CURL_AMD64_VER:-none}"
+          echo "libcurl4 arm64 available:"
+          apt-cache madison libcurl4:arm64 || true
+          if [ -n "$CURL_AMD64_VER" ] && apt-cache madison libcurl4:arm64 | grep -qF "$CURL_AMD64_VER"; then
+            sudo apt-get install -y libcurl4:arm64="$CURL_AMD64_VER" libcurl4-openssl-dev:arm64="$CURL_AMD64_VER"
           fi
           sudo apt-get install -y \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
             cmake make pkg-config gettext \
             libfreeimage-dev:arm64 libvlc-dev:arm64 libvlccore-dev:arm64 \
-            rapidjson-dev libcurl4-openssl-dev:arm64 \
+            rapidjson-dev \
             libfreetype-dev:arm64 libsdl2-dev:arm64 libsdl2-mixer-dev:arm64 \
             libasound2-dev:arm64 libgles-dev:arm64 libgles2-mesa-dev:arm64 \
             libx11-dev:arm64
