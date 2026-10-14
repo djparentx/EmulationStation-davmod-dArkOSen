@@ -1132,7 +1132,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Date
 	if (mShowDate)
 	{
-		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
+		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(":/DS-DIGII.TTF"));
 		int lh = (int)font->getLetterHeight();
 
 		mDate = new TextComponent(mWindow);
@@ -1142,7 +1142,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		mDate->setVerticalAlignment(ALIGN_CENTER);
 		mDate->setColor(mClockType == "Number" ? mClockColor : 0xFFFFFFFF);
 		mDate->setGlowColor(mClockType == "Number" ? ((mClockColor & 0xFFFFFF00) | 0x80) : 0x00000040);
-		mDate->setGlowSize(3);
+		mDate->setGlowSize(2);
 		mDate->setFont(font);
 		mDate->setText(Utils::Time::timeToString(now, "%Y/%m/%d"));
 	}
@@ -1150,7 +1150,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Digital time
 	if (mClockType == "Number")
 	{
-		auto font = Font::get((int)(h / 3.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
+		auto font = Font::get((int)(h / 4.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
 		int lh = (int)font->getLetterHeight();
 
 		mTime = new TextComponent(mWindow);
