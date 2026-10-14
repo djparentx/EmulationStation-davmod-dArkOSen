@@ -1096,11 +1096,11 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	mBgMode      = settings->getString("DateTimeScreenSaverBackgroundMode");
 
 	std::string clockColor = settings->getString("DateTimeScreenSaverClockColor");
-	if (clockColor == "Neon Blue")        mClockColor = 0x1F51FFFF;
-	else if (clockColor == "Neon Yellow") mClockColor = 0xFFFF33FF;
-	else if (clockColor == "Neon Red")    mClockColor = 0xFF3131FF;
-	else if (clockColor == "White")       mClockColor = 0xFFFFFFFF;
-	else                                  mClockColor = 0x39FF14FF; // Neon Green
+	if (clockColor == "Neon Blue")        mClockColor = 0x1F51FFCC;
+	else if (clockColor == "Neon Yellow") mClockColor = 0xFFFF33CC;
+	else if (clockColor == "Neon Red")    mClockColor = 0xFF3131CC;
+	else if (clockColor == "White")       mClockColor = 0xFFFFFFCC;
+	else                                  mClockColor = 0x39FF14CC; // Neon Green
 
 	// Background
 	if (mBgMode == "Color")
