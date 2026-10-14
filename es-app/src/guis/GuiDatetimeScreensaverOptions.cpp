@@ -25,6 +25,16 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 		reopen();
 	});
 
+	// CLOCK COLOR (Number only; colours time and date)
+	if (clockType == "Number")
+	{
+		auto clock_color = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK COLOR"), false);
+		clock_color->addRange(OptionPairs{ { "Neon Green", "Neon Green" }, { "Neon Blue", "Neon Blue" }, { "Neon Yellow", "Neon Yellow" }, { "Neon Red", "Neon Red" }, { "White", "White" } },
+			settings->getString("DateTimeScreenSaverClockColor"));
+		addWithLabel(_("CLOCK COLOR"), clock_color);
+		addSaveFunc([clock_color] { Settings::getInstance()->setString("DateTimeScreenSaverClockColor", clock_color->getSelected()); });
+	}
+
 	// CLOCK STYLE (analog only)
 	if (clockType == "Clock")
 	{

@@ -191,7 +191,8 @@ void Settings::setDefaults()
 	mStringMap["DateTimeScreenSaverBackgroundPath"] = "None";
 	mBoolMap["DateTimeScreenSaverShowDate"] = true;
 	mBoolMap["DateTimeScreenSaverShowSeconds"] = true;
-	
+	mStringMap["DateTimeScreenSaverClockColor"] = "Neon Green";
+
 	mBoolMap["ShowFilenames"] = false;
 
 	// This setting only applies to raspberry pi but set it for all platforms so

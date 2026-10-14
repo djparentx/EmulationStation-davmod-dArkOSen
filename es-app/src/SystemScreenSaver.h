@@ -108,6 +108,9 @@ private:
 	bool			mShowDate;
 	bool			mShowSeconds;
 	unsigned int	mBgColor;
+	unsigned int	mClockColor;
+
+	std::string timeFormat() const;
 };
 
 // Screensaver implementation for main window

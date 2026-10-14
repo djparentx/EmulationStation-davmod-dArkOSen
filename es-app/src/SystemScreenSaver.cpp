@@ -1095,6 +1095,13 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	mShowSeconds = settings->getBool("DateTimeScreenSaverShowSeconds");
 	mBgMode      = settings->getString("DateTimeScreenSaverBackgroundMode");
 
+	std::string clockColor = settings->getString("DateTimeScreenSaverClockColor");
+	if (clockColor == "Neon Blue")        mClockColor = 0x1F51FFFF;
+	else if (clockColor == "Neon Yellow") mClockColor = 0xFFFF33FF;
+	else if (clockColor == "Neon Red")    mClockColor = 0xFF3131FF;
+	else if (clockColor == "White")       mClockColor = 0xFFFFFFFF;
+	else                                  mClockColor = 0x39FF14FF; // Neon Green
+
 	// Background
 	if (mBgMode == "Color")
 	{
@@ -1125,16 +1132,16 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Date
 	if (mShowDate)
 	{
-		auto font = Font::get((int)(h / 10.0f), dateTimeFontPath(":/TsukimiRounded-Regular.ttf"));
+		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
 		int lh = (int)font->getLetterHeight();
 
 		mDate = new TextComponent(mWindow);
-		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 5));
+		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 5 - lh));
 		mDate->setSize((float)mViewport.w, (float)(boxHeight - lh / 2));
 		mDate->setHorizontalAlignment(ALIGN_CENTER);
 		mDate->setVerticalAlignment(ALIGN_CENTER);
-		mDate->setColor(0xFFFFFFFF);
-		mDate->setGlowColor(0x00000040);
+		mDate->setColor(mClockType == "Number" ? mClockColor : 0xFFFFFFFF);
+		mDate->setGlowColor(mClockType == "Number" ? ((mClockColor & 0xFFFFFF00) | 0x80) : 0x00000040);
 		mDate->setGlowSize(3);
 		mDate->setFont(font);
 		mDate->setText(Utils::Time::timeToString(now, "%Y/%m/%d"));
@@ -1143,7 +1150,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Digital time
 	if (mClockType == "Number")
 	{
-		auto font = Font::get((int)(h / 6.0f), dateTimeFontPath(":/TradeWinds-Regular.ttf"));
+		auto font = Font::get((int)(h / 3.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
 		int lh = (int)font->getLetterHeight();
 
 		mTime = new TextComponent(mWindow);
@@ -1151,11 +1158,11 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		mTime->setSize((float)mViewport.w, (float)(boxHeight - lh / 2));
 		mTime->setHorizontalAlignment(ALIGN_CENTER);
 		mTime->setVerticalAlignment(ALIGN_CENTER);
-		mTime->setColor(0xD0D0D0FF);
-		mTime->setGlowColor(0x00000060);
-		mTime->setGlowSize(2);
+		mTime->setColor(mClockColor);
+		mTime->setGlowColor((mClockColor & 0xFFFFFF00) | 0x80);
+		mTime->setGlowSize(3);
 		mTime->setFont(font);
-		mTime->setText(Utils::Time::timeToString(now, mShowSeconds ? "%H:%M:%S" : "%H:%M"));
+		mTime->setText(Utils::Time::timeToString(now, timeFormat()));
 		return;
 	}
 
@@ -1177,6 +1184,15 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	mHourHand  = createClockLayer("hour_hand.png", true);
 	mMinHand   = createClockLayer("min_hand.png", true);
 	mSecHand   = createClockLayer("sec_hand.png", true);
+}
+
+// Follows the global ES clock setting (SHOW CLOCK IN 12-HOUR FORMAT); %-I = hour without leading zero
+std::string DateTimeScreenSaver::timeFormat() const
+{
+	if (Settings::getInstance()->getBool("ClockMode12"))
+		return mShowSeconds ? "%-I:%M:%S %p" : "%-I:%M %p";
+
+	return mShowSeconds ? "%H:%M:%S" : "%H:%M";
 }
 
 DateTimeScreenSaver::~DateTimeScreenSaver()
@@ -1239,7 +1255,7 @@ void DateTimeScreenSaver::update(int deltaTime)
 	if (mClockType == "Number")
 	{
 		if (mTime)
-			mTime->setText(Utils::Time::timeToString(now, mShowSeconds ? "%H:%M:%S" : "%H:%M"));
+			mTime->setText(Utils::Time::timeToString(now, timeFormat()));
 		return;
 	}
 
