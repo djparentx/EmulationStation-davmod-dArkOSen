@@ -5,7 +5,7 @@
 
 #include <SDL_joystick.h>
 #include <map>
-#include <set>
+#include <SDL_haptic.h>
 
 class InputConfig;
 class Window;
@@ -29,7 +29,12 @@ private:
 	InputConfig* mCECInputConfig;
 
 	std::map<SDL_JoystickID, int*> mPrevAxisValues;
-	std::set<SDL_JoystickID> mBuiltInJoysticks;
+	struct BuiltInHaptic
+	{
+		SDL_Haptic* haptic;
+		std::map<std::pair<int, int>, int> effects; // (level, durationMs) -> SDL haptic effect id
+	};
+	std::map<SDL_JoystickID, BuiltInHaptic> mBuiltInHaptics;
 	
 	bool initialized() const;
 
