@@ -45,6 +45,8 @@ public:
 	void	setBrighness(int value);
 	float	getGamma();
 	void	setGamma(float value);
+	int	getTone();
+	void	setTone(int value);
     BatteryInformation getBatteryInformation(bool summary = true);
 
 protected:

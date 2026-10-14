@@ -578,22 +578,53 @@ float ApiSystem::getGamma()
 	return 1.0f;
 }
 
-void ApiSystem::setGamma(float value)
+static void applyDisplayLut(float gamma, int tone)
 {
 #if !WIN32
-	char cmd[64];
-	sprintf(cmd, "/usr/local/bin/gamma -s %.1f > /dev/null 2>&1", value);
+	char cmd[96];
+	sprintf(cmd, "/usr/local/bin/gamma -s %.1f -t %d > /dev/null 2>&1", gamma, tone);
 	runSystemCommand(cmd, "", nullptr);
 
-	std::stringstream confCmd;
-	confCmd << "echo GAMMA=" << std::fixed << std::setprecision(1) << value
-	        << " | sudo tee /etc/gamma-settings.conf > /dev/null 2>&1";
-	runSystemCommand(confCmd.str(), "", nullptr);
+	char confCmd[160];
+	sprintf(confCmd, "printf 'GAMMA=%.1f\\nTONE=%d\\n' | sudo tee /etc/gamma-settings.conf > /dev/null 2>&1", gamma, tone);
+	runSystemCommand(confCmd, "", nullptr);
 
-	std::ofstream shm("/dev/shm/CURRENT_GAMMA");
-	shm << std::fixed << std::setprecision(1) << value;
-	shm.close();
+	std::ofstream shmGamma("/dev/shm/CURRENT_GAMMA");
+	shmGamma << std::fixed << std::setprecision(1) << gamma;
+	shmGamma.close();
+
+	std::ofstream shmTone("/dev/shm/CURRENT_TONE");
+	shmTone << tone;
+	shmTone.close();
 #endif
+}
+
+void ApiSystem::setGamma(float value)
+{
+	applyDisplayLut(value, getTone());
+}
+
+int ApiSystem::getTone()
+{
+#if !WIN32
+	std::ifstream conf("/etc/gamma-settings.conf");
+	std::string line;
+	while (std::getline(conf, line))
+	{
+		if (line.rfind("TONE=", 0) == 0)
+		{
+			int tone = atoi(line.substr(5).c_str());
+			if (tone >= 2700 && tone <= 6500)
+				return tone;
+		}
+	}
+#endif
+	return 5500;
+}
+
+void ApiSystem::setTone(int value)
+{
+	applyDisplayLut(getGamma(), value);
 }
 
 BatteryInformation ApiSystem::getBatteryInformation(bool summary)

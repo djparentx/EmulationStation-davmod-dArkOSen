@@ -12,6 +12,7 @@ SliderComponent::SliderComponent(Window* window, float min, float max, float inc
 
 	// some sane default value
 	mValue = (max + min) / 2;
+	mReversed = false;
 
 	auto menuTheme = ThemeData::getMenuTheme();
 	mColor = menuTheme->Text.color;
@@ -33,19 +34,21 @@ bool SliderComponent::input(InputConfig* config, Input input)
 {
 	if(config->isMappedLike("left", input))
 	{
+		float step = mReversed ? mSingleIncrement : -mSingleIncrement;
 		if(input.value)
-			setValue(mValue - mSingleIncrement);
+			setValue(mValue + step);
 
-		mMoveRate = input.value ? -mSingleIncrement : 0;
+		mMoveRate = input.value ? step : 0;
 		mMoveAccumulator = -MOVE_REPEAT_DELAY;
 		return input.value;
 	}
 	if(config->isMappedLike("right", input))
 	{
+		float step = mReversed ? -mSingleIncrement : mSingleIncrement;
 		if(input.value)
-			setValue(mValue + mSingleIncrement);
+			setValue(mValue + step);
 
-		mMoveRate = input.value ? mSingleIncrement : 0;
+		mMoveRate = input.value ? step : 0;
 		mMoveAccumulator = -MOVE_REPEAT_DELAY;
 		return input.value;
 	}
@@ -146,7 +149,10 @@ void SliderComponent::onValueChanged()
 	// update knob position/size
 	mKnob.setResize(0, mSize.y() * 0.7f);
 	float lineLength = mSize.x() - mKnob.getSize().x() - (mValueCache ? mValueCache->metrics.size.x() + 4 : 0);
-	mKnob.setPosition(((mValue - mMin) / (mMax - mMin)) * lineLength + mKnob.getSize().x()/2, mSize.y() / 2);
+	float knobPos = (mValue - mMin) / (mMax - mMin);
+	if (mReversed)
+		knobPos = 1.0f - knobPos;
+	mKnob.setPosition(knobPos * lineLength + mKnob.getSize().x()/2, mSize.y() / 2);
 
 }
 

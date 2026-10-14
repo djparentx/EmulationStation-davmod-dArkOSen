@@ -417,6 +417,15 @@ void GuiMenu::openDisplaySettings()
 		ApiSystem::getInstance()->setGamma(newVal);
 	});
 	s->addWithLabel(_("GAMMA"), gammaComponent);
+
+	auto toneComponent = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
+	toneComponent->setReversed(true);
+	toneComponent->setValue((float)ApiSystem::getInstance()->getTone());
+	toneComponent->setOnValueChanged([](const float &newVal)
+	{
+		ApiSystem::getInstance()->setTone((int)Math::round(newVal));
+	});
+	s->addWithLabel(_("TEMPERATURE"), toneComponent);
 	
 		auto brightnessPopup = std::make_shared<SwitchComponent>(mWindow);
 		brightnessPopup->setState(Settings::getInstance()->getBool("BrightnessPopup"));
