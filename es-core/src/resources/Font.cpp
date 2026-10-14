@@ -2,6 +2,7 @@
 #include "resources/Font.h"
 
 #include "renderers/Renderer.h" 
+#include "math/Transform4x4f.h"
 #include "utils/FileSystemUtil.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
@@ -454,6 +455,65 @@ void Font::renderTextCache(TextCache* cache)
 	}
 }
 
+void Font::renderTextCacheEx(TextCache* cache, const Transform4x4f& trans, unsigned int glowSize, unsigned int glowColor, const Vector2f& glowOffset, unsigned char opacity)
+{
+	if (cache == NULL)
+		return;
+
+	if ((glowColor & 0x000000FF) != 0 && glowSize > 0)
+	{
+		Transform4x4f glowTrans = trans;
+		glowTrans.translate(Vector3f(glowOffset.x(), glowOffset.y(), 0));
+
+		auto renderAt = [&](float x, float y)
+		{
+			Transform4x4f t = glowTrans;
+			t.translate(Vector3f(x, y, 0));
+			t.round();
+			Renderer::setMatrix(t);
+			renderTextCache(cache);
+		};
+
+		auto copy = cache->vertexLists;
+
+		if (glowSize == 1 && glowOffset == Vector2f::Zero())
+		{
+			int a = Math::min(0xFF, (int)(glowColor & 0xFF) * 2);
+			cache->setColor((glowColor & 0xFFFFFF00) | (unsigned char)(a * (opacity / 255.0)));
+
+			renderAt(1, 0);
+			renderAt(0, 1);
+			renderAt(-1, 0);
+			renderAt(0, -1);
+		}
+		else
+		{
+			cache->setColor((glowColor & 0xFFFFFF00) | (unsigned char)((glowColor & 0xFF) * (opacity / 255.0)));
+
+			int x = -(int)glowSize;
+			int y = -(int)glowSize;
+			renderAt(x, y);
+
+			for (int i = 0; i < 2 * (int)glowSize; i++)
+				renderAt(++x, y);
+
+			for (int i = 0; i < 2 * (int)glowSize; i++)
+				renderAt(x, ++y);
+
+			for (int i = 0; i < 2 * (int)glowSize; i++)
+				renderAt(--x, y);
+
+			for (int i = 0; i < 2 * (int)glowSize; i++)
+				renderAt(x, --y);
+		}
+
+		cache->vertexLists = copy;
+	}
+
+	Renderer::setMatrix(trans);
+	renderTextCache(cache);
+}
+
 void Font::renderGradientTextCache(TextCache* cache, unsigned int colorTop, unsigned int colorBottom, bool horz)
 {
 	if (cache == NULL)
@@ -679,6 +739,10 @@ TextCache* Font::buildTextCache(const std::string& text, Vector2f offset, unsign
 
 	// vertices by texture
 	std::map< FontTexture*, std::vector<Renderer::Vertex> > vertMap;
+	std::map< FontTexture*, std::vector<unsigned char> > extraMap;
+
+	bool inParenthesis = false;
+	bool inBlock = false;
 
 	size_t cursor = 0;
 	while(cursor < text.length())
@@ -689,6 +753,16 @@ TextCache* Font::buildTextCache(const std::string& text, Vector2f offset, unsign
 		// invalid character
 		if(character == 0)
 			continue;
+
+		if (character == '(')
+			inParenthesis = true;
+		else if (character == ')')
+			inParenthesis = false;
+
+		if (character == '[')
+			inBlock = true;
+		else if (character == ']')
+			inBlock = false;
 
 		if(character == '\n')
 		{
@@ -705,6 +779,9 @@ TextCache* Font::buildTextCache(const std::string& text, Vector2f offset, unsign
 		size_t oldVertSize = verts.size();
 		verts.resize(oldVertSize + 6);
 		Renderer::Vertex* vertices = verts.data() + oldVertSize;
+
+		const bool isExtra = inParenthesis || inBlock || character == ']' || character == ')';
+		extraMap[glyph->texture].resize(oldVertSize + 6, isExtra ? 1 : 0);
 
 		const float        glyphStartX = x + glyph->bearing.x();
 		const Vector2i&    textureSize = glyph->texture->textureSize;
@@ -740,6 +817,7 @@ TextCache* Font::buildTextCache(const std::string& text, Vector2f offset, unsign
 
 		vertList.textureIdPtr = &it->first->textureId;
 		vertList.verts = it->second;
+		vertList.extra = extraMap[it->first];
 		i++;
 	}
 
@@ -751,6 +829,16 @@ TextCache* Font::buildTextCache(const std::string& text, Vector2f offset, unsign
 TextCache* Font::buildTextCache(const std::string& text, float offsetX, float offsetY, unsigned int color)
 {
 	return buildTextCache(text, Vector2f(offsetX, offsetY), color, 0.0f);
+}
+
+void TextCache::setColors(unsigned int color, unsigned int extraColor)
+{
+	const unsigned int convertedColor = Renderer::convertColor(color);
+	const unsigned int convertedExtraColor = Renderer::convertColor(extraColor);
+
+	for (auto it = vertexLists.begin(); it != vertexLists.end(); it++)
+		for (size_t i = 0; i < it->verts.size(); i++)
+			it->verts[i].col = (i < it->extra.size() && it->extra[i]) ? convertedExtraColor : convertedColor;
 }
 
 void TextCache::setColor(unsigned int color)

@@ -56,6 +56,8 @@ set(CORE_HEADERS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NinePatchComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RectangleComponent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/WebImageComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollbarComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/OptionListComponent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollableContainer.h
@@ -158,6 +160,8 @@ set(CORE_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/MenuComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/NinePatchComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RatingComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/RectangleComponent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/components/WebImageComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollbarComponent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/ScrollableContainer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/components/SliderComponent.cpp

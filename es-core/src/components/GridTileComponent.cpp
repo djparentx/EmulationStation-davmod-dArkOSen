@@ -696,6 +696,7 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	elem = theme->getElement(view, "gridtile.marquee", "image");
 	if (elem)
 	{
+		mHasStandardMarquee = true;
 		createMarquee();
 		mMarquee->applyTheme(theme, view, "gridtile.marquee", ThemeFlags::ALL ^ (ThemeFlags::PATH));
 
@@ -709,10 +710,13 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	}
 	else if (mMarquee != nullptr)
 	{
+		mHasStandardMarquee = false;
 		removeChild(mMarquee);
 		delete mMarquee;
 		mMarquee = nullptr;
 	}
+	else
+		mHasStandardMarquee = false;
 
 
 	// Apply theme to the <image name="gridtile.marquee"> element
@@ -874,6 +878,51 @@ void GridTileComponent::setMarquee(const std::string& path)
 		mMarquee->setImage(path, false, MaxSizeInfo(mSize));
 
 	resize();
+}
+
+bool GridTileComponent::isMinSizeTile()
+{
+	auto currentProperties = getCurrentProperties(false);
+	return currentProperties.Image.sizeMode == "minSize";
+}
+
+void GridTileComponent::forceMarquee(const std::string& path)
+{
+	if (mHasStandardMarquee)
+	{
+		setMarquee(path);
+		return;
+	}
+
+	if (!path.empty())
+	{
+		if (mMarquee == nullptr)
+		{
+			createMarquee();
+
+			mMarquee->setOrigin(0.5, 0.5);
+			mMarquee->setPosition(0.5, 0.5);
+			mMarquee->setSize(0.5, 0.5);
+			mMarquee->setIsLinear(true);
+
+			mDefaultProperties.Marquee = GridImageProperties();
+			mDefaultProperties.Marquee.size = Vector2f(0.55f, 0.55f);
+			mDefaultProperties.Marquee.Visible = true;
+			mDefaultProperties.Marquee.Loaded = true;
+			mSelectedProperties.Marquee = mDefaultProperties.Marquee;
+			mSelectedProperties.Marquee.size = Vector2f(0.65f, 0.65f);
+		}
+
+		setMarquee(path);
+	}
+	else if (mMarquee != nullptr)
+	{
+		removeChild(mMarquee);
+		delete mMarquee;
+		mMarquee = nullptr;
+
+		mCurrentMarquee = "";
+	}
 }
 
 void GridTileComponent::setFavorite(bool favorite)

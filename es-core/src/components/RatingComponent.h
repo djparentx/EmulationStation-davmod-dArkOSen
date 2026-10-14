@@ -27,6 +27,7 @@ public:
 	void render(const Transform4x4f& parentTrans);
 
 	void onSizeChanged() override;
+	void onPaddingChanged() override { onSizeChanged(); }
 
 	void setOpacity(unsigned char opacity) override;
 
@@ -46,6 +47,7 @@ private:
 	void updateColors();
 
 	float mValue;
+	bool  mAlignRight = false; // Batocera <horizontalAlignment>right</horizontalAlignment>
 
 	Renderer::Vertex mVertices[8];
 

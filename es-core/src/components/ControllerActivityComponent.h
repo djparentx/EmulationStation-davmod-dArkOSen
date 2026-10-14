@@ -18,7 +18,8 @@ public:
 		CONTROLLERS = 1,
 		BATTERY = 2,
 		NETWORK = 4,
-			BLUETOOTH = 8
+			BLUETOOTH = 8,
+		PLANEMODE = 16
 	};
 
 
@@ -67,7 +68,9 @@ protected:
 
 protected:
 	// Pads
-	std::shared_ptr<TextureResource> mPadTexture;	
+	std::shared_ptr<TextureResource> mPadTexture;
+	std::shared_ptr<TextureResource> mGunTexture;   // accepted (Batocera gunPath) - no lightgun support on this platform
+	std::shared_ptr<TextureResource> mWheelTexture;
 
 	class PlayerPad
 	{
@@ -81,6 +84,7 @@ protected:
 		int  batteryLevel;
 		int  keyState;
 		int  timeOut;
+		bool isWheel;
 
 		std::shared_ptr<TextCache>	batteryText;
 
@@ -93,6 +97,7 @@ protected:
 			batteryLevel = -1;
 			keyState = 0;
 			timeOut = 0;
+			isWheel = false;
 		}
 	};
 
@@ -106,6 +111,7 @@ protected:
 	std::shared_ptr<TextureResource> mNetworkOffImage;
 	std::shared_ptr<TextureResource> mNetworkShareImage;
 	std::shared_ptr<TextureResource> mNetworkServiceImage;
+	std::shared_ptr<TextureResource> mPlanemodeImage; // Batocera planemodeIcon: shown while wifi is off
 	bool mNetworkConnected;
 	int mNetworkState; // 0=off 1=active 2=connected 3=sharing 4=service
 	int mNetworkCheckTime;

@@ -84,6 +84,12 @@ void HelpComponent::updateGrid()
 		icons.push_back(icon);
 
 		auto lbl = std::make_shared<TextComponent>(mWindow, Utils::String::toUpper(it->second), font, mStyle.textColor);
+		if (mStyle.glowSize)
+		{
+			lbl->setGlowSize(mStyle.glowSize);
+			lbl->setGlowColor(mStyle.glowColor);
+			lbl->setGlowOffset(mStyle.glowOffset.x(), mStyle.glowOffset.y());
+		}
 		labels.push_back(lbl);
 
 		width += icon->getSize().x() + lbl->getSize().x() + ICON_TEXT_SPACING + ENTRY_SPACING;

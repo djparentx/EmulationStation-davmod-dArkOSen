@@ -39,6 +39,7 @@ public:
 	void setScrollSize(float size) { mScrollSize = size; }
 
 	void fromTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, const std::string& containerType);
+	void loadFromMenuTheme(); // Batocera <menuBackground> scrollbar* properties
 
 private:
 	int   mAlignment;

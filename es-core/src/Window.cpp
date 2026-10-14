@@ -127,6 +127,9 @@ bool Window::init(bool initRenderer)
 	if (Settings::getInstance()->getBool("VolumePopup") && (mVolumeInfo == nullptr))
 		mVolumeInfo = std::make_shared<VolumeInfoComponent>(this);
 
+	if (mControllerActivity == nullptr)
+		mControllerActivity = std::make_shared<ControllerActivityComponent>(this);
+
 	if (mBatteryIndicator == nullptr)
 		mBatteryIndicator = std::make_shared<BatteryIndicatorComponent>(this);
 
@@ -191,6 +194,9 @@ void Window::input(InputConfig* config, Input input)
 
 	if (mIgnoreKeys)
 		return;
+
+	if (mControllerActivity != nullptr)
+		mControllerActivity->input(config, input);
 
 	if (mScreenSaver) {
 		if (mScreenSaver->isScreenSaverActive() && Settings::getInstance()->getBool("ScreenSaverControls") &&
@@ -364,6 +370,10 @@ void Window::update(int deltaTime)
 
 	if (mBatteryIndicator)
 		mBatteryIndicator->update(deltaTime);
+
+	// after the battery indicator: it must see the /tmp/es-*-changed flag files first
+	if (mControllerActivity)
+		mControllerActivity->update(deltaTime);
 		
 	AudioManager::update(deltaTime);
 }
@@ -419,6 +429,9 @@ void Window::render()
 
 		mClockFont->renderTextCache(mClockText.get());*/
 	}
+
+	if (Settings::getInstance()->getBool("ShowControllerActivity") && mControllerActivity != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
+		mControllerActivity->render(transform);
 
 	if (mBatteryIndicator != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
 		mBatteryIndicator->render(transform);
@@ -875,6 +888,9 @@ void Window::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 
 	if (Settings::getInstance()->getBool("BrightnessPopup"))
 		mBrightnessInfo = std::make_shared<BrightnessInfoComponent>(this);
+
+	if (mControllerActivity)
+		mControllerActivity->applyTheme(theme, "screen", "controllerActivity", ThemeFlags::ALL ^ (ThemeFlags::TEXT));
 
 	if (mBatteryIndicator)
 		mBatteryIndicator->applyTheme(theme, "screen", "batteryIndicator", ThemeFlags::ALL);

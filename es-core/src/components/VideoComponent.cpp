@@ -314,6 +314,18 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	if(elem->has("default"))
 		mConfig.defaultVideoPath = elem->get<std::string>("default");
 
+	// Batocera: image shown when the game has no snapshot
+	if (elem->has("defaultSnapshot"))
+		mStaticImage.setDefaultImage(elem->get<std::string>("defaultSnapshot"));
+
+	if (elem->has("linearSmooth"))
+		mStaticImage.setIsLinear(elem->get<bool>("linearSmooth"));
+
+	mEnabled = elem->has("enabled") ? elem->get<bool>("enabled") : true;
+
+	if (properties & ThemeFlags::VISIBLE)
+		setPlayAudio(elem->has("audio") ? elem->get<bool>("audio") : true);
+
 	if((properties & ThemeFlags::DELAY) && elem->has("delay"))
 		mConfig.startDelay = (unsigned)(elem->get<float>("delay") * 1000.0f);
 
@@ -489,7 +501,7 @@ void VideoComponent::manageState()
 
 	// We will only show if the component is on display and the screensaver
 	// is not active
-	bool show = mShowing && !mScreensaverActive && !mDisable;
+	bool show = mShowing && !mScreensaverActive && !mDisable && mEnabled;
 	if (!show)
 		mStartDelayed = false;
 
@@ -587,6 +599,12 @@ ThemeData::ThemeElement::Property VideoComponent::getProperty(const std::string 
 	if (name == "path")
 		return mVideoPath;
 
+	if (name == "enabled")
+		return mEnabled;
+
+	if (name == "audio")
+		return mPlayAudio;
+
 	return GuiComponent::getProperty(name);
 }
 
@@ -599,6 +617,13 @@ void VideoComponent::setProperty(const std::string name, const ThemeData::ThemeE
 		else
 			setVideo(mConfig.defaultVideoPath);
 	}
+	else if (value.type == ThemeData::ThemeElement::Property::PropertyType::Bool && name == "enabled")
+	{
+		mEnabled = value.b;
+		manageState();
+	}
+	else if (value.type == ThemeData::ThemeElement::Property::PropertyType::Bool && name == "audio")
+		setPlayAudio(value.b);
 	else
 		GuiComponent::setProperty(name, value);
 }

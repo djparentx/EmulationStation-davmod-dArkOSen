@@ -82,6 +82,10 @@ public:
 	inline void setColor(unsigned int id, unsigned int color) { mColors[id] = color; }
 	inline void setLineSpacing(float lineSpacing) { mLineSpacing = lineSpacing; }
 
+	// Batocera <extraTextColor> / <extraTextSelectedColor>: color of the text inside () and []
+	inline void setExtraTextColor(unsigned int color) { mExtraColor = color; mHasExtraColor = true; }
+	inline void setExtraTextSelectedColor(unsigned int color) { mExtraSelectedColor = color; mHasExtraSelectedColor = true; }
+
 protected:
 	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(); }
 	virtual void onCursorChanged(const CursorState& state);
@@ -114,6 +118,15 @@ private:
 	// AmberELEC <lines> (fixed number of rows) and scrollbar
 	int mLineCount;
 	ScrollbarComponent mScrollbar;
+
+	unsigned int mExtraColor = 0;
+	bool mHasExtraColor = false;
+	unsigned int mExtraSelectedColor = 0;
+	bool mHasExtraSelectedColor = false;
+
+	unsigned int mGlowColor = 0;
+	unsigned int mGlowSize = 2;
+	Vector2f mGlowOffset = Vector2f::Zero();
 };
 
 template <typename T>
@@ -152,8 +165,23 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	if(size() == 0)
 		return;
 
-	Vector2f clipPos(trans.translation().x(), trans.translation().y());
-	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), mSize.x(), mSize.y()))
+	// rotated list (Batocera <rotation>): clip / cull on the screen bounding box
+	const bool rotated = GuiComponent::getRotation() != 0;
+	Vector2f boundsMin(trans.translation().x(), trans.translation().y());
+	Vector2f boundsMax(boundsMin.x() + mSize.x(), boundsMin.y() + mSize.y());
+	if (rotated)
+	{
+		const Vector3f corners[4] = { trans * Vector3f(0, 0, 0), trans * Vector3f(mSize.x(), 0, 0), trans * Vector3f(0, mSize.y(), 0), trans * Vector3f(mSize.x(), mSize.y(), 0) };
+		boundsMin = boundsMax = Vector2f(corners[0].x(), corners[0].y());
+		for (int c = 1; c < 4; c++)
+		{
+			boundsMin = Vector2f(Math::min(boundsMin.x(), corners[c].x()), Math::min(boundsMin.y(), corners[c].y()));
+			boundsMax = Vector2f(Math::max(boundsMax.x(), corners[c].x()), Math::max(boundsMax.y(), corners[c].y()));
+		}
+	}
+
+	Vector2f clipPos(boundsMin.x(), boundsMin.y());
+	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), boundsMax.x() - boundsMin.x(), boundsMax.y() - boundsMin.y()))
 		return;
 
 	if (Settings::getInstance()->getBool("DebugGrid"))
@@ -206,10 +234,17 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	}
 
 	// clip to inside margins
-	Vector3f dim(mSize.x(), mSize.y(), 0);
-	dim = trans * dim - trans.translation();
-	Renderer::pushClipRect(Vector2i((int)(trans.translation().x() + mHorizontalMargin), (int)trans.translation().y()), 
-		Vector2i((int)(dim.x() - mHorizontalMargin*2), (int)dim.y()));
+	if (rotated)
+		Renderer::pushClipRect(Vector2i((int)boundsMin.x(), (int)boundsMin.y()), Vector2i((int)(boundsMax.x() - boundsMin.x()), (int)(boundsMax.y() - boundsMin.y())));
+	else
+	{
+		Vector3f dim(mSize.x(), mSize.y(), 0);
+		dim = trans * dim - trans.translation();
+		Renderer::pushClipRect(Vector2i((int)(trans.translation().x() + mHorizontalMargin), (int)trans.translation().y()), 
+			Vector2i((int)(dim.x() - mHorizontalMargin*2), (int)dim.y()));
+	}
+
+	const bool glow = (mGlowColor & 0x000000FF) != 0 && mGlowSize > 0;
 
 	for(int i = startEntry; i < listCutoff; i++)
 	{
@@ -224,7 +259,12 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		if(!entry.data.textCache)
 			entry.data.textCache = std::unique_ptr<TextCache>(font->buildTextCache(mUppercase ? Utils::String::toUpper(entry.name) : entry.name, 0, 0, 0x000000FF));
 
-		entry.data.textCache->setColor(applyOpacity(color));
+		if (mCursor == i && mHasExtraSelectedColor)
+			entry.data.textCache->setColors(applyOpacity(color), applyOpacity(mExtraSelectedColor));
+		else if (mHasExtraColor)
+			entry.data.textCache->setColors(applyOpacity(color), applyOpacity(mExtraColor));
+		else
+			entry.data.textCache->setColor(applyOpacity(color));
 
 		Vector3f offset(0, y, 0);
 
@@ -258,8 +298,13 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		else
 			drawTrans.translate(offset);
 
-		Renderer::setMatrix(drawTrans);
-		font->renderTextCache(entry.data.textCache.get());
+		if (glow)
+			font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, GuiComponent::getOpacity());
+		else
+		{
+			Renderer::setMatrix(drawTrans);
+			font->renderTextCache(entry.data.textCache.get());
+		}
 
 		// render currently selected item text again if
 		// marquee is scrolled far enough for it to repeat
@@ -267,8 +312,14 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		{
 			drawTrans = trans;
 			drawTrans.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
-			Renderer::setMatrix(drawTrans);
-			font->renderTextCache(entry.data.textCache.get());
+
+			if (glow)
+				font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, GuiComponent::getOpacity());
+			else
+			{
+				Renderer::setMatrix(drawTrans);
+				font->renderTextCache(entry.data.textCache.get());
+			}
 		}
 
 		y += entrySize;
@@ -426,6 +477,22 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 			setColor(0, elem->get<unsigned int>("primaryColor"));
 		if(elem->has("secondaryColor"))
 			setColor(1, elem->get<unsigned int>("secondaryColor"));
+
+		mHasExtraColor = false;
+		if (elem->has("extraTextColor"))
+			setExtraTextColor(elem->get<unsigned int>("extraTextColor"));
+
+		mHasExtraSelectedColor = false;
+		if (elem->has("extraTextSelectedColor"))
+			setExtraTextSelectedColor(elem->get<unsigned int>("extraTextSelectedColor"));
+
+		mGlowColor = elem->has("glowColor") ? elem->get<unsigned int>("glowColor") : 0;
+
+		if (elem->has("glowSize"))
+			mGlowSize = (unsigned int)elem->get<float>("glowSize");
+
+		if (elem->has("glowOffset"))
+			mGlowOffset = elem->get<Vector2f>("glowOffset");
 	}
 
 	setFont(Font::getFromTheme(elem, properties, mFont));

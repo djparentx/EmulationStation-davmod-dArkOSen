@@ -106,6 +106,7 @@ private:
 	libvlc_media_player_t*			mMediaPlayer;
 	VideoContext					mContext;
 	std::shared_ptr<TextureResource> mTexture;
+	bool							mLinearSmooth = false; // Batocera <linearSmooth>
 
 	std::string					    mSubtitlePath;
 	std::string					    mSubtitleTmpFile;

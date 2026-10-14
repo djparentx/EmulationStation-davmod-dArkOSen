@@ -20,7 +20,9 @@ ButtonComponent::ButtonComponent(Window* window, const std::string& text, const 
 	mColorFocused = menuTheme->Text.selectorColor;
 	mRenderNonFocusedBackground = true;
 	
-	if (Renderer::isSmallScreen())
+	if (menuTheme->Button.hasCornerSize)
+		mBox.setCornerSize(menuTheme->Button.cornerSize);
+	else if (Renderer::isSmallScreen())
 		mBox.setCornerSize(8, 8);
 
 	setPressedFunc(func);

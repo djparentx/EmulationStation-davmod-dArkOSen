@@ -205,6 +205,11 @@ public:
 
 	void setImage(const std::string& path, bool isDefaultImage = false);
 	void setMarquee(const std::string& path);
+
+	// Batocera <logoBackgroundImage>: the logo is shown as a marquee over the background image
+	bool hasMarquee() { return mHasStandardMarquee; }
+	bool isMinSizeTile();
+	void forceMarquee(const std::string& path);
 	
 	void setFavorite(bool favorite);
 	bool hasFavoriteMedia() { return mFavorite != nullptr; }
@@ -256,6 +261,7 @@ private:
 	GridTileProperties mVideoPlayingProperties;
 
 	std::string mCurrentMarquee;
+	bool mHasStandardMarquee = false; // theme defines <image name="gridtile.marquee">
 	std::string mCurrentPath;
 	std::string mVideoPath;
 

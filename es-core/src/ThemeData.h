@@ -129,6 +129,26 @@ struct MenuBackground
 	std::string path;
 	std::string fadePath;	
 	Vector2f cornerSize;	
+
+	// Batocera menu scrollbar: color 0 = none, 1 = auto (text color)
+	unsigned int scrollbarColor;
+	float scrollbarSize;
+	float scrollbarCorner;
+	std::string scrollbarAlignment;
+};
+
+// Batocera <menuGrid>: separator lines of the menu grids (default: the menu text separator color)
+struct GridElement
+{
+	bool hasSeparatorColor;
+	unsigned int separatorColor;
+};
+
+// Batocera <menuButton><cornerSize>
+struct ButtonElement
+{
+	bool hasCornerSize;
+	Vector2f cornerSize;
 };
 
 // <menuGroup> (AmberELEC): group header rows in menus. Defaults keep the previous look
@@ -166,7 +186,9 @@ public:
 	public:
 		ThemeMenu(ThemeData* theme);
 
-		MenuBackground Background{ 0xFFFFFFFF, 0xFFFFFFFF, ":/frame.png", ":/scroll_gradient.png", Vector2f(16, 16) };
+		MenuBackground Background{ 0xFFFFFFFF, 0xFFFFFFFF, ":/frame.png", ":/scroll_gradient.png", Vector2f(16, 16), 0, 0.0025f, 0.01f, "innerright" };
+		GridElement Grid{ false, 0 };
+		ButtonElement Button{ false, Vector2f(16, 16) };
 		MenuElement Title{ 0x555555FF, 0x555555FF, 0x555555FF, 0xFFFFFFFF, 0x555555FF, true, "", nullptr };
 		MenuElement Text{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement TextSmall{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };

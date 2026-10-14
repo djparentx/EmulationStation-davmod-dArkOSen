@@ -21,6 +21,8 @@
 #include "components/BatteryTextComponent.h"
 #include "components/StackPanelComponent.h"
 #include "components/RatingComponent.h"
+#include "components/RectangleComponent.h"
+#include "components/WebImageComponent.h"
 #include "animations/ThemeStoryboard.h"
 
 std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" } };
@@ -54,6 +56,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipX", BOOLEAN },
 		{ "flipY", BOOLEAN },
 		{ "linearSmooth", BOOLEAN },
+		{ "shared", BOOLEAN },              // false: own texture (shared only with elements of the same name)
 		{ "saturation", FLOAT },
 		{ "autoFade", BOOLEAN },
 		{ "scaleOrigin", NORMALIZED_PAIR },
@@ -91,6 +94,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "zIndex", FLOAT },
 		{ "gameImage", PATH },
 		{ "folderImage", PATH },
+		{ "logoBackgroundImage", PATH },
 		{ "showVideoAtDelay", FLOAT },
 		{ "scrollDirection", STRING },
 		{ "scrollSound", PATH },
@@ -133,6 +137,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "glowColor", COLOR },
 		{ "glowSize", FLOAT },
 		{ "glowOffset", NORMALIZED_PAIR },
+		{ "extraTextColor", COLOR },
+		{ "multiLine", STRING },            // true, false, auto
 		{ "singleLineScroll", BOOLEAN },
 		{ "autoScroll", STRING },
 		{ "autoScrollDelay", FLOAT },
@@ -233,7 +239,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH } } },
 	{ "networkIcon", {
-		{ "planemodeIcon", PATH },          // accepted, not used
+		{ "planemodeIcon", PATH },          // no plane mode on this platform: shown while wifi is off
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -254,6 +260,24 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipY", BOOLEAN },
 		{ "zIndex", FLOAT },
 		{ "networkIcon", PATH } } },
+	{ "webimage", {                         // inherits image
+		{ "path", STRING } } },             // file or http(s) url
+	{ "rectangle", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "size", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "h", FLOAT },
+		{ "w", FLOAT },
+		{ "color", COLOR },
+		{ "borderColor", COLOR },
+		{ "borderSize", FLOAT },
+		{ "roundCorners", FLOAT },
+		{ "opacity", FLOAT },
+		{ "visible", BOOLEAN },
+		{ "padding", NORMALIZED_RECT },
+		{ "clipChildren", BOOLEAN },
+		{ "zIndex", FLOAT } } },
 	{ "textlist", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -272,6 +296,13 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "selectedColor", COLOR },
 		{ "primaryColor", COLOR },
 		{ "secondaryColor", COLOR },
+		{ "extraTextColor", COLOR },
+		{ "extraTextSelectedColor", COLOR },
+		{ "glowColor", COLOR },
+		{ "glowSize", FLOAT },
+		{ "glowOffset", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
 		{ "scrollSound", PATH },
@@ -393,6 +424,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "unfilledColor", COLOR },
 		{ "filledPath", PATH },
 		{ "unfilledPath", PATH },
+		{ "horizontalAlignment", STRING },  // left, right (Batocera draws center like left)
 		{ "value", FLOAT },
 		{ "visible", BOOLEAN },
 		{ "padding", NORMALIZED_RECT },
@@ -416,9 +448,19 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "itemSpacing", FLOAT },
 		{ "horizontalAlignment", STRING },
 		{ "imagePath", PATH },
+		{ "gunPath", PATH },                // accepted, no lightgun support on this platform
+		{ "wheelPath", PATH },
 		{ "color", COLOR },
 		{ "activityColor", COLOR },
 		{ "hotkeyColor", COLOR },
+		{ "incharge", PATH },
+		{ "full", PATH },
+		{ "at75", PATH },
+		{ "at50", PATH },
+		{ "at25", PATH },
+		{ "empty", PATH },
+		{ "networkIcon", PATH },
+		{ "planemodeIcon", PATH },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "batteryIndicator", {
@@ -438,7 +480,11 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH },
 		{ "networkIcon", PATH },
+		{ "planemodeIcon", PATH },
+		{ "imagePath", PATH },
 		{ "color", COLOR },
+		{ "activityColor", COLOR },
+		{ "hotkeyColor", COLOR },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "helpsystem", {
@@ -450,6 +496,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "origin", NORMALIZED_PAIR },
 		{ "textColor", COLOR },
 		{ "iconColor", COLOR },
+		{ "glowColor", COLOR },
+		{ "glowSize", FLOAT },
+		{ "glowOffset", NORMALIZED_PAIR },
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
 		{ "iconUpDown", PATH },
@@ -462,7 +511,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "iconL", PATH },
 		{ "iconR", PATH },
 		{ "iconStart", PATH },
-		{ "iconSelect", PATH } } },
+		{ "iconSelect", PATH },
+		{ "iconF1", PATH } } },
 	{ "video", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -487,6 +537,10 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "loops", FLOAT }, // Number of loops to do -1 (default) is infinite 
 		{ "showSnapshotNoVideo", BOOLEAN },
 		{ "showSnapshotDelay", BOOLEAN },
+		{ "defaultSnapshot", PATH },
+		{ "audio", BOOLEAN },
+		{ "enabled", BOOLEAN },
+		{ "linearSmooth", BOOLEAN },
 		{ "saturation", FLOAT },            // applied to the snapshot image only
 		{ "padding", NORMALIZED_RECT },
 		{ "offset", NORMALIZED_PAIR },
@@ -550,7 +604,13 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "fadePath", PATH },
 		{ "color", COLOR },
 		{ "centerColor", COLOR },
-		{ "cornerSize", NORMALIZED_PAIR } } },
+		{ "cornerSize", NORMALIZED_PAIR },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING } } },     // left, right, outer left, outer right
+	{ "menuGrid", {
+		{ "separatorColor", COLOR } } },
 	{ "menuIcons", { 		
 		{ "iconSystem", PATH },
 		{ "iconUpdates", PATH },
@@ -571,6 +631,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 	{ "menuSlider",{
 		{ "path", PATH } } },
 	{ "menuButton",{
+		{ "cornerSize", NORMALIZED_PAIR },
 		{ "path", PATH },
 		{ "filledPath", PATH } } },
 };
@@ -1575,7 +1636,7 @@ static bool isBindingExpression(const std::string& str)
 }
 
 // element types that are always extras, even without extra="true" (AmberELEC)
-static std::set<std::string> _autoExtraTypes { "stackpanel", "container", "clock", "networkIcon", "batteryText", "batteryIcon" };
+static std::set<std::string> _autoExtraTypes { "stackpanel", "container", "clock", "networkIcon", "webimage", "batteryText", "batteryIcon", "rectangle" };
 
 // types inheriting another type's properties (AmberELEC)
 std::map<std::string, std::string> ThemeData::sBaseClasses {
@@ -1782,6 +1843,10 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 void ThemeData::processElement(const pugi::xml_node& root, ThemeElement& element, const std::string& name, const std::string& value, ElementPropertyType type, const std::string& rawValue)
 {
 	const std::string& str = value;
+
+	// <webimage><path>: an url stays a string, a file is resolved like any other path
+	if (type == STRING && name == "path" && element.type == "webimage" && !Utils::String::startsWith(str, "http://") && !Utils::String::startsWith(str, "https://"))
+		type = PATH;
 
 	{
 		switch(type)
@@ -2054,6 +2119,10 @@ GuiComponent* ThemeData::createExtraComponent(Window* window, const std::string&
 		return new BatteryTextComponent(window);
 	else if (t == "rating")
 		return new RatingComponent(window);
+	else if (t == "rectangle")
+		return new RectangleComponent(window);
+	else if (t == "webimage")
+		return new WebImageComponent(window);
 	else if (t == "container" || t == "control")
 		return new GuiComponent(window); // AmberELEC: plain box for nested elements
 
@@ -2180,6 +2249,25 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 
 		if (elem->has("cornerSize"))
 			Background.cornerSize = elem->get<Vector2f>("cornerSize");
+
+		if (elem->has("scrollbarColor"))
+			Background.scrollbarColor = elem->get<unsigned int>("scrollbarColor");
+
+		if (elem->has("scrollbarSize"))
+			Background.scrollbarSize = elem->get<float>("scrollbarSize");
+
+		if (elem->has("scrollbarCorner"))
+			Background.scrollbarCorner = elem->get<float>("scrollbarCorner");
+
+		if (elem->has("scrollbarAlignment"))
+			Background.scrollbarAlignment = elem->get<std::string>("scrollbarAlignment");
+	}
+
+	elem = theme->getElement("menu", "menugrid", "menuGrid");
+	if (elem && elem->has("separatorColor"))
+	{
+		Grid.hasSeparatorColor = true;
+		Grid.separatorColor = elem->get<unsigned int>("separatorColor");
 	}
 
 	elem = theme->getElement("menu", "menutitle", "menuText");
@@ -2248,6 +2336,11 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 			Icons.button = elem->get<std::string>("path");
 		if (elem->has("filledPath"))
 			Icons.button_filled = elem->get<std::string>("filledPath");
+		if (elem->has("cornerSize"))
+		{
+			Button.hasCornerSize = true;
+			Button.cornerSize = elem->get<Vector2f>("cornerSize");
+		}
 	}
 
 	elem = theme->getElement("menu", "menutextedit", "menuTextEdit");

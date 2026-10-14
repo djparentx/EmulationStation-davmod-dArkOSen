@@ -312,14 +312,61 @@ void TextComponent::calculateExtent()
 {
 	if (mAutoCalcExtent.x())
 	{
-		mSize = mFont->sizeText(mUppercase ? Utils::String::toUpper(mText) : mText, mLineSpacing);
+		std::string text = mUppercase ? Utils::String::toUpper(mText) : mText;
+		if (mMultiLine == SINGLELINE)
+			text = text.substr(0, text.find('\n')); // single line: stop at the first newline
+
+		mSize = mFont->sizeText(text, mLineSpacing);
 	}
 	else {
 		if (mAutoCalcExtent.y())
 		{
-			mSize[1] = mFont->sizeWrappedText(mUppercase ? Utils::String::toUpper(mText) : mText, getSize().x(), mLineSpacing).y();
+			if (mMultiLine == SINGLELINE)
+				mSize[1] = mFont->getHeight();
+			else
+				mSize[1] = mFont->sizeWrappedText(mUppercase ? Utils::String::toUpper(mText) : mText, getSize().x(), mLineSpacing).y();
 		}
 	}
+}
+
+bool TextComponent::isMultiLine()
+{
+	if (mMultiLine == MULTILINE)
+		return true;
+
+	if (mMultiLine == SINGLELINE)
+		return false;
+
+	int sy = mSize.y() - mPadding.y() - mPadding.w();
+	return !mAutoScroll && (mSize.y() == 0 || sy > mFont->getHeight()*1.95f);
+}
+
+void TextComponent::setMultiLine(MultiLineType value)
+{
+	if (mMultiLine == value)
+		return;
+
+	mMultiLine = value;
+	onTextChanged();
+}
+
+void TextComponent::setExtraTextColor(unsigned int color)
+{
+	if (mHasExtraColor && mExtraColor == color)
+		return;
+
+	mExtraColor = color;
+	mHasExtraColor = true;
+	onColorChanged();
+}
+
+void TextComponent::resetExtraTextColor()
+{
+	if (!mHasExtraColor)
+		return;
+
+	mHasExtraColor = false;
+	onColorChanged();
 }
 
 void TextComponent::onTextChanged()
@@ -333,12 +380,11 @@ void TextComponent::onTextChanged()
 	}
 
 	int sx = mSize.x() - mPadding.x() - mPadding.z();
-	int sy = mSize.y() - mPadding.y() - mPadding.w();
 
 	std::string text = mUppercase ? Utils::String::toUpper(mText) : mText;
 
 	std::shared_ptr<Font> f = mFont;
-	const bool isMultiline = !mAutoScroll && (mSize.y() == 0 || sy > f->getHeight()*1.95f);
+	const bool isMultiline = isMultiLine();
 
 	bool addAbbrev = false;
 	if (!isMultiline)
@@ -373,6 +419,9 @@ void TextComponent::onTextChanged()
 	}
 	else
 		mTextCache = std::shared_ptr<TextCache>(f->buildTextCache(f->wrapText(text, sx), Vector2f(0, 0), color, sx, mHorizontalAlignment, mLineSpacing));
+
+	if (mHasExtraColor)
+		onColorChanged();
 }
 
 void TextComponent::update(int deltaTime)
@@ -409,8 +458,7 @@ void TextComponent::update(int deltaTime)
 		return;
 	}
 
-	int sy = mSize.y() - mPadding.y() - mPadding.w();
-	const bool isMultiline = !mAutoScroll && (mSize.y() == 0 || sy > mFont->getHeight()*1.95f);
+	const bool isMultiline = isMultiLine();
 
 	if (mAutoScroll && !isMultiline && mSize.x() > 0)
 	{
@@ -459,7 +507,11 @@ void TextComponent::onColorChanged()
 	if (mTextCache)
 	{
 		auto color = mColor & 0xFFFFFF00 | (unsigned char)((mColor & 0xFF) * (mOpacity / 255.0));
-		mTextCache->setColor(color);
+
+		if (mHasExtraColor)
+			mTextCache->setColors(color, mExtraColor & 0xFFFFFF00 | (unsigned char)((mExtraColor & 0xFF) * (mOpacity / 255.0)));
+		else
+			mTextCache->setColor(color);
 	}
 }
 
@@ -563,6 +615,11 @@ void TextComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme, 
 		else 
 			setRenderBackground(false);
 
+		if (elem->has("extraTextColor"))
+			setExtraTextColor(elem->get<unsigned int>("extraTextColor"));
+		else
+			resetExtraTextColor();
+
 		if (elem->has("glowColor"))
 			mGlowColor = elem->get<unsigned int>("glowColor");
 		else
@@ -596,6 +653,19 @@ void TextComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme, 
 		}
 		else
 			mAutoScroll = false;
+
+		if (elem->has("multiLine"))
+		{
+			const std::string multiLine = elem->get<std::string>("multiLine");
+			if (multiLine == "true")
+				setMultiLine(MULTILINE);
+			else if (multiLine == "false")
+				setMultiLine(SINGLELINE);
+			else
+				setMultiLine(MULTILINE_AUTO);
+		}
+		else
+			setMultiLine(MULTILINE_AUTO);
 
 		if (elem->has("autoScrollDelay"))
 			mAutoScrollDelay = (int)Math::clamp(elem->get<float>("autoScrollDelay"), 0.0f, 1000000.0f);
@@ -648,6 +718,10 @@ ThemeData::ThemeElement::Property TextComponent::getProperty(const std::string n
 		return mGlowColor;
 	else if (name == "glowSize")
 		return (float)mGlowSize;
+	else if (name == "extraTextColor")
+		return mExtraColor;
+	else if (name == "multiLine")
+		return std::string(mMultiLine == MULTILINE ? "true" : (mMultiLine == SINGLELINE ? "false" : "auto"));
 	else if (name == "lineSpacing")
 		return mLineSpacing;
 	else if (name == "text" || name == "value")
@@ -671,6 +745,10 @@ void TextComponent::setProperty(const std::string name, const ThemeData::ThemeEl
 		setGlowColor(value.i);
 	else if (value.type == PropType::Float && name == "glowSize")
 		setGlowSize((unsigned int)value.f);
+	else if (value.type == PropType::Int && name == "extraTextColor")
+		setExtraTextColor(value.i);
+	else if (value.type == PropType::String && name == "multiLine")
+		setMultiLine(value.s == "true" ? MULTILINE : (value.s == "false" ? SINGLELINE : MULTILINE_AUTO));
 	else if (value.type == PropType::Float && name == "lineSpacing")
 		setLineSpacing(value.f);
 	else if (value.type == PropType::String && name == "text")

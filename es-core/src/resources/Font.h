@@ -47,6 +47,8 @@ public:
 	TextCache* buildTextCache(const std::string& text, Vector2f offset, unsigned int color, float xLen, Alignment alignment = ALIGN_LEFT, float lineSpacing = 1.5f);
 	
 	void renderTextCache(TextCache* cache);
+	// renders the cache at trans, with a glow outline first when glowColor has alpha (AmberELEC)
+	void renderTextCacheEx(TextCache* cache, const Transform4x4f& trans, unsigned int glowSize, unsigned int glowColor, const Vector2f& glowOffset, unsigned char opacity);
 	void renderGradientTextCache(TextCache* cache, unsigned int colorTop, unsigned int colorBottom, bool horz = false);
 
 	std::string wrapText(std::string text, float xLen); // Inserts newlines into text to make it wrap properly.
@@ -155,6 +157,7 @@ protected:
 	struct VertexList
 	{
 		std::vector<Renderer::Vertex> verts;
+		std::vector<unsigned char> extra; // per vertex: 1 = glyph inside () or [] (Batocera extraTextColor)
 		unsigned int* textureIdPtr; // this is a pointer because the texture ID can change during deinit/reinit (when launching a game)
 	};
 
@@ -167,6 +170,8 @@ public:
 	} metrics;
 
 	void setColor(unsigned int color);
+	// glyphs inside () or [] get extraColor, the others color (Batocera extraTextColor)
+	void setColors(unsigned int color, unsigned int extraColor);
 
 	friend Font;
 };

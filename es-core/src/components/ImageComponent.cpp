@@ -1,5 +1,6 @@
 #include <string>
 #include "components/ImageComponent.h"
+#include <cstdint>
 
 #include "resources/TextureResource.h"
 #include "Log.h"
@@ -197,16 +198,25 @@ void ImageComponent::setImage(std::string path, bool tile, MaxSizeInfo maxSize)
 	TextureResource::cancelAsync(mTexture);
 	mLoadingTexture.reset();
 
+	// Batocera <shared>false</shared>: own texture, shared only with elements of the same name
+	std::string shareId;
+	if (!mSharedTexture)
+	{
+		shareId = getTag();
+		if (shareId.empty())
+			shareId = std::to_string(reinterpret_cast<uintptr_t>(this));
+	}
+
 	if (mPath.empty() || !ResourceManager::getInstance()->fileExists(mPath))
 	{
 		if (mDefaultPath.empty() || !ResourceManager::getInstance()->fileExists(mDefaultPath))
 			mTexture.reset();
 		else
-			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
+			mTexture = TextureResource::get(mDefaultPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation, shareId);
 	}
 	else
 	{
-		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation);
+		std::shared_ptr<TextureResource> texture = TextureResource::get(mPath, tile, mLinear, mForceLoad, mDynamic, true, maxSize, mSaturation, shareId);
 
 		if (!mForceLoad && mDynamic && !mAllowFading && texture != nullptr && !texture->isLoaded())
 			mLoadingTexture = texture;
@@ -612,6 +622,8 @@ void ImageComponent::applyThemeWithType(const std::shared_ptr<ThemeData>& theme,
 
 	if (elem->has("autoFade"))
 		setAllowFading(elem->get<bool>("autoFade"));
+
+	mSharedTexture = elem->has("shared") ? elem->get<bool>("shared") : true;
 
 	// normalized coordinates are relative to the parent's client area (AmberELEC)
 	Vector4f clientRect = getParentClientRect();

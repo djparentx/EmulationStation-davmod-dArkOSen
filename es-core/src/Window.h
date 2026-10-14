@@ -150,6 +150,7 @@ private:
 	std::shared_ptr<VolumeInfoComponent> mVolumeInfo;
 	std::shared_ptr<BrightnessInfoComponent> mBrightnessInfo;
 	std::shared_ptr<BatteryIndicatorComponent>	mBatteryIndicator;
+	std::shared_ptr<ControllerActivityComponent>	mControllerActivity;
 	
 	bool mNormalizeNextUpdate;
 

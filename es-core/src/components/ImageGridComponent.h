@@ -113,6 +113,7 @@ private:
 	int mLastCursor;
 	std::string mDefaultGameTexture;
 	std::string mDefaultFolderTexture;
+	std::string mDefaultLogoBackgroundTexture; // Batocera <logoBackgroundImage>
 
 	// TILES
 	bool mLastRowPartial;
@@ -618,6 +619,23 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 				}
 			}
 		}
+
+		if (elem->has("logoBackgroundImage"))
+		{
+			std::string path = elem->get<std::string>("logoBackgroundImage");
+
+			if (!ResourceManager::getInstance()->fileExists(path))
+				LOG(LogWarning) << "Could not find logo background image, check path: " << path;
+			else
+			{
+				std::string oldTexture = mDefaultLogoBackgroundTexture;
+				mDefaultLogoBackgroundTexture = path;
+
+				for (auto it = mEntries.begin(); it != mEntries.end(); it++)
+					if (!oldTexture.empty() && (*it).data.texturePath == oldTexture)
+						(*it).data.texturePath = mDefaultLogoBackgroundTexture;
+			}
+		}
 	}
 
 	if (elem->has("scrollSound"))
@@ -942,25 +960,46 @@ void ImageGridComponent<T>::updateTileAtPos(int tilePos, int imgPos, bool allowA
 
 		std::string imagePath = mEntries.at(imgPos).data.texturePath;
 
+		std::string marqueePath = mEntries.at(imgPos).data.marqueePath;
+		bool setMarquee = true;
+
 		if (ResourceManager::getInstance()->fileExists(imagePath))
 		{
 			if (mEntries.at(imgPos).data.virtualFolder)
+			{
 				tile->setLabel(""); // _U("\uF114"));
 
-			tile->setImage(imagePath, mEntries.at(imgPos).data.virtualFolder);
+				// Batocera <logoBackgroundImage>: logo over the background image
+				if (!mDefaultLogoBackgroundTexture.empty() && tile->isMinSizeTile())
+				{
+					tile->setImage(mDefaultLogoBackgroundTexture);
+					tile->forceMarquee(imagePath);
+					setMarquee = false;
+				}
+				else
+					tile->setImage(imagePath, true);
+			}
+			else
+				tile->setImage(imagePath, false);
 		}
 		else if (mEntries.at(imgPos).data.folder)
 			tile->setImage(mDefaultFolderTexture, mDefaultFolderTexture == ":/folder.svg");
+		else if (!mDefaultLogoBackgroundTexture.empty() && tile->hasMarquee() && !marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
+			tile->setImage(mDefaultLogoBackgroundTexture);
 		else
 			tile->setImage(mDefaultGameTexture, mDefaultGameTexture == ":/cartridge.svg");
 		
 		// Marquee
-		std::string marqueePath = mEntries.at(imgPos).data.marqueePath;
+		if (setMarquee)
+		{
+			if (!mDefaultLogoBackgroundTexture.empty() && tile->isMinSizeTile())
+				tile->forceMarquee("");
 
-		if (!marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
-			tile->setMarquee(marqueePath);
-		else
-			tile->setMarquee("");
+			if (!marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
+				tile->setMarquee(marqueePath);
+			else
+				tile->setMarquee("");
+		}
 
 		tile->setFavorite(mEntries.at(imgPos).data.favorite);
 

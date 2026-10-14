@@ -191,6 +191,7 @@ private:
 	float mPlaylistTimer;
 
 	bool mLinear;
+	bool mSharedTexture = true; // Batocera <shared>
 };
 
 #endif // ES_CORE_COMPONENTS_IMAGE_COMPONENT_H

@@ -58,6 +58,9 @@ public:
 
 	void setStartDelay(int delay) { mConfig.startDelay = delay; }
 
+	bool getPlayAudio() { return mPlayAudio; }
+	void setPlayAudio(bool value) { mPlayAudio = value; }
+
 	virtual void onShow() override;
 	virtual void onHide() override;
 	virtual void onScreenSaverActivate() override;
@@ -188,6 +191,8 @@ protected:
 	bool							mIsPlaying;
 	bool							mShowing;
 	bool							mDisable;
+	bool							mEnabled = true;    // Batocera <enabled>
+	bool							mPlayAudio = true;  // Batocera <audio>
 	bool							mScreensaverActive;
 	bool							mScreensaverMode;
 	bool							mTargetIsMax;

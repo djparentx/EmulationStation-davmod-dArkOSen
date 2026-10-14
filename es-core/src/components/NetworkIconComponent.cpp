@@ -1,5 +1,6 @@
 #include "components/NetworkIconComponent.h"
 #include "Settings.h"
+#include "resources/ResourceManager.h"
 #include <sstream>
 #include <mutex>
 #include <cstdio>
@@ -43,6 +44,22 @@ static bool checkNetworkConnected()
 	return false;
 }
 
+// wifi radio off - the status daemon's state file when present (0 = off), else nmcli
+static bool checkWifiOff()
+{
+	FILE* f = fopen("/tmp/es-wifi-state", "r");
+	if (f)
+	{
+		int state = -1;
+		int rd = fscanf(f, "%d", &state);
+		fclose(f);
+		if (rd == 1)
+			return state == 0;
+	}
+
+	return executeNetworkCommand("nmcli radio wifi 2>/dev/null").find("disabled") != std::string::npos;
+}
+
 NetworkIconComponent::NetworkIconComponent(Window* window) : ImageComponent(window), mConnected(false), mUpdateElapsed(0), mActive(false)
 {
 	setVisible(false);
@@ -79,11 +96,15 @@ void NetworkIconComponent::update(int deltaTime)
 
 	mUpdateElapsed = 0;
 
-	mConnected = Settings::getInstance()->getBool("ShowNetworkIndicator") && checkNetworkConnected();
+	bool showIndicator = Settings::getInstance()->getBool("ShowNetworkIndicator");
+	mConnected = showIndicator && checkNetworkConnected();
+	bool planemode = showIndicator && !mConnected && !mPlanemodeIcon.empty() && checkWifiOff();
 
-	setVisible(mConnected);
+	setVisible(mConnected || planemode);
 
-	if (mConnected && !mNetworkIcon.empty())
+	if (planemode)
+		setImage(mPlanemodeIcon);
+	else if (mConnected && !mNetworkIcon.empty())
 		setImage(mNetworkIcon);
 }
 
@@ -97,4 +118,9 @@ void NetworkIconComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 
 	if (elem->has("networkIcon"))
 		mNetworkIcon = elem->get<std::string>("networkIcon");
+	else if (elem->has("path"))
+		mNetworkIcon = elem->get<std::string>("path");
+
+	if (elem->has("planemodeIcon") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("planemodeIcon")))
+		mPlanemodeIcon = elem->get<std::string>("planemodeIcon");
 }

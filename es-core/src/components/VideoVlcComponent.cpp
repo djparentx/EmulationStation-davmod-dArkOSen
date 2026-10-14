@@ -258,7 +258,7 @@ void VideoVlcComponent::render(const Transform4x4f& parentTrans)
 		{
 			if (mTexture == nullptr)
 			{
-				mTexture = TextureResource::get("");
+				mTexture = TextureResource::get("", false, mLinearSmooth);
 				resize();
 			}
 
@@ -506,7 +506,7 @@ void VideoVlcComponent::handleLooping()
 				}
 			}
 
-			if (!Settings::getInstance()->getBool("VideoAudio"))
+			if (!Settings::getInstance()->getBool("VideoAudio") || !getPlayAudio())
 			{
 				libvlc_audio_set_mute(mMediaPlayer, 1);
 			}
@@ -608,7 +608,7 @@ void VideoVlcComponent::startVideo()
 			
 				if (hasAudioTrack)
 				{
-					if (!Settings::getInstance()->getBool("VideoAudio"))
+					if (!Settings::getInstance()->getBool("VideoAudio") || !getPlayAudio())
 						libvlc_audio_set_mute(mMediaPlayer, 1);
 					else
 						AudioManager::setVideoPlaying(true);
@@ -678,6 +678,9 @@ void VideoVlcComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	{
 		if (elem && elem->has("color"))
 			setColorShift(elem->get<unsigned int>("color"));
+
+		if (elem && elem->has("linearSmooth"))
+			mLinearSmooth = elem->get<bool>("linearSmooth");
 	}
 
 	if (elem && elem->has("loops"))
