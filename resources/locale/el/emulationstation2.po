@@ -2907,3 +2907,59 @@ msgstr "%d λεπ."
 
 msgid "%d sec"
 msgstr "%d δευτ."
+
+#:
+msgid "datetime"
+msgstr "ημερομηνία και ώρα"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "ΡΥΘΜΙΣΕΙΣ ΠΡΟΣΤΑΣΙΑΣ ΟΘΟΝΗΣ ΗΜΕΡΟΜΗΝΙΑΣ ΚΑΙ ΩΡΑΣ"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "ΠΡΟΣΤΑΣΙΑ ΟΘΟΝΗΣ ΗΜΕΡΟΜΗΝΙΑΣ ΚΑΙ ΩΡΑΣ"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "ΤΥΠΟΣ ΡΟΛΟΓΙΟΥ"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "ΣΤΥΛ ΡΟΛΟΓΙΟΥ"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "ΧΡΩΜΑ ΡΟΛΟΓΙΟΥ"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "ΛΕΙΤΟΥΡΓΙΑ ΦΟΝΤΟΥ"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "ΧΡΩΜΑ ΦΟΝΤΟΥ"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "ΕΙΚΟΝΑ ΦΟΝΤΟΥ"
+
+#:
+msgid "SHOW DATE"
+msgstr "ΕΜΦΑΝΙΣΗ ΗΜΕΡΟΜΗΝΙΑΣ"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "ΕΜΦΑΝΙΣΗ ΔΕΥΤΕΡΟΛΕΠΤΩΝ"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "ΕΝΕΡΓΟΠΟΙΗΣΗ ΔΟΝΗΣΗΣ"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "ΕΝΤΑΣΗ ΔΟΝΗΣΗΣ"
+
+#:
+msgid "TEMPERATURE"
+msgstr "ΘΕΡΜΟΚΡΑΣΙΑ"
