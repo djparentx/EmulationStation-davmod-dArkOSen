@@ -3524,17 +3524,6 @@ void GuiMenu::openUISettings()
 			s->setVariable("reloadAll", true);
 	});
 
-	// controller activity (themable <controllerActivity> element in the theme's "screen" view)
-	auto controllerActivity = std::make_shared<SwitchComponent>(mWindow);
-	controllerActivity->setState(Settings::getInstance()->getBool("ShowControllerActivity"));
-	s->addWithLabel(_("SHOW CONTROLLER ACTIVITY"), controllerActivity);
-	s->addSaveFunc([controllerActivity] { Settings::getInstance()->setBool("ShowControllerActivity", controllerActivity->getState()); });
-
-	auto controllerBattery = std::make_shared<SwitchComponent>(mWindow);
-	controllerBattery->setState(Settings::getInstance()->getBool("ShowControllerBattery"));
-	s->addWithLabel(_("SHOW CONTROLLER BATTERY LEVEL"), controllerBattery);
-	s->addSaveFunc([controllerBattery] { Settings::getInstance()->setBool("ShowControllerBattery", controllerBattery->getState()); });
-
 	// --- Network Icon Pack ---
 	auto networkIconPack = std::make_shared<OptionListComponent<std::string>>(mWindow, _("NETWORK ICON"), false);
 	std::string currentNetPack = Settings::getInstance()->getString("NetworkIconPack");

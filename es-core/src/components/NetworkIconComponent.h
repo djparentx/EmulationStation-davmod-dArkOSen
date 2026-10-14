@@ -23,7 +23,6 @@ private:
 	bool mActive;
 
 	std::string mNetworkIcon;
-	std::string mPlanemodeIcon; // Batocera planemodeIcon: this platform has no plane mode, shown while wifi is off
 };
 
 #endif // ES_CORE_COMPONENTS_NETWORK_COMPONENT_H

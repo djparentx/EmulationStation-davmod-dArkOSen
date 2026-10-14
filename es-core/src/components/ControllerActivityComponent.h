@@ -18,8 +18,7 @@ public:
 		CONTROLLERS = 1,
 		BATTERY = 2,
 		NETWORK = 4,
-			BLUETOOTH = 8,
-		PLANEMODE = 16
+			BLUETOOTH = 8
 	};
 
 
@@ -111,7 +110,6 @@ protected:
 	std::shared_ptr<TextureResource> mNetworkOffImage;
 	std::shared_ptr<TextureResource> mNetworkShareImage;
 	std::shared_ptr<TextureResource> mNetworkServiceImage;
-	std::shared_ptr<TextureResource> mPlanemodeImage; // Batocera planemodeIcon: shown while wifi is off
 	bool mNetworkConnected;
 	int mNetworkState; // 0=off 1=active 2=connected 3=sharing 4=service
 	int mNetworkCheckTime;

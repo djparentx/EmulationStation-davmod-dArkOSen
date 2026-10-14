@@ -239,7 +239,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH } } },
 	{ "networkIcon", {
-		{ "planemodeIcon", PATH },          // no plane mode on this platform: shown while wifi is off
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -460,7 +460,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH },
 		{ "networkIcon", PATH },
-		{ "planemodeIcon", PATH },
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "batteryIndicator", {
@@ -480,7 +480,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH },
 		{ "networkIcon", PATH },
-		{ "planemodeIcon", PATH },
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
 		{ "imagePath", PATH },
 		{ "color", COLOR },
 		{ "activityColor", COLOR },

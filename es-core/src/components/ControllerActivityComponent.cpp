@@ -45,7 +45,6 @@ void ControllerActivityComponent::init()
 	mPadTexture = nullptr;
 	mGunTexture = nullptr;
 	mWheelTexture = nullptr;
-	mPlanemodeImage = nullptr;
 	mHorizontalAlignment = ALIGN_LEFT;
 	mSpacing = (int)(Renderer::getScreenHeight() / 200.0f);
 
@@ -122,12 +121,12 @@ void ControllerActivityComponent::update(int deltaTime)
 	GuiComponent::update(deltaTime);
 
 	// Instant detection via flag files
-	if ((mView & NETWORK) && access("/tmp/es-wifi-changed", F_OK) == 0) {
+	if (access("/tmp/es-wifi-changed", F_OK) == 0) {
 		remove("/tmp/es-wifi-changed");
 		updateNetworkInfo();
 		mNetworkCheckTime = 0;
 	}
-	if ((mView & BLUETOOTH) && access("/tmp/es-bt-changed", F_OK) == 0) {
+	if (access("/tmp/es-bt-changed", F_OK) == 0) {
 		remove("/tmp/es-bt-changed");
 		updateBluetoothInfo();
 		mBluetoothCheckTime = 0;
@@ -253,7 +252,7 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 			}
 		}
 	}
-	if ((mView & NETWORK) && (mNetworkImage != nullptr || mNetworkActiveImage != nullptr || mNetworkOffImage != nullptr || mNetworkShareImage != nullptr || mNetworkServiceImage != nullptr || mPlanemodeImage != nullptr))
+	if ((mView & NETWORK) && (mNetworkImage != nullptr || mNetworkActiveImage != nullptr || mNetworkOffImage != nullptr || mNetworkShareImage != nullptr || mNetworkServiceImage != nullptr))
 		itemsWidth += szW + mSpacing; // getTextureSize(mNetworkImage).x()
 
 	auto batteryText = std::to_string(mBatteryInfo.level) + "%";
@@ -336,8 +335,6 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 		x += renderTexture(x, szW, mNetworkImage, mColorShift);
 	else if ((mView & NETWORK) && mNetworkState == 1 && mNetworkActiveImage != nullptr)
 		x += renderTexture(x, szW, mNetworkActiveImage, mColorShift);
-	else if ((mView & NETWORK) && mNetworkState == 0 && mPlanemodeImage != nullptr)
-		x += renderTexture(x, szW, mPlanemodeImage, mColorShift);
 	else if ((mView & NETWORK) && mNetworkState == 0 && mNetworkOffImage != nullptr)
 		x += renderTexture(x, szW, mNetworkOffImage, mColorShift);
 
@@ -405,18 +402,6 @@ void ControllerActivityComponent::applyTheme(const std::shared_ptr<ThemeData>& t
 			}
 			else
 				mNetworkImage = nullptr;
-		}
-
-		// Plane mode (Batocera) - this platform has no plane mode: the icon is shown while wifi is off
-		if (elem->has("planemodeIcon"))
-		{
-			if (ResourceManager::getInstance()->fileExists(elem->get<std::string>("planemodeIcon")))
-			{
-				mView |= ActivityView::NETWORK | ActivityView::PLANEMODE;
-				mPlanemodeImage = TextureResource::get(elem->get<std::string>("planemodeIcon"), false, true);
-			}
-			else
-				mPlanemodeImage = nullptr;
 		}
 
 		// Battery

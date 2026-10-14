@@ -127,7 +127,8 @@ bool Window::init(bool initRenderer)
 	if (Settings::getInstance()->getBool("VolumePopup") && (mVolumeInfo == nullptr))
 		mVolumeInfo = std::make_shared<VolumeInfoComponent>(this);
 
-	if (mControllerActivity == nullptr)
+	// themable <controllerActivity> (screen view): only created when enabled in es_settings.cfg (no menu entry)
+	if (mControllerActivity == nullptr && Settings::getInstance()->getBool("ShowControllerActivity"))
 		mControllerActivity = std::make_shared<ControllerActivityComponent>(this);
 
 	if (mBatteryIndicator == nullptr)
@@ -371,7 +372,7 @@ void Window::update(int deltaTime)
 	if (mBatteryIndicator)
 		mBatteryIndicator->update(deltaTime);
 
-	// after the battery indicator: it must see the /tmp/es-*-changed flag files first
+	// after the battery indicator: it must consume the /tmp/es-*-changed flag files first
 	if (mControllerActivity)
 		mControllerActivity->update(deltaTime);
 		
@@ -430,7 +431,7 @@ void Window::render()
 		mClockFont->renderTextCache(mClockText.get());*/
 	}
 
-	if (Settings::getInstance()->getBool("ShowControllerActivity") && mControllerActivity != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
+	if (mControllerActivity != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
 		mControllerActivity->render(transform);
 
 	if (mBatteryIndicator != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
