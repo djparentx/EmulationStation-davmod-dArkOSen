@@ -270,7 +270,7 @@ void ViewController::launch(FileData* game, Vector3f center, int entrySlot)
 		auto fadeFunc = [this](float t) {
 			mFadeOpacity = Math::lerp(0.0f, 1.0f, t);
 		};
-		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc]
+		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc, entrySlot]
 		{
 			game->launchGame(mWindow, entrySlot);
 			setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);

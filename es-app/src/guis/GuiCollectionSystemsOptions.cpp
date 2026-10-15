@@ -298,7 +298,7 @@ void GuiCollectionSystemsOptions::updateSettings(std::string newAutoSettings, st
 		ViewController::get()->goToStart();
 		ViewController::get()->reloadAll();
 	}
-	
+}	
 
 // ---------------------------------------------------------------------------
 // Menu "LAST 20 PLAYED GAMES"
