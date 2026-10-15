@@ -4127,3 +4127,59 @@ msgstr "%d 分鐘"
 
 msgid "%d sec"
 msgstr "%d 秒"
+
+#:
+msgid "datetime"
+msgstr "日期時間"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "日期時間螢幕保護程式設定"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "日期時間螢幕保護程式"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "時鐘類型"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "時鐘樣式"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "時鐘顏色"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "背景模式"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "背景顏色"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "背景圖片"
+
+#:
+msgid "SHOW DATE"
+msgstr "顯示日期"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "顯示秒數"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "啟用震動回饋"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "震動強度"
+
+#:
+msgid "TEMPERATURE"
+msgstr "溫度"

@@ -4340,3 +4340,59 @@ msgstr "%d хв"
 
 msgid "%d sec"
 msgstr "%d с"
+
+#:
+msgid "datetime"
+msgstr "дата і час"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "НАЛАШТУВАННЯ ЗАСТАВКИ ДАТИ І ЧАСУ"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "ЗАСТАВКА ДАТИ І ЧАСУ"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "ТИП ГОДИННИКА"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "СТИЛЬ ГОДИННИКА"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "КОЛІР ГОДИННИКА"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "РЕЖИМ ФОНУ"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "КОЛІР ФОНУ"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "ЗОБРАЖЕННЯ ФОНУ"
+
+#:
+msgid "SHOW DATE"
+msgstr "ПОКАЗАТИ ДАТУ"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "ПОКАЗАТИ СЕКУНДИ"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "УВІМКНУТИ ВІБРОВІДГУК"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "СИЛА ВІБРАЦІЇ"
+
+#:
+msgid "TEMPERATURE"
+msgstr "ТЕМПЕРАТУРА"
