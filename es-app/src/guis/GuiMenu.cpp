@@ -55,10 +55,6 @@
 GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(window, _("MAIN MENU")), mVersion(window)
 {
 
-	int playRemaining = FileData::getPlayTimeRemaining();
-	if (playRemaining >= 0)
-		addEntry(_("TIME LEFT TODAY") + ": " + std::to_string(playRemaining / 60) + " " + _("MIN"), false, [] {}, "");
-
 	addEntry(_("DISPLAY SETTINGS AND INFO"), true, [this] { openDisplaySettings(); }, "iconSystem");
 
 	auto theme = ThemeData::getMenuTheme();
@@ -3291,16 +3287,6 @@ void GuiMenu::openUISettings()
 			}, _("NO"), nullptr));
 		}
 	});
-
-	// PLAY TIMER
-	auto playTimer = std::make_shared<OptionListComponent<int>>(mWindow, _("PLAY TIMER"), false);
-	int curPlayTimer = Settings::getInstance()->getInt("PlayTimer");
-	playTimer->add(_("OFF"), 0, curPlayTimer == 0);
-	for (int m : { 15, 30, 45, 60, 90, 120 })
-		playTimer->add(std::to_string(m) + " " + _("MIN"), m, curPlayTimer == m);
-	s->addWithLabel(_("PLAY TIMER"), playTimer);
-	s->addSaveFunc([playTimer] { Settings::getInstance()->setInt("PlayTimer", playTimer->getSelected()); });
-	
 	//#endif
 
 	// LANGUAGE

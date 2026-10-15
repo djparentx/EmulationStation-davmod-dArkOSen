@@ -7,7 +7,6 @@
 #include "GuiComponent.h"
 #include "renderers/Renderer.h"
 #include <random>
-#include <map>
 
 using namespace std;
 
@@ -76,43 +75,6 @@ private:
 	float mFade;
 };
 
-class DateTimeScreenSaver : public GameScreenSaverBase
-{
-public:
-	DateTimeScreenSaver(Window* window);
-	~DateTimeScreenSaver();
-
-	void setImage(const std::string path);
-	bool hasImage();
-
-	void render(const Transform4x4f& transform) override;
-	void update(int deltaTime) override;
-
-	static std::map<std::string, std::string> getBackgrounds();
-
-private:
-	ImageComponent* createClockLayer(const std::string& file, bool rotates);
-
-	TextComponent*	mDate;
-	TextComponent*	mTime;
-	ImageComponent*	mClockFace;
-	ImageComponent*	mHourHand;
-	ImageComponent*	mMinHand;
-	ImageComponent*	mSecHand;
-	ImageComponent*	mBackground;
-
-	std::string		mClockType;
-	std::string		mClockStyle;
-	std::string		mBgMode;
-	std::string		mBgPath;
-	bool			mShowDate;
-	bool			mShowSeconds;
-	unsigned int	mBgColor;
-	unsigned int	mClockColor;
-
-	std::string timeFormat() const;
-};
-
 // Screensaver implementation for main window
 class SystemScreenSaver : public Window::ScreenSaver
 {
@@ -161,8 +123,7 @@ private:
 
 	std::shared_ptr<ImageScreenSaver>		mFadingImageScreensaver;
 	std::shared_ptr<ImageScreenSaver>		mImageScreensaver;
-	std::shared_ptr<DateTimeScreenSaver>	mDateTimeScreensaver;
-	
+
 	Window*			mWindow;
 	STATE			mState;
 	float			mOpacity;

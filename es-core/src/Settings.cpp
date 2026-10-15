@@ -131,7 +131,6 @@ void Settings::setDefaults()
 	mBoolMap["InvertPwrBtn"] = false;
 	mBoolMap["EnableVibration"] = true;
 	mIntMap["VibrationIntensity"] = 2;
-	mIntMap["PlayTimer"] = 0;
 	mBoolMap["ScanPorts"] = false;
 	mBoolMap["InvertVolBtns"] = false;
 	mIntMap["ScreenSaverTime"] = 5*60*1000; // 5 minutes
@@ -187,15 +186,7 @@ void Settings::setDefaults()
 	mStringMap["SlideshowScreenSaverImageFilter"] = ".png,.jpg";
 	mBoolMap["SlideshowScreenSaverRecurse"] = false;
 	mBoolMap["SlideshowScreenSaverGameName"] = true;
-	mStringMap["DateTimeScreenSaverClockType"] = "Number";
-	mStringMap["DateTimeScreenSaverClockStyle"] = "style2";
-	mStringMap["DateTimeScreenSaverBackgroundMode"] = "Color";
-	mStringMap["DateTimeScreenSaverBackgroundColor"] = "Night";
-	mStringMap["DateTimeScreenSaverBackgroundPath"] = "None";
-	mBoolMap["DateTimeScreenSaverShowDate"] = true;
-	mBoolMap["DateTimeScreenSaverShowSeconds"] = true;
-	mStringMap["DateTimeScreenSaverClockColor"] = "Neon Green";
-
+	
 	mBoolMap["ShowFilenames"] = false;
 
 	// This setting only applies to raspberry pi but set it for all platforms so

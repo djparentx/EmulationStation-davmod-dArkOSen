@@ -23,9 +23,6 @@
 #include "AudioManager.h"
 #include "math/Vector2i.h"
 #include "SystemConf.h"
-#include "resources/Font.h"
-#include "resources/ResourceManager.h"
-#include "utils/TimeUtil.h"
 
 #define FADE_TIME					(500)
 #define DATE_TIME_UPDATE_INTERVAL	(100)
@@ -75,7 +72,7 @@ SystemScreenSaver::~SystemScreenSaver()
 
 bool SystemScreenSaver::allowSleep()
 {
-	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr && mDateTimeScreensaver == nullptr);
+	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr);
 }
 
 bool SystemScreenSaver::isScreenSaverActive()
@@ -186,16 +183,6 @@ void SystemScreenSaver::startScreenSaver()
 		return;
 	}
 
-	else if (screensaver_behavior == "datetime")
-	{
-		mDateTimeScreensaver = std::make_shared<DateTimeScreenSaver>(mWindow);
-		mState = STATE_SCREENSAVER_ACTIVE;
-		mOpacity = 0.0f;
-		PowerSaver::runningScreenSaver(true);
-		mTimer = 0;
-		return;
-	}
-
 	// No videos. Just use a standard screensaver
 	mState = STATE_SCREENSAVER_ACTIVE;
 	mCurrentGame = NULL;
@@ -234,8 +221,7 @@ void SystemScreenSaver::stopScreenSaver()
 
 	mVideoScreensaver = nullptr;
 	mImageScreensaver = nullptr;
-	mDateTimeScreensaver = nullptr;
-	
+
 	// we need this to loop through different videos
 	mState = STATE_INACTIVE;
 	PowerSaver::runningScreenSaver(false);
@@ -289,11 +275,6 @@ void SystemScreenSaver::renderScreenSaver()
 				mImageScreensaver->render(transform);
 			}
 		}
-	}
-	else if (mDateTimeScreensaver)
-	{
-		Renderer::setMatrix(transform);
-		mDateTimeScreensaver->render(transform);
 	}
 	else if (mState != STATE_INACTIVE)
 	{
@@ -478,13 +459,6 @@ std::string SystemScreenSaver::pickRandomCustomImage()
 
 void SystemScreenSaver::update(int deltaTime)
 {
-	// Date & time screensaver has no fade/swap cycle
-	if (mDateTimeScreensaver)
-	{
-		mDateTimeScreensaver->update(deltaTime);
-		return;
-	}
-	
 	// Use this to update the fade value for the current fade stage
 	if (mState == STATE_FADE_OUT_WINDOW)
 	{
@@ -1039,257 +1013,4 @@ void VideoScreenSaver::update(int deltaTime)
 		mTime += deltaTime;	
 		mVideo->update(deltaTime);
 	}
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// DATE TIME SCREEN SAVER CLASS
-// ------------------------------------------------------------------------------------------------------------------------
-
-#define DATETIME_BG_DIR "/roms/screensaverbgs"
-
-static std::string dateTimeFontPath(const std::string& path)
-{
-	return ResourceManager::getInstance()->fileExists(path) ? path : FONT_PATH_REGULAR;
-}
-
-static void renderClipped(ImageComponent* image, const Renderer::Rect& viewport, const Transform4x4f& transform)
-{
-	if (image == nullptr || !image->hasImage())
-		return;
-
-	Renderer::pushClipRect(Vector2i(viewport.x, viewport.y), Vector2i(viewport.w, viewport.h));
-	image->render(transform);
-	Renderer::popClipRect();
-}
-
-std::map<std::string, std::string> DateTimeScreenSaver::getBackgrounds()
-{
-	std::map<std::string, std::string> backgrounds;
-
-	if (!Utils::FileSystem::isDirectory(DATETIME_BG_DIR))
-		return backgrounds;
-
-	for (auto entry : Utils::FileSystem::getDirContent(DATETIME_BG_DIR))
-	{
-		if (Utils::FileSystem::isDirectory(entry))
-		{
-			for (auto sub : Utils::FileSystem::getDirContent(entry))
-				if (!Utils::FileSystem::isDirectory(sub))
-					backgrounds[Utils::FileSystem::getFileName(sub)] = sub;
-		}
-		else
-			backgrounds[Utils::FileSystem::getFileName(entry)] = entry;
-	}
-
-	return backgrounds;
-}
-
-DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(window),
-	mDate(nullptr), mTime(nullptr), mClockFace(nullptr), mHourHand(nullptr), mMinHand(nullptr), mSecHand(nullptr), mBackground(nullptr),
-	mBgColor(0x171614FF)
-{
-	auto settings = Settings::getInstance();
-	mClockType   = settings->getString("DateTimeScreenSaverClockType");
-	mClockStyle  = settings->getString("DateTimeScreenSaverClockStyle");
-	mShowDate    = settings->getBool("DateTimeScreenSaverShowDate");
-	mShowSeconds = settings->getBool("DateTimeScreenSaverShowSeconds");
-	mBgMode      = settings->getString("DateTimeScreenSaverBackgroundMode");
-
-	std::string clockColor = settings->getString("DateTimeScreenSaverClockColor");
-	if (clockColor == "Neon Blue")        mClockColor = 0x1F51FFCC;
-	else if (clockColor == "Neon Yellow") mClockColor = 0xFFFF33CC;
-	else if (clockColor == "Neon Red")    mClockColor = 0xFF3131CC;
-	else if (clockColor == "White")       mClockColor = 0xFFFFFFCC;
-	else                                  mClockColor = 0x39FF14CC; // Neon Green
-
-	// Background
-	if (mBgMode == "Color")
-	{
-		std::string color = settings->getString("DateTimeScreenSaverBackgroundColor");
-		if (color == "Night")            mBgColor = 0x171614FF;
-		else if (color == "Bistre")      mBgColor = 0x3A2618FF;
-		else if (color == "Garnet")      mBgColor = 0x754043FF;
-		else if (color == "Beaver")      mBgColor = 0x9A8873FF;
-		else if (color == "Black Olive") mBgColor = 0x37423DFF;
-	}
-	else
-	{
-		mBgColor = 0x000000FF;
-		mBgPath = settings->getString("DateTimeScreenSaverBackgroundPath");
-		if (mBgPath != "None")
-		{
-			auto backgrounds = getBackgrounds();
-			auto it = backgrounds.find(mBgPath);
-			if (it != backgrounds.cend())
-				setImage(it->second);
-		}
-	}
-
-	time_t now = time(NULL);
-	int h = mViewport.h;
-	int boxHeight = (int)(h * 0.25f);
-
-	// Date
-	if (mShowDate)
-	{
-		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(":/DS-DIGII.TTF"));
-		int lh = (int)font->getLetterHeight();
-
-		mDate = new TextComponent(mWindow);
-		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 5 - lh));
-		mDate->setSize((float)mViewport.w, (float)(boxHeight - lh / 2));
-		mDate->setHorizontalAlignment(ALIGN_CENTER);
-		mDate->setVerticalAlignment(ALIGN_CENTER);
-		mDate->setColor(mClockType == "Number" ? mClockColor : 0xFFFFFFFF);
-		mDate->setGlowColor(mClockType == "Number" ? ((mClockColor & 0xFFFFFF00) | 0x10) : 0x00000040);
-		mDate->setGlowSize(3);
-		mDate->setFont(font);
-		mDate->setText(Utils::Time::timeToString(now, "%Y/%m/%d"));
-	}
-
-	// Digital time
-	if (mClockType == "Number")
-	{
-		auto font = Font::get((int)(h / 5.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
-		int lh = (int)font->getLetterHeight();
-
-		mTime = new TextComponent(mWindow);
-		mTime->setSize((float)mViewport.w, (float)lh);
-		mTime->setPosition((float)mViewport.x, mViewport.y + h * 0.5f - lh * 0.5f);
-		mTime->setHorizontalAlignment(ALIGN_CENTER);
-		mTime->setVerticalAlignment(ALIGN_CENTER);
-		mTime->setColor(mClockColor);
-		mTime->setGlowColor((mClockColor & 0xFFFFFF00) | 0x10);
-		mTime->setGlowSize(3);
-		mTime->setFont(font);
-		mTime->setText(Utils::Time::timeToString(now, timeFormat()));
-		return;
-	}
-
-	// Analog clock
-	if (mDate)
-	{
-		mDate->setFont(Font::get((int)(h / 15.0f), FONT_PATH_REGULAR));
-		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 3));
-		mDate->setSize((float)mViewport.w, h * 0.1f);
-
-		if (mClockStyle == "style3")
-		{
-			mDate->setOrigin(0.0f, 0.5f);
-			mDate->setPosition((float)(mViewport.x + 0.18 * h), (float)(h / 2));
-		}
-	}
-
-	mClockFace = createClockLayer("clock.png", false);
-	mHourHand  = createClockLayer("hour_hand.png", true);
-	mMinHand   = createClockLayer("min_hand.png", true);
-	mSecHand   = createClockLayer("sec_hand.png", true);
-}
-
-// Follows the global ES clock setting (SHOW CLOCK IN 12-HOUR FORMAT); %-I = hour without leading zero
-std::string DateTimeScreenSaver::timeFormat() const
-{
-	if (Settings::getInstance()->getBool("ClockMode12"))
-		return mShowSeconds ? "%-I:%M:%S %p" : "%-I:%M %p";
-
-	return mShowSeconds ? "%H:%M:%S" : "%H:%M";
-}
-
-DateTimeScreenSaver::~DateTimeScreenSaver()
-{
-	delete mDate;
-	delete mTime;
-	delete mClockFace;
-	delete mHourHand;
-	delete mMinHand;
-	delete mSecHand;
-	delete mBackground;
-}
-
-ImageComponent* DateTimeScreenSaver::createClockLayer(const std::string& file, bool rotates)
-{
-	auto layer = new ImageComponent(mWindow, true, true);
-	layer->setOrigin(0.5f, 0.5f);
-	if (rotates)
-		layer->setRotationOrigin(0.5f, 0.5f);
-	layer->setPosition(mViewport.x + mViewport.w * 0.5f, mViewport.y + mViewport.h * 0.5f);
-	layer->setMaxSize((float)mViewport.w, (float)mViewport.h);
-	layer->setImage(":/clock/" + mClockStyle + "/" + file);
-	return layer;
-}
-
-void DateTimeScreenSaver::setImage(const std::string path)
-{
-	if (mBackground == nullptr)
-	{
-		mBackground = new ImageComponent(mWindow, true, true);
-		mBackground->setOrigin(0.5f, 0.5f);
-		mBackground->setPosition(mViewport.x + mViewport.w * 0.5f, mViewport.y + mViewport.h * 0.5f);
-		mBackground->setMaxSize((float)mViewport.w, (float)mViewport.h);
-	}
-
-	mBackground->setImage(path);
-}
-
-bool DateTimeScreenSaver::hasImage()
-{
-	return mBackground != nullptr && mBackground->hasImage();
-}
-
-void DateTimeScreenSaver::update(int deltaTime)
-{
-	// GameScreenSaverBase::update skipped: slideshow date/time overlay is off for this screensaver
-	GuiComponent::update(deltaTime);
-
-	time_t now = time(NULL);
-	struct tm* t = localtime(&now);
-
-	if (mDate)
-	{
-		std::string date = Utils::Time::timeToString(now, "%Y/%m/%d");
-		if (mClockType != "Number" && mClockStyle == "style3")
-			date = date.substr(2);
-		mDate->setText(date);
-	}
-
-	if (mClockType == "Number")
-	{
-		if (mTime)
-			mTime->setText(Utils::Time::timeToString(now, timeFormat()));
-		return;
-	}
-
-	mHourHand->setRotationDegrees(t->tm_hour * 30.0f + (t->tm_min / 60.0f) * 30.0f);
-	mMinHand->setRotationDegrees(t->tm_min * 6.0f);
-	if (mShowSeconds)
-		mSecHand->setRotationDegrees(t->tm_sec * 6.0f);
-}
-
-void DateTimeScreenSaver::render(const Transform4x4f& transform)
-{
-	// GameScreenSaverBase::render skipped: slideshow date/time overlay is off for this screensaver
-	if (mBgMode != "Color" && hasImage())
-		renderClipped(mBackground, mViewport, transform);
-	else
-		Renderer::drawRect(0.0f, 0.0f, Renderer::getScreenWidth(), Renderer::getScreenHeight(), mBgColor, mBgColor);
-
-	if (mClockType == "Number")
-	{
-		if (mDate)
-			mDate->render(transform);
-		if (mTime)
-			mTime->render(transform);
-		return;
-	}
-
-	renderClipped(mClockFace, mViewport, transform);
-
-	if (mDate)
-		mDate->render(transform);
-
-	renderClipped(mHourHand, mViewport, transform);
-	renderClipped(mMinHand, mViewport, transform);
-
-	if (mShowSeconds)
-		renderClipped(mSecHand, mViewport, transform);
 }
