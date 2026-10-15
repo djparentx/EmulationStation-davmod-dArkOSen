@@ -1974,3 +1974,59 @@ msgstr "最近プレイした20本"
 
 msgid "NO GAME PLAYED YET"
 msgstr "まだプレイしたゲームがありません"
+
+#:
+msgid "datetime"
+msgstr "日付と時刻"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "日付と時刻スクリーンセーバーの設定"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "日付と時刻スクリーンセーバー"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "時計の種類"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "時計のスタイル"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "時計の色"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "背景モード"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "背景色"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "背景画像"
+
+#:
+msgid "SHOW DATE"
+msgstr "日付を表示"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "秒を表示"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "振動フィードバックを有効にする"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "振動の強さ"
+
+#:
+msgid "TEMPERATURE"
+msgstr "温度"

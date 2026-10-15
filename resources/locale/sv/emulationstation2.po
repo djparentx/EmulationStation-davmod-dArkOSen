@@ -3882,3 +3882,59 @@ msgstr "DE 20 SENAST SPELADE SPELEN"
 
 msgid "NO GAME PLAYED YET"
 msgstr "INGET SPEL SPELAT ANNU"
+
+#:
+msgid "datetime"
+msgstr "datum och tid"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "INSTÄLLNINGAR FÖR DATUM- OCH TIDSSKÄRMSLÄCKARE"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "DATUM- OCH TIDSSKÄRMSLÄCKARE"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "KLOCKTYP"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "KLOCKSTIL"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "KLOCKFÄRG"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "BAKGRUNDSLÄGE"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "BAKGRUNDSFÄRG"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "BAKGRUNDSBILD"
+
+#:
+msgid "SHOW DATE"
+msgstr "VISA DATUM"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "VISA SEKUNDER"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "AKTIVERA VIBRATIONSRESPONS"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "VIBRATIONSSTYRKA"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATUR"

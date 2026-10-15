@@ -4129,3 +4129,59 @@ msgstr "最近玩过的20个游戏"
 
 msgid "NO GAME PLAYED YET"
 msgstr "尚未玩过任何游戏"
+
+#:
+msgid "datetime"
+msgstr "日期时间"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "日期时间屏幕保护程序设定"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "日期时间屏幕保护程序"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "时钟类型"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "时钟样式"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "时钟颜色"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "背景模式"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "背景颜色"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "背景图片"
+
+#:
+msgid "SHOW DATE"
+msgstr "显示日期"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "显示秒"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "启用振动反馈"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "振动强度"
+
+#:
+msgid "TEMPERATURE"
+msgstr "温度"

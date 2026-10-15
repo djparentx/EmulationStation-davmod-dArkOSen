@@ -6,6 +6,7 @@
 #include "animations/LaunchAnimation.h"
 #include "animations/MoveCameraAnimation.h"
 #include "guis/GuiMenu.h"
+#include "guis/GuiMsgBox.h"
 #include "views/gamelist/DetailedGameListView.h"
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/GridGameListView.h"
@@ -248,6 +249,22 @@ void ViewController::launch(FileData* game, Vector3f center, int entrySlot)
 		LOG(LogError) << "tried to launch something that isn't a game";
 		return;
 	}
+
+	int playRemaining = FileData::getPlayTimeRemaining();
+	if (playRemaining > 0)
+	{
+		int minutesLeft = playRemaining / 60;
+		std::string msg = minutesLeft == 0 ? "LESS THAN 1 MINUTE OF PLAY TIME LEFT TODAY"
+			: std::to_string(minutesLeft) + (minutesLeft == 1 ? " MINUTE" : " MINUTES") + " OF PLAY TIME LEFT TODAY";
+		mWindow->pushGui(new GuiMsgBox(mWindow, msg, "OK", [this, game, center, entrySlot] { doLaunch(game, center, entrySlot); }));
+		return;
+	}
+
+	doLaunch(game, center, entrySlot);
+}
+
+void ViewController::doLaunch(FileData* game, Vector3f center, int entrySlot)
+{
 
 	// Hide the current view
 	//if (mCurrentView)

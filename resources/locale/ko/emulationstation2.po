@@ -2229,3 +2229,59 @@ msgstr "최근 플레이한 게임 20개"
 
 msgid "NO GAME PLAYED YET"
 msgstr "아직 플레이한 게임이 없습니다"
+
+#:
+msgid "datetime"
+msgstr "날짜 및 시간"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "날짜 및 시간 화면보호기 설정"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "날짜 및 시간 화면보호기"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "시계 유형"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "시계 스타일"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "시계 색상"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "배경 모드"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "배경 색상"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "배경 이미지"
+
+#:
+msgid "SHOW DATE"
+msgstr "날짜 표시"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "초 표시"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "진동 피드백 사용"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "진동 강도"
+
+#:
+msgid "TEMPERATURE"
+msgstr "온도"
