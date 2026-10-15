@@ -3413,3 +3413,65 @@ msgstr "%d min"
 
 msgid "%d sec"
 msgstr "%d s"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "OSTATNIE 20 GIER"
+
+msgid "NO GAME PLAYED YET"
+msgstr "NIE ZAGRANO JESZCZE W ZADNA GRE"
+
+#:
+msgid "datetime"
+msgstr "data i godzina"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "USTAWIENIA WYGASZACZA DATY I GODZINY"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "WYGASZACZ DATY I GODZINY"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "TYP ZEGARA"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "STYL ZEGARA"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "KOLOR ZEGARA"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "TRYB TŁA"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "KOLOR TŁA"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "OBRAZ TŁA"
+
+#:
+msgid "SHOW DATE"
+msgstr "POKAŻ DATĘ"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "POKAŻ SEKUNDY"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "WŁĄCZ WIBRACJE"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "INTENSYWNOŚĆ WIBRACJI"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATURA"

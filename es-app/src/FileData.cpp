@@ -19,6 +19,10 @@
 #include <assert.h>
 #include "Gamelist.h"
 #include <algorithm>
+#include "guis/GuiMsgBox.h"
+#include <sstream>
+#include <ctime>
+#include <unistd.h>
 
 FileData::FileData(FileType type, const std::string& path, SystemData* system)
 	: mType(type), mSystem(system), mParent(NULL), mMetadata(type == GAME ? GAME_METADATA : FOLDER_METADATA) // metadata is REALLY set in the constructor!
@@ -273,9 +277,16 @@ FileData* FileData::getSourceFileData()
 	return this;
 }
 
-void FileData::launchGame(Window* window)
+void FileData::launchGame(Window* window, int entrySlot)
 {
 	LOG(LogInfo) << "Attempting to launch game...";
+
+	int playLimit = Settings::getInstance()->getInt("PlayTimer");
+	if (playLimit > 0 && getPlayTimeRemaining() == 0)
+	{
+		window->pushGui(new GuiMsgBox(window, "DAILY PLAY TIME LIMIT REACHED\nCOME BACK TOMORROW!", "OK"));
+		return;
+	}
 
 	AudioManager::getInstance()->deinit();
 	VolumeControl::getInstance()->deinit();
@@ -325,6 +336,28 @@ void FileData::launchGame(Window* window)
 	command = Utils::String::replace(command, "%SYSTEM%", getSystemName());
 	command = Utils::String::replace(command, "%HOME%", Utils::FileSystem::getHomePath());
 
+	// inject savestate slot requested from LAST 20 PLAYED GAMES
+	if (entrySlot >= 0)
+	{
+		// longest first: retroarch32 contains retroarch
+		const std::string bins[2] = { "/usr/local/bin/retroarch32", "/usr/local/bin/retroarch" };
+		bool injected = false;
+		for (int i = 0; i < 2 && !injected; i++)
+		{
+			size_t pos = command.find(bins[i]);
+			if (pos == std::string::npos)
+				continue;
+			size_t end = pos + bins[i].length();
+			// name must end here (space or end of string), otherwise it's a prefix
+			if (end < command.length() && command[end] != ' ')
+				continue;
+			command.insert(end, " --entryslot " + std::to_string(entrySlot));
+			injected = true;
+		}
+		// non-RetroArch (pico8, ppsspp, drastic...): no injection, they use their own save format
+		(void)injected;
+	}
+
 	if (Utils::FileSystem::exists("/usr/local/bin/quickmode.sh"))
 	{
 	    FileData* gameToUpdate = getSourceFileData();
@@ -345,7 +378,13 @@ void FileData::launchGame(Window* window)
 
 	time_t sessionStart = Utils::Time::now();
 
+	if (playLimit > 0 && Utils::FileSystem::exists("/usr/local/bin/playtimer_watchdog.sh"))
+		runSystemCommand("/usr/local/bin/playtimer_watchdog.sh " + std::to_string(playLimit * 60) + " " + std::to_string(getpid()) + " >/dev/null 2>&1 &", "", nullptr);
+
 	int exitCode = runSystemCommand(command, getDisplayName(), hideWindow ? NULL : window);
+
+	if (playLimit > 0)
+		runSystemCommand("pkill -TERM -f /usr/local/bin/playtimer_watchdog.sh", "", nullptr);
 	if (exitCode != 0)
 	{
 		LOG(LogWarning) << "...launch terminated with nonzero exit code " << exitCode << "!";
@@ -355,11 +394,13 @@ void FileData::launchGame(Window* window)
 
 	{
 		int elapsed = (int)(Utils::Time::now() - sessionStart);
-		if (elapsed > 0)
+		if (elapsed > 0 && elapsed < 86400)
 		{
 			FileData* gameToUpdate = getSourceFileData();
 			int priorGametime = gameToUpdate->getMetadata().getInt("gametime");
 			gameToUpdate->getMetadata().set("gametime", std::to_string(static_cast<long long>(priorGametime + elapsed)));
+			gameToUpdate->getMetadata().set("lastsession", std::to_string(static_cast<long long>(elapsed)));
+			saveToGamelistRecovery(gameToUpdate);
 		}
 	}
 
@@ -387,6 +428,27 @@ void FileData::launchGame(Window* window)
 	// music
 	if (Settings::getInstance()->getBool("audio.bgmusic"))
 		AudioManager::getInstance()->playRandomMusic();
+}
+
+// Seconds of play time left today, or -1 when PLAY TIMER is off
+int FileData::getPlayTimeRemaining()
+{
+	int playLimit = Settings::getInstance()->getInt("PlayTimer");
+	if (playLimit <= 0)
+		return -1;
+
+	char today[11];
+	time_t nowTime = time(NULL);
+	strftime(today, sizeof(today), "%Y-%m-%d", localtime(&nowTime));
+
+	std::istringstream state(Utils::FileSystem::readAllText("/home/ark/.emulationstation/playtimer.state"));
+	std::string stateDate;
+	int usedSeconds = 0;
+	if (!(state >> stateDate >> usedSeconds) || stateDate != today)
+		usedSeconds = 0;
+
+	int remaining = playLimit * 60 - usedSeconds;
+	return remaining > 0 ? remaining : 0;
 }
 
 CollectionFileData::CollectionFileData(FileData* file, SystemData* system)

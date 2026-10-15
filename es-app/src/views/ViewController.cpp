@@ -6,6 +6,7 @@
 #include "animations/LaunchAnimation.h"
 #include "animations/MoveCameraAnimation.h"
 #include "guis/GuiMenu.h"
+#include "guis/GuiMsgBox.h"
 #include "views/gamelist/DetailedGameListView.h"
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/GridGameListView.h"
@@ -241,13 +242,29 @@ void ViewController::onFileChanged(FileData* file, FileChangeType change)
 		it->second->onFileChanged(file, change);
 }
 
-void ViewController::launch(FileData* game, Vector3f center)
+void ViewController::launch(FileData* game, Vector3f center, int entrySlot)
 {
 	if(game->getType() != GAME)
 	{
 		LOG(LogError) << "tried to launch something that isn't a game";
 		return;
 	}
+
+	int playRemaining = FileData::getPlayTimeRemaining();
+	if (playRemaining > 0)
+	{
+		int minutesLeft = playRemaining / 60;
+		std::string msg = minutesLeft == 0 ? "LESS THAN 1 MINUTE OF PLAY TIME LEFT TODAY"
+			: std::to_string(minutesLeft) + (minutesLeft == 1 ? " MINUTE" : " MINUTES") + " OF PLAY TIME LEFT TODAY";
+		mWindow->pushGui(new GuiMsgBox(mWindow, msg, "OK", [this, game, center, entrySlot] { doLaunch(game, center, entrySlot); }));
+		return;
+	}
+
+	doLaunch(game, center, entrySlot);
+}
+
+void ViewController::doLaunch(FileData* game, Vector3f center, int entrySlot)
+{
 
 	// Hide the current view
 	//if (mCurrentView)
@@ -270,25 +287,25 @@ void ViewController::launch(FileData* game, Vector3f center)
 		auto fadeFunc = [this](float t) {
 			mFadeOpacity = Math::lerp(0.0f, 1.0f, t);
 		};
-		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc]
+		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc, entrySlot]
 		{
-			game->launchGame(mWindow);
+			game->launchGame(mWindow, entrySlot);
 			setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);			
 		});
 	} else if (transition_style == "slide"){
 		// move camera to zoom in on center + fade out, launch game, come back in
-		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 1500), 0, [this, origCamera, center, game]
+		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 1500), 0, [this, origCamera, center, game, entrySlot]
 		{
-			game->launchGame(mWindow);			
+			game->launchGame(mWindow, entrySlot);		
 			mCamera = origCamera;
 			setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 600), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);
 		});
 	} else { // instant
-		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this, origCamera, center, game]
+		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this, origCamera, center, game, entrySlot]
 		{
-			game->launchGame(mWindow);
+			game->launchGame(mWindow, entrySlot);
 			mCamera = origCamera;
 			setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);

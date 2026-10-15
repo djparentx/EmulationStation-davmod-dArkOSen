@@ -3224,3 +3224,65 @@ msgstr "%d min"
 
 msgid "%d sec"
 msgstr "%d s"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "LOS 20 ULTIMOS JUEGOS JUGADOS"
+
+msgid "NO GAME PLAYED YET"
+msgstr "NINGUN JUEGO JUGADO TODAVIA"
+
+#:
+msgid "datetime"
+msgstr "fecha y hora"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "AJUSTES SALVAPANTALLAS FECHA Y HORA"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "SALVAPANTALLAS FECHA Y HORA"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "TIPO DE RELOJ"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "ESTILO DE RELOJ"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "COLOR DEL RELOJ"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "MODO DE FONDO"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "COLOR DE FONDO"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "IMAGEN DE FONDO"
+
+#:
+msgid "SHOW DATE"
+msgstr "MOSTRAR FECHA"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "MOSTRAR SEGUNDOS"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "ACTIVAR RESPUESTA DE VIBRACIÓN"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "INTENSIDAD DE VIBRACIÓN"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATURA"
