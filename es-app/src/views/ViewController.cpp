@@ -241,7 +241,7 @@ void ViewController::onFileChanged(FileData* file, FileChangeType change)
 		it->second->onFileChanged(file, change);
 }
 
-void ViewController::launch(FileData* game, Vector3f center)
+void ViewController::launch(FileData* game, Vector3f center, int entrySlot)
 {
 	if(game->getType() != GAME)
 	{
@@ -272,23 +272,23 @@ void ViewController::launch(FileData* game, Vector3f center)
 		};
 		setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this, game, fadeFunc]
 		{
-			game->launchGame(mWindow);
+			game->launchGame(mWindow, entrySlot);
 			setAnimation(new LambdaAnimation(fadeFunc, 800), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);			
 		});
 	} else if (transition_style == "slide"){
 		// move camera to zoom in on center + fade out, launch game, come back in
-		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 1500), 0, [this, origCamera, center, game]
+		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 1500), 0, [this, origCamera, center, game, entrySlot]
 		{
-			game->launchGame(mWindow);			
+			game->launchGame(mWindow, entrySlot);		
 			mCamera = origCamera;
 			setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 600), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);
 		});
 	} else { // instant
-		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this, origCamera, center, game]
+		setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this, origCamera, center, game, entrySlot]
 		{
-			game->launchGame(mWindow);
+			game->launchGame(mWindow, entrySlot);
 			mCamera = origCamera;
 			setAnimation(new LaunchAnimation(mCamera, mFadeOpacity, center, 10), 0, [this] { mLockInput = false; mWindow->endRenderLoadingScreen(); }, true);
 			this->onFileChanged(game, FILE_METADATA_CHANGED);

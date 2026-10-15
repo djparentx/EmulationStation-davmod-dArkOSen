@@ -3320,3 +3320,9 @@ msgstr "%d min"
 
 msgid "%d sec"
 msgstr "%d s"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "GLI ULTIMI 20 GIOCHI GIOCATI"
+
+msgid "NO GAME PLAYED YET"
+msgstr "NESSUN GIOCO GIOCATO FINORA"

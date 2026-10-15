@@ -1968,3 +1968,9 @@ msgstr "%d分"
 
 msgid "%d sec"
 msgstr "%d秒"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "最近プレイした20本"
+
+msgid "NO GAME PLAYED YET"
+msgstr "まだプレイしたゲームがありません"

@@ -273,7 +273,7 @@ FileData* FileData::getSourceFileData()
 	return this;
 }
 
-void FileData::launchGame(Window* window)
+void FileData::launchGame(Window* window, int entrySlot)
 {
 	LOG(LogInfo) << "Attempting to launch game...";
 
@@ -325,6 +325,28 @@ void FileData::launchGame(Window* window)
 	command = Utils::String::replace(command, "%SYSTEM%", getSystemName());
 	command = Utils::String::replace(command, "%HOME%", Utils::FileSystem::getHomePath());
 
+	// inject savestate slot requested from LAST 20 PLAYED GAMES
+	if (entrySlot >= 0)
+	{
+		// longest first: retroarch32 contains retroarch
+		const std::string bins[2] = { "/usr/local/bin/retroarch32", "/usr/local/bin/retroarch" };
+		bool injected = false;
+		for (int i = 0; i < 2 && !injected; i++)
+		{
+			size_t pos = command.find(bins[i]);
+			if (pos == std::string::npos)
+				continue;
+			size_t end = pos + bins[i].length();
+			// name must end here (space or end of string), otherwise it's a prefix
+			if (end < command.length() && command[end] != ' ')
+				continue;
+			command.insert(end, " --entryslot " + std::to_string(entrySlot));
+			injected = true;
+		}
+		// non-RetroArch (pico8, ppsspp, drastic...): no injection, they use their own save format
+		(void)injected;
+	}
+
 	if (Utils::FileSystem::exists("/usr/local/bin/quickmode.sh"))
 	{
 	    FileData* gameToUpdate = getSourceFileData();
@@ -355,11 +377,13 @@ void FileData::launchGame(Window* window)
 
 	{
 		int elapsed = (int)(Utils::Time::now() - sessionStart);
-		if (elapsed > 0)
+		if (elapsed > 0 && elapsed < 86400)
 		{
 			FileData* gameToUpdate = getSourceFileData();
 			int priorGametime = gameToUpdate->getMetadata().getInt("gametime");
 			gameToUpdate->getMetadata().set("gametime", std::to_string(static_cast<long long>(priorGametime + elapsed)));
+			gameToUpdate->getMetadata().set("lastsession", std::to_string(static_cast<long long>(elapsed)));
+			saveToGamelistRecovery(gameToUpdate);
 		}
 	}
 

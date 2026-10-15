@@ -2433,3 +2433,9 @@ msgstr "%d phút"
 
 msgid "%d sec"
 msgstr "%d giây"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "20 TRO CHOI CHOI GAN DAY"
+
+msgid "NO GAME PLAYED YET"
+msgstr "CHUA CHOI TRO CHOI NAO"

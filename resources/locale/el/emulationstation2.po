@@ -2907,3 +2907,9 @@ msgstr "%d λεπ."
 
 msgid "%d sec"
 msgstr "%d δευτ."
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "ΤΑ 20 ΤΕΛΕΥΤΑΙΑ ΠΑΙΧΝΙΔΙΑ"
+
+msgid "NO GAME PLAYED YET"
+msgstr "ΔΕΝ ΕΧΕΙ ΠΑΙΧΤΕΙ ΚΑΝΕΝΑ ΠΑΙΧΝΙΔΙ"

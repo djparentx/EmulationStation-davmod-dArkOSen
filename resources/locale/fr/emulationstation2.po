@@ -2079,3 +2079,9 @@ msgstr "%d mn"
 
 msgid "%d sec"
 msgstr "%d s"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "LES 20 DERNIERS JEUX JOUES"
+
+msgid "NO GAME PLAYED YET"
+msgstr "AUCUN JEU JOUE POUR L'INSTANT"

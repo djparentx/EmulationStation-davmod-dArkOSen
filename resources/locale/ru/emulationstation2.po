@@ -4129,3 +4129,9 @@ msgstr "%d м"
 
 msgid "%d sec"
 msgstr "%d с"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "ПОСЛЕДНИЕ 20 ИГР"
+
+msgid "NO GAME PLAYED YET"
+msgstr "ПОКА НЕТ СЫГРАННЫХ ИГР"

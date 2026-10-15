@@ -3876,3 +3876,9 @@ msgstr "%d min"
 
 msgid "%d sec"
 msgstr "%d s"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "DE 20 SENAST SPELADE SPELEN"
+
+msgid "NO GAME PLAYED YET"
+msgstr "INGET SPEL SPELAT ANNU"
