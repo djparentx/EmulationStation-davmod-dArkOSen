@@ -19,6 +19,10 @@
 #include <assert.h>
 #include "Gamelist.h"
 #include <algorithm>
+#include "guis/GuiMsgBox.h"
+#include <sstream>
+#include <ctime>
+#include <unistd.h>
 
 FileData::FileData(FileType type, const std::string& path, SystemData* system)
 	: mType(type), mSystem(system), mParent(NULL), mMetadata(type == GAME ? GAME_METADATA : FOLDER_METADATA) // metadata is REALLY set in the constructor!
@@ -277,6 +281,13 @@ void FileData::launchGame(Window* window)
 {
 	LOG(LogInfo) << "Attempting to launch game...";
 
+	int playLimit = Settings::getInstance()->getInt("PlayTimer");
+	if (playLimit > 0 && getPlayTimeRemaining() == 0)
+	{
+		window->pushGui(new GuiMsgBox(window, "DAILY PLAY TIME LIMIT REACHED\nCOME BACK TOMORROW!", "OK"));
+		return;
+	}
+
 	AudioManager::getInstance()->deinit();
 	VolumeControl::getInstance()->deinit();
 
@@ -345,7 +356,13 @@ void FileData::launchGame(Window* window)
 
 	time_t sessionStart = Utils::Time::now();
 
+	if (playLimit > 0 && Utils::FileSystem::exists("/usr/local/bin/playtimer_watchdog.sh"))
+		runSystemCommand("/usr/local/bin/playtimer_watchdog.sh " + std::to_string(playLimit * 60) + " " + std::to_string(getpid()) + " >/dev/null 2>&1 &", "", nullptr);
+
 	int exitCode = runSystemCommand(command, getDisplayName(), hideWindow ? NULL : window);
+
+	if (playLimit > 0)
+		runSystemCommand("pkill -TERM -f /usr/local/bin/playtimer_watchdog.sh", "", nullptr);
 	if (exitCode != 0)
 	{
 		LOG(LogWarning) << "...launch terminated with nonzero exit code " << exitCode << "!";
@@ -387,6 +404,27 @@ void FileData::launchGame(Window* window)
 	// music
 	if (Settings::getInstance()->getBool("audio.bgmusic"))
 		AudioManager::getInstance()->playRandomMusic();
+}
+
+// Seconds of play time left today, or -1 when PLAY TIMER is off
+int FileData::getPlayTimeRemaining()
+{
+	int playLimit = Settings::getInstance()->getInt("PlayTimer");
+	if (playLimit <= 0)
+		return -1;
+
+	char today[11];
+	time_t nowTime = time(NULL);
+	strftime(today, sizeof(today), "%Y-%m-%d", localtime(&nowTime));
+
+	std::istringstream state(Utils::FileSystem::readAllText("/home/ark/.emulationstation/playtimer.state"));
+	std::string stateDate;
+	int usedSeconds = 0;
+	if (!(state >> stateDate >> usedSeconds) || stateDate != today)
+		usedSeconds = 0;
+
+	int remaining = playLimit * 60 - usedSeconds;
+	return remaining > 0 ? remaining : 0;
 }
 
 CollectionFileData::CollectionFileData(FileData* file, SystemData* system)
