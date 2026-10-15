@@ -282,21 +282,10 @@ void FileData::launchGame(Window* window)
 	LOG(LogInfo) << "Attempting to launch game...";
 
 	int playLimit = Settings::getInstance()->getInt("PlayTimer");
-	if (playLimit > 0)
+	if (playLimit > 0 && getPlayTimeRemaining() == 0)
 	{
-		char today[11];
-		time_t nowTime = time(NULL);
-		strftime(today, sizeof(today), "%Y-%m-%d", localtime(&nowTime));
-
-		std::istringstream state(Utils::FileSystem::readAllText("/home/ark/.emulationstation/playtimer.state"));
-		std::string stateDate;
-		int usedSeconds = 0;
-
-		if ((state >> stateDate >> usedSeconds) && stateDate == today && usedSeconds >= playLimit * 60)
-		{
-			window->pushGui(new GuiMsgBox(window, "DAILY PLAY TIME LIMIT REACHED\nCOME BACK TOMORROW!", "OK"));
-			return;
-		}
+		window->pushGui(new GuiMsgBox(window, "DAILY PLAY TIME LIMIT REACHED\nCOME BACK TOMORROW!", "OK"));
+		return;
 	}
 
 	AudioManager::getInstance()->deinit();
@@ -415,6 +404,27 @@ void FileData::launchGame(Window* window)
 	// music
 	if (Settings::getInstance()->getBool("audio.bgmusic"))
 		AudioManager::getInstance()->playRandomMusic();
+}
+
+// Seconds of play time left today, or -1 when PLAY TIMER is off
+int FileData::getPlayTimeRemaining()
+{
+	int playLimit = Settings::getInstance()->getInt("PlayTimer");
+	if (playLimit <= 0)
+		return -1;
+
+	char today[11];
+	time_t nowTime = time(NULL);
+	strftime(today, sizeof(today), "%Y-%m-%d", localtime(&nowTime));
+
+	std::istringstream state(Utils::FileSystem::readAllText("/home/ark/.emulationstation/playtimer.state"));
+	std::string stateDate;
+	int usedSeconds = 0;
+	if (!(state >> stateDate >> usedSeconds) || stateDate != today)
+		usedSeconds = 0;
+
+	int remaining = playLimit * 60 - usedSeconds;
+	return remaining > 0 ? remaining : 0;
 }
 
 CollectionFileData::CollectionFileData(FileData* file, SystemData* system)

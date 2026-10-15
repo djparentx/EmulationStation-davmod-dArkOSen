@@ -55,6 +55,10 @@
 GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(window, _("MAIN MENU")), mVersion(window)
 {
 
+	int playRemaining = FileData::getPlayTimeRemaining();
+	if (playRemaining >= 0)
+		addEntry(_("TIME LEFT TODAY") + ": " + std::to_string(playRemaining / 60) + " " + _("MIN"), false, [] {}, "");
+
 	addEntry(_("DISPLAY SETTINGS AND INFO"), true, [this] { openDisplaySettings(); }, "iconSystem");
 
 	auto theme = ThemeData::getMenuTheme();
