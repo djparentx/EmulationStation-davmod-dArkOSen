@@ -129,6 +129,7 @@ void Settings::setDefaults()
 	mBoolMap["InvertPwrBtn"] = false;
 	mBoolMap["EnableVibration"] = true;
 	mIntMap["VibrationIntensity"] = 2;
+	mIntMap["PlayTimer"] = 0;
 	mBoolMap["ScanPorts"] = false;
 	mBoolMap["InvertVolBtns"] = false;
 	mIntMap["ScreenSaverTime"] = 5*60*1000; // 5 minutes

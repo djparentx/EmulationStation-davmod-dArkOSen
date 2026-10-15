@@ -3287,6 +3287,16 @@ void GuiMenu::openUISettings()
 			}, _("NO"), nullptr));
 		}
 	});
+
+	// PLAY TIMER
+	auto playTimer = std::make_shared<OptionListComponent<int>>(mWindow, _("PLAY TIMER"), false);
+	int curPlayTimer = Settings::getInstance()->getInt("PlayTimer");
+	playTimer->add(_("OFF"), 0, curPlayTimer == 0);
+	for (int m : { 15, 30, 45, 60, 90, 120 })
+		playTimer->add(std::to_string(m) + " " + _("MIN"), m, curPlayTimer == m);
+	s->addWithLabel(_("PLAY TIMER"), playTimer);
+	s->addSaveFunc([playTimer] { Settings::getInstance()->setInt("PlayTimer", playTimer->getSelected()); });
+	
 	//#endif
 
 	// LANGUAGE
