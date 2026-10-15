@@ -3,7 +3,7 @@ name: Build EmulationStation (RK3326 aarch64)
 on:
   push:
     branches: [ "main", "351v", "feature/**" ]
-    pull_request:
+  pull_request:
     branches: [ "351v" ]
   workflow_dispatch:
 
