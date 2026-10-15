@@ -3386,3 +3386,86 @@ msgstr "SKANOWAĆ GRY SD1?\nKONSOLA URUCHOMI SIĘ PONOWNIE, ABY ZAKOŃCZYĆ SKAN
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SKANOWAĆ SD2?\nKONSOLA URUCHOMI SIĘ PONOWNIE, ABY ZAKOŃCZYĆ SKANOWANIE."
+
+msgid "BENCHMARKING"
+msgstr "TESTY WYDAJNOŚCI"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK NIE POWIÓDŁ SIĘ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "TRWA, PROSZĘ CZEKAĆ"
+
+msgid "LOG IS EMPTY."
+msgstr "DZIENNIK JEST PUSTY."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d godz."
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"
+
+#:
+msgid "datetime"
+msgstr "data i godzina"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "USTAWIENIA WYGASZACZA DATY I GODZINY"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "WYGASZACZ DATY I GODZINY"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "TYP ZEGARA"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "STYL ZEGARA"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "KOLOR ZEGARA"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "TRYB TŁA"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "KOLOR TŁA"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "OBRAZ TŁA"
+
+#:
+msgid "SHOW DATE"
+msgstr "POKAŻ DATĘ"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "POKAŻ SEKUNDY"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "WŁĄCZ WIBRACJE"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "INTENSYWNOŚĆ WIBRACJI"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATURA"

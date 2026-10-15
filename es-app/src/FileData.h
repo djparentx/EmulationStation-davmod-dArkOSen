@@ -80,7 +80,8 @@ public:
 	std::string getCleanName() const;
 
 	void launchGame(Window* window);
-
+	static int getPlayTimeRemaining();
+	
 	static void resetSettings();
 	
 	virtual const MetaDataList& getMetadata() const { return mMetadata; }

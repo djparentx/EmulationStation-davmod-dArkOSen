@@ -11,6 +11,14 @@
 #include <SDL.h>
 #include <iostream>
 #include <assert.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#define RUMBLE_BIN "/usr/local/bin/sdl_rumble"
+
+extern char** environ;
 
 #define KEYBOARD_GUID_STRING "-1"
 #define CEC_GUID_STRING      "-2"
@@ -119,7 +127,7 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 	auto it = mInputConfigs.find(joyId);
 	delete it->second;
 	mInputConfigs.erase(it);
-
+	
 	// close the joystick
 	auto joyIt = mJoysticks.find(joyId);
 	if(joyIt != mJoysticks.cend())
@@ -129,6 +137,39 @@ void InputManager::removeJoystickByJoystickID(SDL_JoystickID joyId)
 	}else{
 		LOG(LogError) << "Could not find joystick to close (instance ID: " << joyId << ")";
 	}
+}
+
+// Haptic feedback, same method as stock ES: run /usr/local/bin/sdl_rumble <level 1-5> <durationMs>.
+// Spawned directly (no shell), output to /dev/null; finished children are reaped so no zombies build up.
+void InputManager::rumble(int level, int durationMs)
+{
+	// reap rumble processes that have finished
+	for (auto it = mRumblePids.begin(); it != mRumblePids.end(); )
+	{
+		if (waitpid(*it, nullptr, WNOHANG) != 0)
+			it = mRumblePids.erase(it);
+		else
+			++it;
+	}
+
+	if (level < 1) level = 1;
+	if (level > 5) level = 5;
+	if (durationMs < 1) durationMs = 1;
+
+	std::string levelArg = std::to_string(level);
+	std::string durationArg = std::to_string(durationMs);
+	char* argv[] = { (char*)RUMBLE_BIN, (char*)levelArg.c_str(), (char*)durationArg.c_str(), nullptr };
+
+	posix_spawn_file_actions_t actions;
+	posix_spawn_file_actions_init(&actions);
+	posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
+	posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
+
+	pid_t pid;
+	if (posix_spawn(&pid, RUMBLE_BIN, &actions, nullptr, argv, environ) == 0)
+		mRumblePids.push_back(pid);
+
+	posix_spawn_file_actions_destroy(&actions);
 }
 
 void InputManager::deinit()
@@ -141,7 +182,7 @@ void InputManager::deinit()
 		SDL_JoystickClose(iter->second);
 	}
 	mJoysticks.clear();
-
+	
 	for(auto iter = mInputConfigs.cbegin(); iter != mInputConfigs.cend(); iter++)
 	{
 		delete iter->second;
@@ -259,10 +300,16 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 
 	case SDL_JOYBUTTONDOWN:
 	case SDL_JOYBUTTONUP:
+		if (ev.type == SDL_JOYBUTTONDOWN && Settings::getInstance()->getBool("EnableVibration"))
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
+		
 		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
 		return true;
 
 	case SDL_JOYHATMOTION:
+		if (ev.jhat.value != SDL_HAT_CENTERED && Settings::getInstance()->getBool("EnableVibration"))
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
+		
 		window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));
 		return true;
 
@@ -282,6 +329,9 @@ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
 			SDL_PushEvent(quit);
 			return false;
 		}
+
+		if (Settings::getInstance()->getBool("EnableVibration"))
+			rumble(Settings::getInstance()->getInt("VibrationIntensity"), 40);
 
 		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 1, false));
 		return true;

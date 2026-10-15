@@ -28,7 +28,8 @@ public:
 	virtual void setColor(unsigned int color);
 
 	inline void setOnValueChanged(const std::function<void(const float&)>& callback) { mValueChanged = callback; }
-
+	inline void setReversed(bool reversed) { mReversed = reversed; onValueChanged(); }
+	
 private:
 	void onValueChanged();
 
@@ -38,7 +39,8 @@ private:
 	float mMoveRate;
 	int mPrecision;
 	int mMoveAccumulator;
-
+	bool mReversed;
+	
 	ImageComponent mKnob;
 
 	std::string mSuffix;

@@ -3849,3 +3849,86 @@ msgstr "SKANNA SD1-SPEL?\nKONSOLEN STARTAR OM FÖR ATT SLUTFÖRA SKANNINGEN."
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "SKANNA SD2?\nKONSOLEN STARTAR OM FÖR ATT SLUTFÖRA SKANNINGEN."
+
+msgid "BENCHMARKING"
+msgstr "PRESTANDATESTER"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "BENCHMARK MISSLYCKADES"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "KÖRS, VÄNTA"
+
+msgid "LOG IS EMPTY."
+msgstr "LOGGEN ÄR TOM."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d tim"
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"
+
+#:
+msgid "datetime"
+msgstr "datum och tid"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "INSTÄLLNINGAR FÖR DATUM- OCH TIDSSKÄRMSLÄCKARE"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "DATUM- OCH TIDSSKÄRMSLÄCKARE"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "KLOCKTYP"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "KLOCKSTIL"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "KLOCKFÄRG"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "BAKGRUNDSLÄGE"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "BAKGRUNDSFÄRG"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "BAKGRUNDSBILD"
+
+#:
+msgid "SHOW DATE"
+msgstr "VISA DATUM"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "VISA SEKUNDER"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "AKTIVERA VIBRATIONSRESPONS"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "VIBRATIONSSTYRKA"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATUR"

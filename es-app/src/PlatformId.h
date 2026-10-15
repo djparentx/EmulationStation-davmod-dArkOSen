@@ -151,7 +151,8 @@ namespace PlatformIds
 		LCD_GAMES,
 		VTECH_CREATIVISION,
 		VTECH_VSMILE,
-
+		ANDROID,
+		
 		PLATFORM_IGNORE, // do not allow scraping for this system
 		PLATFORM_COUNT
 	};

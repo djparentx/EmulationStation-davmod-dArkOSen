@@ -2052,3 +2052,86 @@ msgstr "ANALYSER LES JEUX SD1 ?\nLA CONSOLE VA REDÉMARRER POUR TERMINER L'ANALY
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "ANALYSER SD2 ?\nLA CONSOLE VA REDÉMARRER POUR TERMINER L'ANALYSE."
+
+msgid "BENCHMARKING"
+msgstr "BENCHMARKS"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "ÉCHEC DU BENCHMARK"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "EN COURS, VEUILLEZ PATIENTER"
+
+msgid "LOG IS EMPTY."
+msgstr "LE JOURNAL EST VIDE."
+
+msgid "%d d"
+msgstr "%d j"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "%d mn"
+msgstr "%d mn"
+
+msgid "%d sec"
+msgstr "%d s"
+
+#:
+msgid "datetime"
+msgstr "date et heure"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "PARAMÈTRES DE L'ÉCRAN DE VEILLE DATE ET HEURE"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "ÉCRAN DE VEILLE DATE ET HEURE"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "TYPE D'HORLOGE"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "STYLE D'HORLOGE"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "COULEUR DE L'HORLOGE"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "MODE D'ARRIÈRE-PLAN"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "COULEUR D'ARRIÈRE-PLAN"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "IMAGE D'ARRIÈRE-PLAN"
+
+#:
+msgid "SHOW DATE"
+msgstr "AFFICHER LA DATE"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "AFFICHER LES SECONDES"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "ACTIVER LE RETOUR DE VIBRATION"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "INTENSITÉ DE VIBRATION"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPÉRATURE"

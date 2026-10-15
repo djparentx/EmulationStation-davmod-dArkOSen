@@ -566,6 +566,9 @@ int main(int argc, char* argv[])
 
 	window.endRenderLoadingScreen();
 
+	if (Settings::getInstance()->getBool("EnableVibration"))
+		InputManager::getInstance()->rumble(5, 1000);
+
 	if (Settings::getInstance()->getBool("audio.bgmusic"))
 		AudioManager::getInstance()->playRandomMusic();
 

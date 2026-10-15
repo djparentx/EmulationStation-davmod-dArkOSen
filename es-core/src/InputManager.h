@@ -6,17 +6,11 @@
 #include <SDL_joystick.h>
 #include <map>
 #include <vector>
+#include <sys/types.h>
 
 class InputConfig;
 class Window;
 union SDL_Event;
-
-struct PlayerDeviceInfo
-{
-	int  index;        // SDL joystick instance id (InputConfig::getDeviceId)
-	int  batteryLevel; // 0-100, -1 when unknown / wired
-	bool isWheel;
-};
 
 //you should only ever instantiate one of these, by the way
 class InputManager
@@ -36,7 +30,8 @@ private:
 	InputConfig* mCECInputConfig;
 
 	std::map<SDL_JoystickID, int*> mPrevAxisValues;
-
+	std::vector<pid_t> mRumblePids;
+	
 	bool initialized() const;
 
 	void addJoystickByDeviceIndex(int id);
@@ -65,10 +60,8 @@ public:
 
 	InputConfig* getInputConfigByDevice(int deviceId);
 
-	// configured joysticks, in connection order (used by the themable controllerActivity element)
-	std::vector<PlayerDeviceInfo> getConnectedPads();
-
 	bool parseEvent(const SDL_Event& ev, Window* window);
+	void rumble(int level, int durationMs);
 };
 
 #endif // ES_CORE_INPUT_MANAGER_H

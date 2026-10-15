@@ -6,6 +6,7 @@
 #include "components/SwitchComponent.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiSlideshowScreensaverOptions.h"
+#include "guis/GuiDatetimeScreensaverOptions.h"
 #include "guis/GuiVideoScreensaverOptions.h"
 #include "Settings.h"
 
@@ -29,6 +30,7 @@ GuiGeneralScreensaverOptions::GuiGeneralScreensaverOptions(Window* window, std::
 	screensavers.push_back("black");
 	screensavers.push_back("random video");
 	screensavers.push_back("slideshow");
+	screensavers.push_back("datetime");
 	for(auto it = screensavers.cbegin(); it != screensavers.cend(); it++)
 		screensaver_behavior->add(_(it->c_str()), *it, Settings::getInstance()->getString("ScreenSaverBehavior") == *it);
 	addWithLabel(_("SCREENSAVER BEHAVIOR"), screensaver_behavior);
@@ -59,6 +61,12 @@ GuiGeneralScreensaverOptions::GuiGeneralScreensaverOptions(Window* window, std::
 	row.makeAcceptInputHandler(std::bind(&GuiGeneralScreensaverOptions::openSlideshowScreensaverOptions, this));
 	addRow(row);
 
+	row.elements.clear();
+	row.addElement(std::make_shared<TextComponent>(mWindow, _("DATE TIME SCREENSAVER SETTINGS"), theme->Text.font, theme->Text.color), true);
+	row.addElement(makeArrow(mWindow), false);
+	row.makeAcceptInputHandler(std::bind(&GuiGeneralScreensaverOptions::openDateTimeScreensaverOptions, this));
+	addRow(row);
+
 	// Allow ScreenSaver Controls - ScreenSaverControls
 	auto ss_controls = std::make_shared<SwitchComponent>(mWindow);
 	ss_controls->setState(Settings::getInstance()->getBool("ScreenSaverControls"));
@@ -78,3 +86,6 @@ void GuiGeneralScreensaverOptions::openSlideshowScreensaverOptions() {
     mWindow->pushGui(new GuiSlideshowScreensaverOptions(mWindow, _("SLIDESHOW SCREENSAVER").c_str()));
 }
 
+void GuiGeneralScreensaverOptions::openDateTimeScreensaverOptions() {
+	mWindow->pushGui(new GuiDatetimeScreensaverOptions(mWindow, _("DATE & TIME SCREENSAVER").c_str()));
+}

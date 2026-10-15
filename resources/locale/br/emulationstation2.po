@@ -3015,3 +3015,86 @@ msgstr "VERIFICAR JOGOS SD1?\nO CONSOLE SERÁ REINICIADO PARA CONCLUIR A VERIFIC
 
 msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
 msgstr "VERIFICAR SD2?\nO CONSOLE SERÁ REINICIADO PARA CONCLUIR A VERIFICAÇÃO."
+
+msgid "BENCHMARKING"
+msgstr "TESTES DE DESEMPENHO"
+
+msgid "BENCHMARK"
+msgstr "BENCHMARK"
+
+msgid "BENCHMARK FAILED"
+msgstr "FALHA NO BENCHMARK"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "EXECUTANDO, POR FAVOR ESPERE"
+
+msgid "LOG IS EMPTY."
+msgstr "O REGISTRO ESTÁ VAZIO."
+
+msgid "%d d"
+msgstr "%d d"
+
+msgid "%d h"
+msgstr "%d h"
+
+msgid "%d mn"
+msgstr "%d min"
+
+msgid "%d sec"
+msgstr "%d s"
+
+#:
+msgid "datetime"
+msgstr "data e hora"
+
+#:
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "AJUSTAR SCREENSAVER DATA E HORA"
+
+#:
+msgid "DATE & TIME SCREENSAVER"
+msgstr "SCREENSAVER DATA E HORA"
+
+#:
+msgid "CLOCK TYPE"
+msgstr "TIPO DE RELÓGIO"
+
+#:
+msgid "CLOCK STYLE"
+msgstr "ESTILO DO RELÓGIO"
+
+#:
+msgid "CLOCK COLOR"
+msgstr "COR DO RELÓGIO"
+
+#:
+msgid "BACKGROUND MODE"
+msgstr "MODO DE FUNDO"
+
+#:
+msgid "BACKGROUND COLOR"
+msgstr "COR DE FUNDO"
+
+#:
+msgid "BACKGROUND IMAGE"
+msgstr "IMAGEM DE FUNDO"
+
+#:
+msgid "SHOW DATE"
+msgstr "MOSTRAR DATA"
+
+#:
+msgid "SHOW SECONDS"
+msgstr "MOSTRAR SEGUNDOS"
+
+#:
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "ATIVAR VIBRAÇÃO"
+
+#:
+msgid "VIBRATION INTENSITY"
+msgstr "INTENSIDADE DA VIBRAÇÃO"
+
+#:
+msgid "TEMPERATURE"
+msgstr "TEMPERATURA"

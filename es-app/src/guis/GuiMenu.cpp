@@ -3,6 +3,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include "guis/GuiMenu.h"
+#include <sys/stat.h>
+#include <dirent.h>
 #include "guis/GuiTools.h"
 #include "components/OptionListComponent.h"
 #include "components/SliderComponent.h"
@@ -53,6 +55,10 @@
 GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(window, _("MAIN MENU")), mVersion(window)
 {
 
+	int playRemaining = FileData::getPlayTimeRemaining();
+	if (playRemaining >= 0)
+		addEntry(_("TIME LEFT TODAY") + ": " + std::to_string(playRemaining / 60) + " " + _("MIN"), false, [] {}, "");
+
 	addEntry(_("DISPLAY SETTINGS AND INFO"), true, [this] { openDisplaySettings(); }, "iconSystem");
 
 	auto theme = ThemeData::getMenuTheme();
@@ -63,10 +69,10 @@ GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(win
 	{
 		addEntry(_("UI SETTINGS"), true, [this] { openUISettings(); }, "iconUI");
 		// addEntry(_("CONFIGURE INPUT"), true, [this] { openConfigInput(); }, "iconControllers");
+
+		addEntry(_("NETWORK SETTINGS"), true, [this] { openNetworkSettings(); }, "iconNetwork");
 	}
-
-	addEntry(_("NETWORK SETTINGS"), true, [this] { openNetworkSettings(); }, "iconNetwork");
-
+	
 	addEntry(_("SOUND SETTINGS"), true, [this] { openSoundSettings(); }, "iconSound");
 
 	if (isFullUI)
@@ -101,7 +107,8 @@ GuiMenu::GuiMenu(Window* window, bool animate) : GuiComponent(window), mMenu(win
 	
 	addEntry(_("QUIT"), !Settings::getInstance()->getBool("ShowOnlyExit"), [this] {openQuitMenu(); }, "iconQuit");
 
-	addEntry(_("BAT") + ": " + std::string(getShOutput(R"(cat /sys/class/power_supply/battery/capacity)")) + "%" + " | " + _("SND") + ": " + std::string(getShOutput(R"(current_volume)")) + " | " + _("BRT") + ": " + std::to_string(ApiSystem::getInstance()->getBrightnessLevel()) + "% | " + _("WIFI") + ": " + std::string(getShOutput(R"(if [ -z $(cat /sys/class/net/wlan0/operstate) ]; then echo "Off"; else cat /sys/class/net/wlan0/operstate; fi)")), true, [this] {  });
+	addEntry(_("BAT") + ": " + std::string(getShOutput(R"(cat /sys/class/power_supply/battery/capacity)")) + "%" + " | " + _("SND") + ": " + std::string(getShOutput(R"(current_volume)")) + " | " + _("BRT") + ": " + std::to_string(ApiSystem::getInstance()->getBrightnessLevel()) + "% | " + _("WIFI") + ": " + std::string(getShOutput(R"(if [ -z $(cat /sys/class/net/wlan0/operstate) ]; then echo "Off"; else cat /sys/class/net/wlan0/operstate; fi)")), true, [] { });
+	/*/sys/class/net/wlan0/operstate; fi)")), true, [this] { openQuickStatusMenu(); });*/
 
 	addEntry(_("Distro Version") + ": " + std::string(getShOutput(R"(cat /usr/share/plymouth/themes/text.plymouth | grep title | cut -c 7-50)")), false, [this] {
 		if (access("/usr/local/bin/Update.sh", F_OK) == 0)
@@ -414,6 +421,15 @@ void GuiMenu::openDisplaySettings()
 		ApiSystem::getInstance()->setGamma(newVal);
 	});
 	s->addWithLabel(_("GAMMA"), gammaComponent);
+
+	auto toneComponent = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
+	toneComponent->setReversed(true);
+	toneComponent->setValue((float)ApiSystem::getInstance()->getTone());
+	toneComponent->setOnValueChanged([](const float &newVal)
+	{
+		ApiSystem::getInstance()->setTone((int)Math::round(newVal));
+	});
+	s->addWithLabel(_("TEMPERATURE"), toneComponent);
 	
 		auto brightnessPopup = std::make_shared<SwitchComponent>(mWindow);
 		brightnessPopup->setState(Settings::getInstance()->getBool("BrightnessPopup"));
@@ -2314,6 +2330,7 @@ void GuiMenu::toggleZram(bool enable, const std::string& size,
         if (size == "128M") bytes = 134217728;
         else if (size == "256M") bytes = 268435456;
         else if (size == "512M") bytes = 536870912;
+		else if (size == "768M") bytes = 805306368;
         else if (size == "1024M") bytes = 1073741824;
 
         // Set size in bytes
@@ -2334,6 +2351,7 @@ void GuiMenu::saveZramConfig(const std::string& size, const std::string& compAlg
     if (size == "128M") bytes = 134217728;
     else if (size == "256M") bytes = 268435456;
     else if (size == "512M") bytes = 536870912;
+	else if (size == "768M") bytes = 805306368;
     else if (size == "1024M") bytes = 1073741824;
 
     std::string content = "ALGORITHM=" + compAlgo + "\nSIZE=" + std::to_string(bytes) + "\n";
@@ -2364,12 +2382,12 @@ void GuiMenu::openPerformanceSettings()
 	auto s = new GuiSettings(mWindow, _("PERFORMANCE SETTINGS"));
 	
 	// --- CPU Grade ---
-    /* std::string cpuBinning = getCpuBinning();
+    std::string cpuBinning = getCpuBinning();
     auto cpuText = std::make_shared<TextComponent>(mWindow,
         cpuBinning,
         ThemeData::getMenuTheme()->Text.font, ThemeData::getMenuTheme()->Text.color);
     s->addWithLabel(_("CPU GRADE"), cpuText);
-	*/
+
 	
 	// --- CPU Temp ---
     auto cpuTempText = std::make_shared<TextComponent>(mWindow,
@@ -2451,6 +2469,9 @@ void GuiMenu::openPerformanceSettings()
 	
 	// --- GPU Frequency ---
     auto gpuFreqs = getGpuAvailableFreqs();
+    std::sort(gpuFreqs.begin(), gpuFreqs.end(), [](const std::string& a, const std::string& b) {
+        return atoll(a.c_str()) < atoll(b.c_str());
+    });
     if (!gpuFreqs.empty()) {
         auto freqList = std::make_shared<OptionListComponent<std::string>>(mWindow, _("MAX FREQ"), false);
         std::string currentFreq = getGpuMaxFreq();
@@ -3270,6 +3291,16 @@ void GuiMenu::openUISettings()
 			}, _("NO"), nullptr));
 		}
 	});
+
+	// PLAY TIMER
+	auto playTimer = std::make_shared<OptionListComponent<int>>(mWindow, _("PLAY TIMER"), false);
+	int curPlayTimer = Settings::getInstance()->getInt("PlayTimer");
+	playTimer->add(_("OFF"), 0, curPlayTimer == 0);
+	for (int m : { 15, 30, 45, 60, 90, 120 })
+		playTimer->add(std::to_string(m) + " " + _("MIN"), m, curPlayTimer == m);
+	s->addWithLabel(_("PLAY TIMER"), playTimer);
+	s->addSaveFunc([playTimer] { Settings::getInstance()->setInt("PlayTimer", playTimer->getSelected()); });
+	
 	//#endif
 
 	// LANGUAGE
@@ -4043,6 +4074,34 @@ void GuiMenu::openOtherSettings()
 			InputConfig::AssignActionButtons();
 			ViewController::get()->reloadAll(mWindow);
 		}
+	});
+
+	// Haptic feedback on button press
+	bool vibrationOn = Settings::getInstance()->getBool("EnableVibration");
+	auto vibration = std::make_shared<SwitchComponent>(mWindow);
+	vibration->setState(vibrationOn);
+	s->addWithLabel(_("ENABLE VIBRATION FEEDBACK"), vibration);
+	s->addSaveFunc([vibration] { Settings::getInstance()->setBool("EnableVibration", vibration->getState()); });
+
+	// Vibration intensity (only while vibration is enabled)
+	if (vibrationOn)
+	{
+		auto intensity = std::make_shared< OptionListComponent<std::string> >(mWindow, _("VIBRATION INTENSITY"), false);
+		intensity->addRange({ "1", "2", "3", "4", "5" }, std::to_string(Settings::getInstance()->getInt("VibrationIntensity")));
+		s->addWithLabel(_("VIBRATION INTENSITY"), intensity);
+		s->addSaveFunc([intensity] { Settings::getInstance()->setInt("VibrationIntensity", std::stoi(intensity->getSelected())); });
+	}
+
+	// Toggling vibration saves and rebuilds the menu so VIBRATION INTENSITY shows/hides
+	vibration->setOnChangedCallback([this, s] {
+		s->save();
+		if (s->getVariable("reloadGuiMenu"))
+		{
+			s->close();
+			return;
+		}
+		delete s;
+		openOtherSettings();
 	});
 
     //Flip power button suspend/poweroff function
