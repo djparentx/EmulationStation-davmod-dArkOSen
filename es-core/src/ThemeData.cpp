@@ -25,10 +25,13 @@
 #include "components/WebImageComponent.h"
 #include "animations/ThemeStoryboard.h"
 
-std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" } };
+std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" }, { "splash" } };
 std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "z-index" }, { "visible" } };
 
 std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> ThemeData::sElementMap {
+	// Batocera <view name="splash"><splash name="splash"> in <theme>/splash.xml and gamesplash.xml
+	{ "splash", {
+		{ "backgroundColor", COLOR } } },
 	{ "image", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -811,8 +814,12 @@ void ThemeData::loadFile(const std::string system, std::map<std::string, std::st
 	parseVariables(root);
 	parseTheme(root);
 	
-	mMenuTheme = nullptr;
-	mDefaultTheme = this;
+	// a splash.xml / gamesplash.xml theme (Splash) must not replace the current theme's menu
+	if (system != "splash")
+	{
+		mMenuTheme = nullptr;
+		mDefaultTheme = this;
+	}
 }
 
 const std::shared_ptr<ThemeData::ThemeMenu>& ThemeData::getMenuTheme()
@@ -2097,10 +2104,10 @@ const std::shared_ptr<ThemeData>& ThemeData::getDefault()
 	return theme;
 }
 
-GuiComponent* ThemeData::createExtraComponent(Window* window, const std::string& t)
+GuiComponent* ThemeData::createExtraComponent(Window* window, const std::string& t, bool forceLoad)
 {
 	if(t == "image")
-		return new ImageComponent(window);
+		return new ImageComponent(window, forceLoad);
 	else if(t == "text")
 		return new TextComponent(window);
 	else if (t == "ninepatch")
@@ -2139,7 +2146,7 @@ void ThemeData::applySelfTheme(GuiComponent* comp, const ThemeElement& elem)
 	comp->applyTheme(theme, "default", "default", ThemeFlags::ALL);
 }
 
-std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window)
+std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad)
 {
 	std::vector<GuiComponent*> comps;
 
@@ -2152,7 +2159,7 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 		ThemeElement& elem = viewIt->second.elements.at(*it);
 		if(elem.extra)
 		{
-			GuiComponent* comp = createExtraComponent(window, elem.type);
+			GuiComponent* comp = createExtraComponent(window, elem.type, forceLoad);
 			if (comp == nullptr)
 				continue;
 
@@ -2422,7 +2429,7 @@ std::vector<std::pair<std::string, std::string>> ThemeData::getViewsOfTheme()
 	std::vector<std::pair<std::string, std::string>> ret;
 	for (auto it = mViews.cbegin(); it != mViews.cend(); ++it)
 	{
-		if (it->first == "menu" || it->first == "system" || it->first == "screen")
+		if (it->first == "menu" || it->first == "system" || it->first == "screen" || it->first == "splash")
 			continue;
 
 		ret.push_back(std::pair<std::string, std::string>(it->first, it->second.displayName.empty() ? it->first : it->second.displayName));

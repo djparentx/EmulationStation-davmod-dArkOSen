@@ -332,7 +332,7 @@ public:
 	// If expectedType is an empty string, will do no type checking.
 	const ThemeElement* getElement(const std::string& view, const std::string& element, const std::string& expectedType) const;
 
-	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window);
+	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad = false);
 
 	// AmberELEC view attributes extraTransition / extraTransitionSpeed (-1 = not set) / extraTransitionDirection
 	bool getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction);
@@ -341,7 +341,7 @@ public:
 	static std::string getArchString();
 
 	// component for a theme element type (extras and nested elements), nullptr if not supported
-	static GuiComponent* createExtraComponent(Window* window, const std::string& type);
+	static GuiComponent* createExtraComponent(Window* window, const std::string& type, bool forceLoad = false);
 	// applies a standalone element (e.g. a nested child) to a component
 	static void applySelfTheme(GuiComponent* comp, const ThemeElement& elem);
 

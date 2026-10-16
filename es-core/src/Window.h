@@ -26,6 +26,8 @@ class ControllerActivityComponent;
 class BatteryIndicatorComponent;
 class VolumeInfoComponent;
 class BrightnessInfoComponent;
+class Splash;
+class IBindable;
 
 struct HelpStyle;
 
@@ -81,7 +83,7 @@ public:
 	void renderLoadingScreen(std::string text, float percent = -1, unsigned char opacity = 255);
 	void renderGameLoadingScreen(float opacity=1, bool swapBuffers=true);
 
-	void loadCustomImageLoadingScreen(std::string imagePath, std::string customText);
+	void loadCustomImageLoadingScreen(std::string imagePath, std::string customText, IBindable* bindable = nullptr);
 
 	void renderHelpPromptsEarly(); // used to render HelpPrompts before a fade
 	void setHelpPrompts(const std::vector<HelpPrompt>& prompts, const HelpStyle& style);
@@ -131,6 +133,12 @@ private:
 
 	std::shared_ptr<TextureResource> mSplash;
 	std::string						 mCustomSplash;
+
+	// Batocera themed splash screens (<theme>/splash.xml, <theme>/gamesplash.xml)
+	std::shared_ptr<Splash>			 mThemedSplash;
+	std::shared_ptr<Splash>			 mThemedGameSplash;
+	std::string						 mThemedSplashSet;
+	bool							 mThemedSplashChecked = false;
 	
 	std::vector<GuiComponent*> mScreenExtras;
 	std::vector<GuiComponent*> mGuiStack;

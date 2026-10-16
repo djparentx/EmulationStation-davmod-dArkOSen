@@ -278,7 +278,7 @@ void ViewController::doLaunch(FileData* game, Vector3f center, int entrySlot)
 	mWindow->stopInfoPopup(); // make sure we disable any existing info popup
 	mLockInput = true;
 
-	mWindow->loadCustomImageLoadingScreen(game->getImagePath(), game->getName());
+	mWindow->loadCustomImageLoadingScreen(game->getImagePath(), game->getName(), game);
 
 	std::string transition_style = Settings::getInstance()->getString("GameTransitionStyle");
 	if(transition_style == "fade")

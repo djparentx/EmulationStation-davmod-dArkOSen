@@ -20,6 +20,7 @@
 #include "AudioManager.h"
 #include "components/VolumeInfoComponent.h"
 #include "components/BrightnessInfoComponent.h"
+#include "Splash.h"
 
 Window::Window() : mNormalizeNextUpdate(false), mFrameTimeElapsed(0), mFrameCountElapsed(0), mAverageDeltaTime(10),
   mAllowSleep(true), mSleeping(false), mTimeSinceLastInput(0), mScreenSaver(NULL), mRenderScreenSaver(false), mInfoPopup(NULL), mClockElapsed(0),
@@ -495,10 +496,33 @@ void Window::endRenderLoadingScreen()
 {
 	mSplash = NULL;
 	mCustomSplash = "";
+
+	mThemedSplash = nullptr;
+	mThemedGameSplash = nullptr;
+	mThemedSplashChecked = false;
 }
 
 void Window::renderLoadingScreen(std::string text, float percent, unsigned char opacity)
 {	
+	// Batocera <theme>/splash.xml (checked once per theme)
+	std::string themeSet = Settings::getInstance()->getString("ThemeSet");
+	if (!mThemedSplashChecked || mThemedSplashSet != themeSet)
+	{
+		mThemedSplashChecked = true;
+		mThemedSplashSet = themeSet;
+
+		mThemedSplash = std::make_shared<Splash>(this, ":/splash.svg", true);
+		if (!mThemedSplash->isThemed())
+			mThemedSplash = nullptr;
+	}
+
+	if (mThemedSplash != nullptr)
+	{
+		mThemedSplash->update(text, percent);
+		mThemedSplash->render(opacity / 255.0f);
+		return;
+	}
+
 	if (mSplash == NULL)
 		mSplash = TextureResource::get(":/splash.svg", false, true, false, false);
 
@@ -550,12 +574,22 @@ void Window::renderLoadingScreen(std::string text, float percent, unsigned char 
 #endif
 }
 
-void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string customText)
+void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string customText, IBindable* bindable)
 {
-	if (!Utils::FileSystem::exists(imagePath))
+	if (Settings::getInstance()->getBool("HideWindow"))
 		return;
 
-	if (Settings::getInstance()->getBool("HideWindow"))
+	// Batocera <theme>/gamesplash.xml (with the game's bindings)
+	mThemedGameSplash = std::make_shared<Splash>(this, imagePath, false, bindable);
+	if (mThemedGameSplash->isThemed())
+	{
+		mThemedGameSplash->update(customText);
+		return;
+	}
+
+	mThemedGameSplash = nullptr;
+
+	if (!Utils::FileSystem::exists(imagePath))
 		return;
 
 	if (mSplash != NULL)
@@ -570,6 +604,12 @@ void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string cus
 
 void Window::renderGameLoadingScreen(float opacity, bool swapBuffers)
 {
+	if (mThemedGameSplash != nullptr)
+	{
+		mThemedGameSplash->render(opacity, swapBuffers);
+		return;
+	}
+
 	if (mSplash == NULL)
 		mSplash = TextureResource::get(":/splash.svg", false, true, false, false);
 
