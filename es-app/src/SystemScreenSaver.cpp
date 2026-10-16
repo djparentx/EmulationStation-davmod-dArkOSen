@@ -1136,13 +1136,13 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		int lh = (int)font->getLetterHeight();
 
 		mDate = new TextComponent(mWindow);
-		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h - (h / 5 - lh) - (boxHeight - lh / 2)));
+		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 5 - lh));
 		mDate->setSize((float)mViewport.w, (float)(boxHeight - lh / 2));
 		mDate->setHorizontalAlignment(ALIGN_CENTER);
 		mDate->setVerticalAlignment(ALIGN_CENTER);
 		mDate->setColor(mClockType == "Number" ? mClockColor : 0xFFFFFFFF);
 		mDate->setGlowColor(mClockType == "Number" ? ((mClockColor & 0xFFFFFF00) | 0x10) : 0x00000040);
-		mDate->setGlowSize(2);
+		mDate->setGlowSize(3);
 		mDate->setFont(font);
 		mDate->setText(Utils::Time::timeToString(now, "%Y/%m/%d"));
 	}
