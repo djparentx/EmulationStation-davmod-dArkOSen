@@ -466,8 +466,6 @@ void GuiMenu::openDisplaySettings()
 	mWindow->pushGui(s);
 }
 
-}
-
 void GuiMenu::openNightFilterSettings(std::shared_ptr<SliderComponent> displayTone)
 {
 	auto api = ApiSystem::getInstance();
