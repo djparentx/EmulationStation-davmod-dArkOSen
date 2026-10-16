@@ -110,7 +110,7 @@ void Settings::setDefaults()
 	mBoolMap["ShowControllerBattery"] = false;
 	mStringMap["ShowBattery"] = "text";
 	mStringMap["VerbalBatteryVoice"] = "male1";
-	mStringMap["VerbalBatteryWarning"] = "on";
+	mStringMap["VerbalBatteryWarning"] = "no";
 	mStringMap["VerbalBatteryThreshold"] = "Default";
 	mStringMap["GlobalPerformanceGovernor"] = "performance";
 	mStringMap["AutoSuspendTimeout"] = "Off";
