@@ -1142,7 +1142,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		mDate->setVerticalAlignment(ALIGN_CENTER);
 		mDate->setColor(mClockType == "Number" ? mClockColor : 0xFFFFFFFF);
 		mDate->setGlowColor(mClockType == "Number" ? ((mClockColor & 0xFFFFFF00) | 0x10) : 0x00000040);
-		mDate->setGlowSize(3);
+		mDate->setGlowSize(2);
 		mDate->setFont(font);
 		mDate->setText(Utils::Time::timeToString(now, "%Y/%m/%d"));
 	}
