@@ -13,6 +13,7 @@ SliderComponent::SliderComponent(Window* window, float min, float max, float inc
 	// some sane default value
 	mValue = (max + min) / 2;
 	mReversed = false;
+	mRepeat = true;
 
 	auto menuTheme = ThemeData::getMenuTheme();
 	mColor = menuTheme->Text.color;
@@ -38,7 +39,7 @@ bool SliderComponent::input(InputConfig* config, Input input)
 		if(input.value)
 			setValue(mValue + step);
 
-		mMoveRate = input.value ? step : 0;
+		mMoveRate = (input.value && mRepeat) ? step : 0;
 		mMoveAccumulator = -MOVE_REPEAT_DELAY;
 		return input.value;
 	}
@@ -48,7 +49,7 @@ bool SliderComponent::input(InputConfig* config, Input input)
 		if(input.value)
 			setValue(mValue + step);
 
-		mMoveRate = input.value ? step : 0;
+		mMoveRate = (input.value && mRepeat) ? step : 0;
 		mMoveAccumulator = -MOVE_REPEAT_DELAY;
 		return input.value;
 	}

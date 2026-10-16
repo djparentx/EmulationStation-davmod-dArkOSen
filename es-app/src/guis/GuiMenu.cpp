@@ -424,12 +424,33 @@ void GuiMenu::openDisplaySettings()
 
 	auto toneComponent = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
 	toneComponent->setReversed(true);
-	toneComponent->setValue((float)ApiSystem::getInstance()->getTone());
+	toneComponent->setRepeat(false);
+	toneComponent->setValue((float)ApiSystem::getInstance()->getEffectiveTone());
 	toneComponent->setOnValueChanged([](const float &newVal)
 	{
+		if (ApiSystem::getInstance()->isNightFilterActive())
+			return; // night filter is master; display refresh only
 		ApiSystem::getInstance()->setTone((int)Math::round(newVal));
 	});
-	s->addWithLabel(_("TEMPERATURE"), toneComponent);
+
+	ComponentListRow toneRow;
+	toneRow.addElement(std::make_shared<TextComponent>(mWindow, _("TEMPERATURE"), ThemeData::getMenuTheme()->Text.font, ThemeData::getMenuTheme()->Text.color), true);
+	toneRow.addElement(toneComponent, false, true);
+	toneRow.input_handler = [this, toneComponent](InputConfig* config, Input input) -> bool
+	{
+		if (input.value != 0 && (config->isMappedLike("left", input) || config->isMappedLike("right", input))
+			&& ApiSystem::getInstance()->isNightFilterActive())
+		{
+			mWindow->pushGui(new GuiMsgBox(mWindow, _("NIGHT FILTER ACTIVE"), _("OK")));
+			return true;
+		}
+		return toneComponent->input(config, input);
+	};
+	s->addRow(toneRow);
+
+	s->addEntry(_("NIGHT FILTER"), true, [this, toneComponent] {
+		openNightFilterSettings(toneComponent);
+	}, "");
 	
 		auto brightnessPopup = std::make_shared<SwitchComponent>(mWindow);
 		brightnessPopup->setState(Settings::getInstance()->getBool("BrightnessPopup"));
@@ -441,6 +462,70 @@ void GuiMenu::openDisplaySettings()
 					Settings::getInstance()->setBool("BrightnessPopup", brightnessPopup->getState());
 			}
 		);
+
+	mWindow->pushGui(s);
+}
+
+}
+
+void GuiMenu::openNightFilterSettings(std::shared_ptr<SliderComponent> displayTone)
+{
+	auto api = ApiSystem::getInstance();
+	auto s = new GuiSettings(mWindow, _("NIGHT FILTER"));
+
+	// --- ENABLE FILTER ---
+	auto enableSwitch = std::make_shared<SwitchComponent>(mWindow);
+	enableSwitch->setState(api->getNightFilterEnabled());
+	s->addWithLabel(_("ENABLE FILTER"), enableSwitch);
+
+	// minutes since midnight -> "9:00 PM"
+	auto timeLabel = [](int minutes) -> std::string
+	{
+		int h24 = minutes / 60;
+		int h12 = (h24 % 12 == 0) ? 12 : h24 % 12;
+		char buf[16];
+		snprintf(buf, sizeof(buf), "%d:%02d %s", h12, minutes % 60, h24 < 12 ? "AM" : "PM");
+		return std::string(buf);
+	};
+
+	// --- START TIME (15 min steps) ---
+	int initStart = api->getNightFilterStart();
+	auto startList = std::make_shared<OptionListComponent<int>>(mWindow, _("START TIME"), false);
+	for (int m = 0; m < 1440; m += 15)
+		startList->add(timeLabel(m), m, m == initStart);
+	s->addWithLabel(_("START TIME"), startList);
+
+	// --- END TIME (15 min steps) ---
+	int initEnd = api->getNightFilterEnd();
+	auto endList = std::make_shared<OptionListComponent<int>>(mWindow, _("END TIME"), false);
+	for (int m = 0; m < 1440; m += 15)
+		endList->add(timeLabel(m), m, m == initEnd);
+	s->addWithLabel(_("END TIME"), endList);
+
+	// --- TEMPERATURE (live preview while in this menu) ---
+	int initTone = api->getNightFilterTone();
+	auto toneSlider = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
+	toneSlider->setReversed(true);
+	toneSlider->setRepeat(false);
+	toneSlider->setValue((float)initTone);
+	toneSlider->setOnValueChanged([](const float &newVal)
+	{
+		ApiSystem::getInstance()->previewNightTone((int)Math::round(newVal));
+	});
+	s->addWithLabel(_("TEMPERATURE"), toneSlider);
+
+	api->previewNightTone(initTone);
+
+	// Restores the system tone even if the menu is closed without save() (close-all button)
+	std::shared_ptr<void> previewGuard(nullptr, [](void*) { ApiSystem::getInstance()->endNightPreview(); });
+
+	s->addSaveFunc([enableSwitch, startList, endList, toneSlider, displayTone, previewGuard]
+	{
+		auto api = ApiSystem::getInstance();
+		api->setNightFilter(enableSwitch->getState(), startList->getSelected(), endList->getSelected(), (int)Math::round(toneSlider->getValue()));
+		api->endNightPreview();
+		displayTone->setValue((float)api->getEffectiveTone());
+	});
 
 	mWindow->pushGui(s);
 }
