@@ -1136,7 +1136,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		int lh = (int)font->getLetterHeight();
 
 		mDate = new TextComponent(mWindow);
-		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h / 5 - lh));
+		mDate->setPosition((float)mViewport.x, (float)(mViewport.y + h - (h / 5 - lh) - (boxHeight - lh / 2)));
 		mDate->setSize((float)mViewport.w, (float)(boxHeight - lh / 2));
 		mDate->setHorizontalAlignment(ALIGN_CENTER);
 		mDate->setVerticalAlignment(ALIGN_CENTER);
