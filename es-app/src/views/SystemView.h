@@ -13,6 +13,8 @@
 class AnimatedImageComponent;
 class SystemData;
 class VideoVlcComponent;
+template<typename T> class TextListComponent;
+template<typename T> class ImageGridComponent;
 
 enum CarouselType : unsigned int
 {
@@ -99,6 +101,15 @@ private:
 	void renderExtras(const Transform4x4f& parentTrans, float lower, float upper);
 	void renderInfoBar(const Transform4x4f& trans);
 	void renderFade(const Transform4x4f& trans);
+
+	// AmberELEC: <textlist name="textlist"> / <imagegrid name="imagegrid"> in the system view replace the carousel
+	GuiComponent* getSystemList();
+	void deleteSystemList();
+	void populateSystemList();
+
+	TextListComponent<SystemData*>*  mSystemTextList = nullptr;
+	ImageGridComponent<SystemData*>* mSystemGrid = nullptr;
+	bool mSyncingSystemList = false;
 
 
 	SystemViewCarousel	mCarousel;

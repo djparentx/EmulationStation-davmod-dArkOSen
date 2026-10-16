@@ -15,6 +15,8 @@
 #include "components/VideoVlcComponent.h"
 #include "BindingManager.h"
 #include "components/ItemTemplateComponent.h"
+#include "components/ImageGridComponent.h"
+#include "components/TextListComponent.h"
 #include <random>
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"
@@ -61,7 +63,54 @@ SystemView::~SystemView()
 		mStaticBackground = nullptr;
 	}
 
+	deleteSystemList();
 	clearEntries();
+}
+
+GuiComponent* SystemView::getSystemList()
+{
+	if (mSystemTextList != nullptr)
+		return mSystemTextList;
+
+	return mSystemGrid;
+}
+
+void SystemView::deleteSystemList()
+{
+	if (mSystemTextList != nullptr)
+	{
+		delete mSystemTextList;
+		mSystemTextList = nullptr;
+	}
+
+	if (mSystemGrid != nullptr)
+	{
+		delete mSystemGrid;
+		mSystemGrid = nullptr;
+	}
+}
+
+// fill the system textlist / imagegrid with the carousel entries
+void SystemView::populateSystemList()
+{
+	if (mSystemTextList != nullptr)
+	{
+		mSystemTextList->clear();
+		for (auto& e : mEntries)
+			mSystemTextList->add(e.object->getFullName(), e.object, 0);
+	}
+
+	if (mSystemGrid != nullptr)
+	{
+		mSystemGrid->clear();
+		for (auto& e : mEntries)
+			mSystemGrid->add(e.object->getFullName(), e.object->getProperty("image").s, "", "", false, false, false, e.object);
+	}
+
+	if (mSystemTextList != nullptr && mCursor >= 0 && mCursor < (int)mEntries.size())
+		mSystemTextList->setCursor(mEntries.at(mCursor).object);
+	else if (mSystemGrid != nullptr && mCursor >= 0 && mCursor < (int)mEntries.size())
+		mSystemGrid->setCursor(mEntries.at(mCursor).object);
 }
 
 void SystemView::clearEntries()
@@ -332,6 +381,8 @@ void SystemView::populate()
 		this->add(e);
 	}
 
+	populateSystemList();
+
 	if (mEntries.size() == 0)
 	{
 		// Something is wrong, there is not a single system to show, check if UI mode is not full
@@ -385,6 +436,16 @@ void SystemView::showQuickSearch()
 
 bool SystemView::input(InputConfig* config, Input input)
 {
+	// system textlist / imagegrid: navigation goes to the list, its cursor drives the view
+	GuiComponent* systemList = getSystemList();
+	if (systemList != nullptr && (config->isMappedLike("up", input) || config->isMappedLike("down", input) ||
+		config->isMappedLike("left", input) || config->isMappedLike("right", input) ||
+		config->isMappedTo("pagedown", input) || config->isMappedTo("pageup", input)))
+	{
+		systemList->input(config, input);
+		return true;
+	}
+
 	if(input.value != 0)
 	{
 		if (config->isMappedTo("y", input))
@@ -614,6 +675,9 @@ void SystemView::update(int deltaTime)
 {
 	listUpdate(deltaTime);
 
+	if (getSystemList() != nullptr)
+		getSystemList()->update(deltaTime);
+
 	// <itemTemplate> logos: storyboards
 	for (int i = 0; i < (int)mEntries.size(); i++)
 		if (dynamic_cast<ItemTemplateComponent*>(mEntries.at(i).data.logo.get()) != nullptr)
@@ -626,6 +690,17 @@ void SystemView::update(int deltaTime)
 
 void SystemView::onCursorChanged(const CursorState& /*state*/)
 {
+	// keep the system textlist / imagegrid on the same system
+	if (!mSyncingSystemList && mCursor >= 0 && mCursor < (int)mEntries.size())
+	{
+		mSyncingSystemList = true;
+		if (mSystemTextList != nullptr && mSystemTextList->getCursorIndex() != mCursor)
+			mSystemTextList->setCursorIndex(mCursor);
+		else if (mSystemGrid != nullptr && mSystemGrid->getCursorIndex() != mCursor)
+			mSystemGrid->setCursorIndex(mCursor);
+		mSyncingSystemList = false;
+	}
+
 	if (mLastSystem != getSelected()) {
 		mLastSystem = getSelected();
 		AudioManager::getInstance()->themeChanged(getSelected()->getTheme());
@@ -877,7 +952,9 @@ void SystemView::render(const Transform4x4f& parentTrans)
 std::vector<HelpPrompt> SystemView::getHelpPrompts()
 {
 	std::vector<HelpPrompt> prompts;
-	if (mCarousel.type == VERTICAL || mCarousel.type == VERTICAL_WHEEL)
+	if (mSystemGrid != nullptr)
+		prompts.push_back(HelpPrompt("up/down/left/right", _("CHOOSE")));
+	else if (mSystemTextList != nullptr || mCarousel.type == VERTICAL || mCarousel.type == VERTICAL_WHEEL)
 		prompts.push_back(HelpPrompt("up/down", _("CHOOSE")));
 	else
 		prompts.push_back(HelpPrompt("left/right", _("CHOOSE")));
@@ -915,11 +992,71 @@ void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 	getDefaultElements();
 
 	if (!theme->hasView("system"))
+	{
+		deleteSystemList();
 		return;
+	}
 
 	const ThemeData::ThemeElement* carouselElem = theme->getElement("system", "systemcarousel", "carousel");
 	if (carouselElem)
 		getCarouselFromTheme(carouselElem);
+
+	// AmberELEC: a <textlist name="textlist"> or <imagegrid name="imagegrid"> replaces the carousel
+	const ThemeData::ThemeElement* textListElem = theme->getElement("system", "textlist", "");
+	if (textListElem != nullptr && textListElem->type != "textlist")
+		textListElem = nullptr;
+
+	const ThemeData::ThemeElement* imageGridElem = textListElem != nullptr ? nullptr : theme->getElement("system", "imagegrid", "");
+	if (imageGridElem != nullptr && imageGridElem->type != "imagegrid")
+		imageGridElem = nullptr;
+
+	if (textListElem != nullptr)
+	{
+		if (mSystemGrid != nullptr)
+			deleteSystemList();
+
+		if (mSystemTextList == nullptr)
+		{
+			mSystemTextList = new TextListComponent<SystemData*>(mWindow);
+			mSystemTextList->setCursorChangedCallback([this](CursorState /*state*/)
+			{
+				if (mSyncingSystemList || mSystemTextList == nullptr)
+					return;
+
+				mSyncingSystemList = true;
+				setCursorIndex(mSystemTextList->getCursorIndex());
+				mSyncingSystemList = false;
+			});
+		}
+
+		mSystemTextList->applyTheme(theme, "system", "textlist", ThemeFlags::ALL);
+		mCarousel.zIndex = mSystemTextList->getZIndex();
+	}
+	else if (imageGridElem != nullptr)
+	{
+		if (mSystemTextList != nullptr)
+			deleteSystemList();
+
+		if (mSystemGrid == nullptr)
+		{
+			mSystemGrid = new ImageGridComponent<SystemData*>(mWindow);
+			mSystemGrid->setThemeName("system");
+			mSystemGrid->setCursorChangedCallback([this](CursorState /*state*/)
+			{
+				if (mSyncingSystemList || mSystemGrid == nullptr)
+					return;
+
+				mSyncingSystemList = true;
+				setCursorIndex(mSystemGrid->getCursorIndex());
+				mSyncingSystemList = false;
+			});
+		}
+
+		mSystemGrid->applyTheme(theme, "system", "imagegrid", ThemeFlags::ALL);
+		mCarousel.zIndex = mSystemGrid->getZIndex();
+	}
+	else
+		deleteSystemList();
 
 	// extras transition: carousel values, then the system view's attributes (AmberELEC)
 	mExtraTransitionType = mCarousel.defaultTransition;
@@ -982,6 +1119,13 @@ void  SystemView::getViewElements(const std::shared_ptr<ThemeData>& theme)
 //  Render system carousel
 void SystemView::renderCarousel(const Transform4x4f& trans)
 {
+	// system textlist / imagegrid instead of the carousel
+	if (getSystemList() != nullptr)
+	{
+		getSystemList()->render(trans);
+		return;
+	}
+
 	// background box behind logos
 	Transform4x4f carouselTrans = trans;
 	carouselTrans.translate(Vector3f(mCarousel.pos.x(), mCarousel.pos.y(), 0.0));
@@ -1490,6 +1634,9 @@ void SystemView::onShow()
 	mShowing = true;
 	activateExtras(mCursor);
 
+	if (getSystemList() != nullptr)
+		getSystemList()->onShow();
+
 	if (mCursor >= 0 && mCursor < (int)mEntries.size())
 	{
 		ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(mEntries.at(mCursor).data.logo.get());
@@ -1505,6 +1652,9 @@ void SystemView::onHide()
 {
 	GuiComponent::onHide();
 	mShowing = false;
+
+	if (getSystemList() != nullptr)
+		getSystemList()->onHide();
 	updateExtras([this](GuiComponent* p) { p->onHide(); });
 
 	if (mStaticVideoBackground)

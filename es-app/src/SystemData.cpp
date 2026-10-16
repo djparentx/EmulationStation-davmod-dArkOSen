@@ -1002,6 +1002,19 @@ BindableProperty SystemData::getProperty(const std::string& name)
 	if (name == "name")
 		return getName();
 
+	// AmberELEC: the theme's system logo (system imagegrid tiles, {system:image})
+	if (name == "image" || name == "logo")
+	{
+		if (getTheme() != nullptr)
+		{
+			const ThemeData::ThemeElement* logoElem = getTheme()->getElement("system", "logo", "image");
+			if (logoElem && logoElem->has("path"))
+				return BindableProperty(logoElem->get<std::string>("path"), BindablePropertyType::Path);
+		}
+
+		return BindableProperty("", BindablePropertyType::Path);
+	}
+
 	if (name == "fullName")
 		return getFullName();
 
