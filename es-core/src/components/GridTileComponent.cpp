@@ -316,13 +316,16 @@ void GridTileComponent::update(int deltaTime)
 {
 	GuiComponent::update(deltaTime);
 
+	if (mItemTemplate != nullptr)
+		mItemTemplate->update(deltaTime);
+
 	if (mVideo != nullptr && mVideo->isPlaying() && mVideo->isFading())
 		resize();
 }
 
 void GridTileComponent::renderBackground(const Transform4x4f& parentTrans)
 {
-	if (!mVisible)
+	if (!mVisible || mItemTemplate != nullptr)
 		return;
 
 	Transform4x4f trans = getTransform() * parentTrans;
@@ -339,6 +342,15 @@ void GridTileComponent::renderContent(const Transform4x4f& parentTrans)
 	Vector2f clipPos(trans.translation().x(), trans.translation().y());
 	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), mSize.x(), mSize.y()))
 		return;
+
+	if (mItemTemplate != nullptr)
+	{
+		if (mItemTemplate->getSize() != mSize)
+			mItemTemplate->setSize(mSize);
+
+		mItemTemplate->render(trans);
+		return;
+	}
 
 	auto currentProperties = getCurrentProperties(false);
 
@@ -646,6 +658,24 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	resetProperties();
 
 	const ThemeData::ThemeElement* grid = theme->getElement(view, "gamegrid", "imagegrid");
+
+	// AmberELEC <itemTemplate>
+	mItemTemplate = nullptr;
+	if (grid != nullptr)
+	{
+		for (auto& child : grid->children)
+		{
+			if (child.first != "itemTemplate")
+				continue;
+
+			mItemTemplate = std::make_shared<ItemTemplateComponent>("", mWindow);
+			mItemTemplate->setScaleOrigin(Vector2f(0.0f, 0.0f));
+			mItemTemplate->setSize(mSize);
+			mItemTemplate->loadTemplatedChildren(&child.second);
+			break;
+		}
+	}
+
 	if (grid && grid->has("showVideoAtDelay"))
 	{
 		createVideo();
@@ -1003,10 +1033,31 @@ void GridTileComponent::stopVideo()
 		mVideo->setVideo("");
 }
 
+void GridTileComponent::setItemTemplateBinding(IBindable* bindable, const std::string& label)
+{
+	if (mItemTemplate == nullptr)
+		return;
+
+	mItemTemplate->setLabel(label);
+	mItemTemplate->updateTemplateBindings(bindable);
+}
+
 void GridTileComponent::setSelected(bool selected, bool allowAnimation, Vector3f* pPosition, bool force)
 {
 	if (!mShown || !ALLOWANIMATIONS)
 		allowAnimation = false;
+
+	// AmberELEC <itemTemplate>: "activate" / "deactivate" when the selection changes, "scroll" for the others
+	if (mItemTemplate != nullptr)
+	{
+		if (mSelected != selected)
+			mItemTemplate->playDefaultActivationStoryboard(selected);
+		else if (!selected)
+			mItemTemplate->playStoryboard("scroll");
+
+		mSelected = selected;
+		return;
+	}
 
 	if (mSelected == selected && !force)
 	{

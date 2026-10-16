@@ -52,6 +52,35 @@ public:
 	virtual IBindable* getBindableParent() { return nullptr; };
 };
 
+// AmberELEC: a themed child of an <itemTemplate>, exposed as {name:property} (<image name="cover"> -> {cover:visible})
+class ComponentBinding : public IBindable
+{
+public:
+	ComponentBinding(GuiComponent* comp, IBindable* parent);
+
+	BindableProperty getProperty(const std::string& name) override;
+	std::string getBindableTypeName() override { return mTypeName; }
+	IBindable* getBindableParent() override { return mParent; };
+
+protected:
+	IBindable*    mParent;
+	std::string   mTypeName;
+	GuiComponent* mComponent;
+};
+
+// AmberELEC: the <itemTemplate> root, exposed as {grid:label} / {grid:h} / {grid:y}
+class GridTemplateBinding : public ComponentBinding
+{
+public:
+	GridTemplateBinding(GuiComponent* comp, const std::string& label, IBindable* parent);
+	BindableProperty getProperty(const std::string& name) override;
+
+	std::string getBindableTypeName() override { return "grid"; }
+
+protected:
+	std::string   mLabel;
+};
+
 class BindingManager
 {
 public:

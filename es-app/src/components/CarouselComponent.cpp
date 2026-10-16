@@ -2,6 +2,7 @@
 
 #include "animations/LambdaAnimation.h"
 #include "components/ImageComponent.h"
+#include "components/ItemTemplateComponent.h"
 #include "components/TextComponent.h"
 #include "utils/FileSystemUtil.h"
 #include "BindingManager.h"
@@ -148,10 +149,10 @@ void CarouselComponent::playStoryboards(int oldCursor)
 		auto logo = mEntries.at(oldCursor).data.logo;
 		if (logo)
 		{
-			if (logo->startStoryboard("deactivate"))
+			if (startLogoStoryboard(logo.get(), "deactivate"))
 				oldCursorHasStoryboard = true;
 			else
-				logo->stopStoryboard();
+				stopLogoStoryboard(logo.get());
 		}
 	}
 
@@ -162,10 +163,10 @@ void CarouselComponent::playStoryboards(int oldCursor)
 		auto logo = mEntries.at(mCursor).data.logo;
 		if (logo)
 		{
-			if (logo->startStoryboard("activate"))
+			if (startLogoStoryboard(logo.get(), "activate"))
 				cursorHasStoryboard = true;
 			else
-				logo->stopStoryboard();
+				stopLogoStoryboard(logo.get());
 		}
 	}
 
@@ -176,7 +177,7 @@ void CarouselComponent::playStoryboards(int oldCursor)
 
 		auto logo = mEntries.at(i).data.logo;
 		if (logo)
-			logo->startStoryboard("scroll");
+			startLogoStoryboard(logo.get(), "scroll");
 	}
 }
 
@@ -543,10 +544,10 @@ void CarouselComponent::onShow()
 		auto logo = mEntries.at(mCursor).data.logo;
 		if (logo)
 		{
-			if (logo->startStoryboard("activate") || logo->startStoryboard(""))
+			if (startLogoStoryboard(logo.get(), "activate") || startLogoStoryboard(logo.get(), ""))
 				cursorStoryboardSet = true;
 			else
-				logo->stopStoryboard();
+				stopLogoStoryboard(logo.get());
 		}
 	}
 
@@ -556,14 +557,37 @@ void CarouselComponent::onShow()
 			continue;
 
 		auto logo = mEntries.at(i).data.logo;
-		if (logo && !logo->startStoryboard("scroll"))
-			logo->startStoryboard("");
+		if (logo && !startLogoStoryboard(logo.get(), "scroll"))
+			startLogoStoryboard(logo.get(), "");
 	}
 }
 
 bool CarouselComponent::storyboardHasProperty(GuiComponent* comp, const std::string& event, const std::string& propertyName)
 {
+	ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(comp);
+	if (templ != nullptr)
+		return templ->storyboardExists(event, propertyName);
+
 	return comp->storyboardHasProperty(event, propertyName);
+}
+
+// <itemTemplate> logos play the storyboard on all their elements
+bool CarouselComponent::startLogoStoryboard(GuiComponent* comp, const std::string& event)
+{
+	ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(comp);
+	if (templ != nullptr)
+		return templ->playStoryboard(event);
+
+	return comp->startStoryboard(event);
+}
+
+void CarouselComponent::stopLogoStoryboard(GuiComponent* comp)
+{
+	ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(comp);
+	if (templ != nullptr)
+		templ->stopStoryboards();
+	else
+		comp->stopStoryboard();
 }
 
 void CarouselComponent::ensureLogo(IList<CarouselComponentData, FileData*>::Entry& entry)
@@ -574,7 +598,26 @@ void CarouselComponent::ensureLogo(IList<CarouselComponentData, FileData*>::Entr
 	std::string mediaPath;
 
 	FileData* file = entry.object;
-	if (file != nullptr && mImageSource != CarouselImageSource::TEXT)
+
+	// AmberELEC <itemTemplate>
+	const ThemeData::ThemeElement* carouselElem = mTheme->getElement(mThemeViewName, "gamecarousel", "gamecarousel");
+	if (carouselElem != nullptr)
+	{
+		for (auto& child : carouselElem->children)
+		{
+			if (child.first != "itemTemplate")
+				continue;
+
+			ItemTemplateComponent* templ = new ItemTemplateComponent(entry.name, mWindow);
+			templ->setScaleOrigin(Vector2f(0.0f, 0.0f));
+			templ->setSize(mLogoSize * mLogoScale);
+			templ->loadTemplatedChildren(&child.second);
+			entry.data.logo = std::shared_ptr<GuiComponent>(templ);
+			break;
+		}
+	}
+
+	if (entry.data.logo == nullptr && file != nullptr && mImageSource != CarouselImageSource::TEXT)
 	{
 		switch (mImageSource)
 		{
@@ -591,7 +634,11 @@ void CarouselComponent::ensureLogo(IList<CarouselComponentData, FileData*>::Entr
 		}
 	}
 
-	if (!mediaPath.empty() && Utils::FileSystem::exists(mediaPath))
+	if (entry.data.logo != nullptr)
+	{
+		// <itemTemplate> logo
+	}
+	else if (!mediaPath.empty() && Utils::FileSystem::exists(mediaPath))
 	{
 		ImageComponent* logo = new ImageComponent(mWindow, false, true);
 		logo->setMaxSize(mLogoSize * mLogoScale);
@@ -625,7 +672,10 @@ void CarouselComponent::ensureLogo(IList<CarouselComponentData, FileData*>::Entr
 		entry.data.logo = std::shared_ptr<GuiComponent>(text);
 	}
 
-	if (file != nullptr)
+	ItemTemplateComponent* itemTemplate = dynamic_cast<ItemTemplateComponent*>(entry.data.logo.get());
+	if (itemTemplate != nullptr)
+		itemTemplate->updateTemplateBindings(file);
+	else if (file != nullptr)
 		BindingManager::updateBindings(entry.data.logo.get(), file);
 
 	if (mType == GameCarouselType::VERTICAL || mType == GameCarouselType::VERTICAL_WHEEL)

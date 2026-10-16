@@ -13,6 +13,8 @@
 #include "Settings.h"
 #include "Sound.h"
 #include "EsLocale.h"
+#include "BindingManager.h"
+#include <type_traits>
 
 #define EXTRAITEMS 2
 
@@ -105,6 +107,10 @@ private:
 	void buildTiles();
 	void updateTiles(bool allowAnimation = true, bool updateSelectedState = true);
 	void updateTileAtPos(int tilePos, int imgPos, bool allowAnimation = true, bool updateSelectedState = true);
+
+	// AmberELEC <itemTemplate>: T is bindable when it's a FileData* / SystemData*
+	template <typename U> static IBindable* toBindable(const U& obj, std::true_type) { return static_cast<IBindable*>(obj); }
+	template <typename U> static IBindable* toBindable(const U& /*obj*/, std::false_type) { return nullptr; }
 	void calcGridDimension();
 	
 	bool isVertical() { return mScrollDirection == SCROLL_VERTICALLY; };
@@ -957,6 +963,20 @@ void ImageGridComponent<T>::updateTileAtPos(int tilePos, int imgPos, bool allowA
 			tile->setLabel(name);
 		else
 			tile->setLabel(_U("\uF006 ") + name);
+
+		// AmberELEC <itemTemplate>: the template shows the item, bound to its object ({game:...})
+		if (tile->hasItemTemplate())
+		{
+			const T& obj = mEntries.at(imgPos).object;
+			IBindable* bindable = toBindable(obj, std::integral_constant<bool, std::is_convertible<T, IBindable*>::value>());
+
+			tile->setItemTemplateBinding(bindable, mEntries.at(imgPos).data.favorite ? _U("\uF006 ") + name : name);
+
+			if (updateSelectedState)
+				tile->setSelected(!loopedIndex && imgPos == mCursor, allowAnimation);
+
+			return;
+		}
 
 		std::string imagePath = mEntries.at(imgPos).data.texturePath;
 

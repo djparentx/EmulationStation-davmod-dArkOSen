@@ -82,6 +82,8 @@ private:
 	void playStoryboards(int oldCursor);
 
 	static bool storyboardHasProperty(GuiComponent* comp, const std::string& event, const std::string& propertyName);
+	static bool startLogoStoryboard(GuiComponent* comp, const std::string& event);
+	static void stopLogoStoryboard(GuiComponent* comp);
 
 	// unit is list index
 	float mCamOffset;

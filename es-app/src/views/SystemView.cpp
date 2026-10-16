@@ -14,6 +14,7 @@
 #include "components/VideoComponent.h"
 #include "components/VideoVlcComponent.h"
 #include "BindingManager.h"
+#include "components/ItemTemplateComponent.h"
 #include <random>
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"
@@ -189,9 +190,28 @@ void SystemView::populate()
 		e.name = (*it)->getName();
 		e.object = *it;
 
+		// AmberELEC <carousel><itemTemplate>: the logo is drawn from the template, bound to the system ({system:...})
+		const ThemeData::ThemeElement* carouselElem = theme->getElement("system", "systemcarousel", "carousel");
+		if (carouselElem != nullptr)
+		{
+			for (auto& child : carouselElem->children)
+			{
+				if (child.first != "itemTemplate")
+					continue;
+
+				ItemTemplateComponent* templ = new ItemTemplateComponent((*it)->getFullName(), mWindow);
+				templ->setScaleOrigin(Vector2f(0.0f, 0.0f));
+				templ->setSize(mCarousel.logoSize * mCarousel.logoScale);
+				templ->loadTemplatedChildren(&child.second);
+				templ->updateTemplateBindings(*it);
+				e.data.logo = std::shared_ptr<GuiComponent>(templ);
+				break;
+			}
+		}
+
 		// make logo
 		const ThemeData::ThemeElement* logoElem = theme->getElement("system", "logo", "image");
-		if (logoElem && logoElem->has("path"))
+		if (!e.data.logo && logoElem && logoElem->has("path"))
 		{
 			std::string path = logoElem->get<std::string>("path");
 			std::string defaultPath = logoElem->has("default") ? logoElem->get<std::string>("default") : "";
@@ -593,6 +613,12 @@ void SystemView::showNavigationBar(const std::string& title, const std::function
 void SystemView::update(int deltaTime)
 {
 	listUpdate(deltaTime);
+
+	// <itemTemplate> logos: storyboards
+	for (int i = 0; i < (int)mEntries.size(); i++)
+		if (dynamic_cast<ItemTemplateComponent*>(mEntries.at(i).data.logo.get()) != nullptr)
+			mEntries.at(i).data.logo->update(deltaTime);
+
 	updateExtras([this, deltaTime](GuiComponent* p) { p->update(deltaTime); });
 	mSystemInfo.update(deltaTime); // runs the theme's systemInfo storyboard
 	GuiComponent::update(deltaTime);
@@ -699,6 +725,21 @@ void SystemView::onCursorChanged(const CursorState& /*state*/)
 
 	int oldCursor = mLastCursor;
 	mLastCursor = mCursor;
+
+	// <itemTemplate> logos: "deactivate" on the previous system, "activate" on the new one
+	if (oldCursor >= 0 && oldCursor < (int)mEntries.size())
+	{
+		ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(mEntries.at(oldCursor).data.logo.get());
+		if (templ != nullptr)
+			templ->playDefaultActivationStoryboard(false);
+	}
+
+	if (mCursor >= 0 && mCursor < (int)mEntries.size())
+	{
+		ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(mEntries.at(mCursor).data.logo.get());
+		if (templ != nullptr)
+			templ->playDefaultActivationStoryboard(true);
+	}
 
 	Animation* anim;
 	bool move_carousel = Settings::getInstance()->getBool("MoveCarousel");
@@ -1062,8 +1103,12 @@ void SystemView::renderCarousel(const Transform4x4f& trans)
 			comp->setRotationDegrees(mCarousel.logoRotation * distance);
 			comp->setRotationOrigin(mCarousel.logoRotationOrigin);
 		}
-		comp->setScale(scale);
-		comp->setOpacity((unsigned char)opacity);
+		// an <itemTemplate> storyboard animating scale / opacity drives them itself (AmberELEC)
+		ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(comp.get());
+		if (templ == nullptr || !(templ->storyboardExists("activate", "scale") || templ->storyboardExists("deactivate", "scale") || templ->storyboardExists("", "scale")))
+			comp->setScale(scale);
+		if (templ == nullptr || !(templ->storyboardExists("activate", "opacity") || templ->storyboardExists("deactivate", "opacity") || templ->storyboardExists("", "opacity")))
+			comp->setOpacity((unsigned char)opacity);
 		comp->render(logoTrans);
 	}
 	Renderer::popClipRect();
@@ -1444,6 +1489,13 @@ void SystemView::onShow()
 	GuiComponent::onShow();	
 	mShowing = true;
 	activateExtras(mCursor);
+
+	if (mCursor >= 0 && mCursor < (int)mEntries.size())
+	{
+		ItemTemplateComponent* templ = dynamic_cast<ItemTemplateComponent*>(mEntries.at(mCursor).data.logo.get());
+		if (templ != nullptr)
+			templ->playDefaultActivationStoryboard(true);
+	}
 
 	if (mStaticVideoBackground)
 		mStaticVideoBackground->onShow();

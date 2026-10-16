@@ -1850,6 +1850,24 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			}
 			else if (name == "onclick")
 				continue; // mouse / touch action - no pointer input on these devices
+			else if (name == "itemTemplate" && (element.type == "textlist" || element.type == "imagegrid" || element.type == "carousel" || element.type == "gamecarousel"))
+			{
+				// AmberELEC <itemTemplate>: the elements drawn for each item instead of the default text / image
+				ThemeElement* child = nullptr;
+				for (auto& existing : element.children)
+					if (existing.first == "itemTemplate")
+						child = &existing.second;
+
+				if (child == nullptr)
+				{
+					element.children.push_back(std::pair<std::string, ThemeElement>("itemTemplate", ThemeElement()));
+					child = &element.children.back().second;
+				}
+
+				child->extra = 99; // never created as an extra component
+				parseElement(node, sElementMap.find("control")->second, *child, view, overwrite);
+				continue;
+			}
 			else if (sElementMap.find(name) != sElementMap.cend())
 			{
 				// AmberELEC: nested element, created as a child component of this element

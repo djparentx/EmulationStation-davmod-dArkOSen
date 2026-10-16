@@ -4,13 +4,16 @@
 #define ES_APP_COMPONENTS_TEXT_LIST_COMPONENT_H
 
 #include "components/IList.h"
+#include "components/ItemTemplateComponent.h"
 #include "components/ScrollbarComponent.h"
+#include "BindingManager.h"
 #include "math/Misc.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
 #include "Sound.h"
 #include "Settings.h"
 #include <memory>
+#include <type_traits>
 
 class TextCache;
 
@@ -18,6 +21,7 @@ struct TextListData
 {
 	unsigned int colorId;
 	std::shared_ptr<TextCache> textCache;
+	std::shared_ptr<ItemTemplateComponent> itemTemplate; // AmberELEC <itemTemplate>
 };
 
 //A graphical list. Supports multiple colors for rows and scrolling.
@@ -91,6 +95,17 @@ protected:
 	virtual void onCursorChanged(const CursorState& state);
 
 private:
+	// AmberELEC <itemTemplate>: the rows are drawn from the template, bound to the row object ({game:...})
+	template <typename U> static IBindable* toBindable(const U& obj, std::true_type) { return static_cast<IBindable*>(obj); }
+	template <typename U> static IBindable* toBindable(const U& /*obj*/, std::false_type) { return nullptr; }
+	IBindable* getBindable(const typename IList<TextListData, T>::Entry& entry) { return toBindable(entry.object, std::integral_constant<bool, std::is_convertible<T, IBindable*>::value>()); }
+
+	void renderItemTemplates(const Transform4x4f& trans, int startEntry, int listCutoff, float entrySize);
+
+	ThemeData::ThemeElement mItemTemplate;
+	bool mHasItemTemplate = false;
+	int  mLastCursor = -1;
+
 	int mMarqueeOffset;
 	int mMarqueeOffset2;
 	int mMarqueeTime;
@@ -220,7 +235,7 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	auto applyOpacity = [opacity](unsigned int color) { return (color & 0xFFFFFF00) | (unsigned int)((color & 0xFF) * opacity); };
 
 	// draw selector bar
-	if(startEntry < listCutoff)
+	if(startEntry < listCutoff && !mHasItemTemplate)
 	{
 		if (mSelectorImage.hasImage()) {
 			mSelectorImage.setPosition(0.f, (mCursor - startEntry)*entrySize + mSelectorOffsetY, 0.f);
@@ -245,6 +260,12 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	}
 
 	const bool glow = (mGlowColor & 0x000000FF) != 0 && mGlowSize > 0;
+
+	if (mHasItemTemplate)
+	{
+		renderItemTemplates(trans, startEntry, listCutoff, entrySize);
+		listCutoff = startEntry; // no text rows
+	}
 
 	for(int i = startEntry; i < listCutoff; i++)
 	{
@@ -342,6 +363,36 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 }
 
 template <typename T>
+void TextListComponent<T>::renderItemTemplates(const Transform4x4f& trans, int startEntry, int listCutoff, float entrySize)
+{
+	float y = 0;
+
+	for (int i = startEntry; i < listCutoff; i++)
+	{
+		typename IList<TextListData, T>::Entry& entry = mEntries.at((unsigned int)i);
+
+		if (!entry.data.itemTemplate)
+		{
+			auto templ = std::make_shared<ItemTemplateComponent>(entry.name, GuiComponent::mWindow);
+			templ->setScaleOrigin(Vector2f(0.0f, 0.0f));
+			templ->setSize(mSize.x(), entrySize);
+			templ->loadTemplatedChildren(&mItemTemplate);
+			templ->updateTemplateBindings(getBindable(entry));
+
+			entry.data.itemTemplate = templ;
+
+			if (mCursor == i)
+				templ->playDefaultActivationStoryboard(true);
+		}
+
+		entry.data.itemTemplate->setPosition(0.0f, y);
+		entry.data.itemTemplate->render(trans);
+
+		y += entrySize;
+	}
+}
+
+template <typename T>
 bool TextListComponent<T>::input(InputConfig* config, Input input)
 {
 	if(size() > 0)
@@ -387,6 +438,13 @@ void TextListComponent<T>::update(int deltaTime)
 {
 	listUpdate(deltaTime);
 	mScrollbar.update(deltaTime);
+
+	if (mHasItemTemplate)
+	{
+		for (auto& entry : mEntries)
+			if (entry.data.itemTemplate)
+				entry.data.itemTemplate->update(deltaTime);
+	}
 
 	if(!isScrolling() && size() > 0)
 	{
@@ -446,6 +504,18 @@ void TextListComponent<T>::onCursorChanged(const CursorState& state)
 
 	mScrollbar.onCursorChanged();
 
+	// AmberELEC <itemTemplate>: the selected row plays "activate", the previous one "deactivate"
+	if (mHasItemTemplate && mLastCursor != mCursor)
+	{
+		if (mCursor >= 0 && mCursor < (int)mEntries.size() && mEntries.at(mCursor).data.itemTemplate)
+			mEntries.at(mCursor).data.itemTemplate->playDefaultActivationStoryboard(true);
+
+		if (mLastCursor >= 0 && mLastCursor < (int)mEntries.size() && mEntries.at(mLastCursor).data.itemTemplate)
+			mEntries.at(mLastCursor).data.itemTemplate->playDefaultActivationStoryboard(false);
+	}
+
+	mLastCursor = mCursor;
+
 	if(mCursorChangedCallback)
 		mCursorChangedCallback(state);
 }
@@ -458,6 +528,21 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 	const ThemeData::ThemeElement* elem = theme->getElement(view, element, "textlist");
 	if(!elem)
 		return;
+
+	// AmberELEC <itemTemplate>: rows are rebuilt from the template
+	mHasItemTemplate = false;
+	mItemTemplate = ThemeData::ThemeElement();
+	for (auto& child : elem->children)
+	{
+		if (child.first == "itemTemplate")
+		{
+			mItemTemplate = child.second;
+			mHasItemTemplate = true;
+		}
+	}
+
+	for (auto& entry : mEntries)
+		entry.data.itemTemplate = nullptr;
 
 	using namespace ThemeFlags;
 	if(properties & COLOR)

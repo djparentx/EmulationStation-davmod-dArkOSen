@@ -7,6 +7,8 @@
 #include "ImageComponent.h"
 #include "TextComponent.h"
 #include "ThemeData.h"
+#include "ItemTemplateComponent.h"
+#include <memory>
 
 class VideoComponent;
 
@@ -234,6 +236,10 @@ public:
 
 	std::shared_ptr<TextureResource> getTexture(bool marquee = false);
 
+	// AmberELEC <itemTemplate>: the tile is drawn from the template instead of image / label / background
+	bool hasItemTemplate() { return mItemTemplate != nullptr; }
+	void setItemTemplateBinding(IBindable* bindable, const std::string& label);
+
 private:
 	void	resetProperties();
 	void	createVideo();
@@ -283,6 +289,8 @@ private:
 
 	bool mVideoPlaying;
 	bool mShown;
+
+	std::shared_ptr<ItemTemplateComponent> mItemTemplate;
 };
 
 #endif // ES_CORE_COMPONENTS_GRID_TILE_COMPONENT_H
