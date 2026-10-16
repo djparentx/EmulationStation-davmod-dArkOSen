@@ -66,7 +66,8 @@ public:
 		BASIC,
 		DETAILED,
 		GRID,
-		VIDEO 
+		VIDEO,
+		GAMECAROUSEL
 		//,GRIDEX
 	};
 

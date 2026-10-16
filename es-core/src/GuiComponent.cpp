@@ -158,6 +158,19 @@ bool GuiComponent::isStoryboardSelected(const std::string& event) const
 	return mStoryboardAnimator != nullptr && mStoryboardAnimator->getName() == event;
 }
 
+bool GuiComponent::storyboardHasProperty(const std::string& event, const std::string& propertyName) const
+{
+	auto it = mStoryboards.find(event);
+	if (it == mStoryboards.cend() || it->second == nullptr)
+		return false;
+
+	for (auto anim : it->second->animations)
+		if (anim->propertyName == propertyName)
+			return true;
+
+	return false;
+}
+
 void GuiComponent::enableStoryboardProperty(const std::string& name, bool enable)
 {
 	if (mStoryboardAnimator != nullptr)

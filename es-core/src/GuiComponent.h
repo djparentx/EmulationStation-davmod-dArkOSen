@@ -209,6 +209,7 @@ public:
 	void pauseStoryboard();
 	bool isStoryboardRunning(const std::string& event = "");
 	bool isStoryboardSelected(const std::string& event) const;
+	bool storyboardHasProperty(const std::string& event, const std::string& propertyName) const; // AmberELEC storyBoardExists(name, propertyName)
 	void enableStoryboardProperty(const std::string& name, bool enable);
 
 	// theme bindings (AmberELEC): "<property>_binding" expressions, resolved by BindingManager

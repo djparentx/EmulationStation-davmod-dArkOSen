@@ -1,0 +1,52 @@
+#pragma once
+#ifndef ES_APP_VIEWS_GAME_LIST_CAROUSEL_GAME_LIST_VIEW_H
+#define ES_APP_VIEWS_GAME_LIST_CAROUSEL_GAME_LIST_VIEW_H
+
+#include "components/CarouselComponent.h"
+#include "views/gamelist/DetailedContainer.h"
+#include "views/gamelist/ISimpleGameListView.h"
+
+// Batocera / AmberELEC "gamecarousel" gamelist view: a <gamecarousel> of game logos + the detailed game info panel
+class CarouselGameListView : public ISimpleGameListView
+{
+public:
+	CarouselGameListView(Window* window, FolderData* root);
+	~CarouselGameListView();
+
+	// Called when a FileData* is added, has its metadata changed, or is removed
+	virtual void onFileChanged(FileData* file, FileChangeType change) override;
+
+	virtual void onThemeChanged(const std::shared_ptr<ThemeData>& theme) override;
+	virtual void onShow() override;
+
+	virtual FileData* getCursor() override;
+	virtual void setCursor(FileData* file) override;
+
+	virtual const char* getName() const override
+	{
+		if (!mCustomThemeName.empty())
+			return mCustomThemeName.c_str();
+
+		return "gamecarousel";
+	}
+
+	virtual std::vector<HelpPrompt> getHelpPrompts() override;
+	virtual void launch(FileData* game) override;
+	virtual std::vector<FileData*> getFileDataEntries() override;
+
+protected:
+	virtual std::string getQuickSystemSelectRightButton() override;
+	virtual std::string getQuickSystemSelectLeftButton() override;
+	virtual void populateList(const std::vector<FileData*>& files) override;
+	virtual void remove(FileData* game, bool deleteFile) override;
+	virtual void addPlaceholder();
+
+	void updateInfoPanel();
+
+	CarouselComponent mList;
+	DetailedContainer* mDetails = nullptr;
+
+	FileData* mStoryboardFile = nullptr; // game whose activate storyboards are currently running
+};
+
+#endif // ES_APP_VIEWS_GAME_LIST_CAROUSEL_GAME_LIST_VIEW_H

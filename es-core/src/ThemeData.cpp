@@ -25,7 +25,7 @@
 #include "components/WebImageComponent.h"
 #include "animations/ThemeStoryboard.h"
 
-std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" }, { "splash" } };
+std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "gamecarousel" }, { "menu" }, { "screen" }, { "splash" } };
 std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "z-index" }, { "visible" } };
 
 std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> ThemeData::sElementMap {
@@ -582,6 +582,39 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scaledLogoSpacing", FLOAT },
 		{ "scrollSound", PATH },
 		{ "zIndex", FLOAT } } },
+	{ "gamecarousel", {
+		{ "type", STRING },
+		{ "size", NORMALIZED_PAIR },
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "origin", NORMALIZED_PAIR },
+		{ "color", COLOR },
+		{ "colorEnd", COLOR },
+		{ "gradientType", STRING },
+		{ "logoScale", FLOAT },
+		{ "logoRotation", FLOAT },
+		{ "logoRotationOrigin", NORMALIZED_PAIR },
+		{ "logoSize", NORMALIZED_PAIR },
+		{ "logoPos", NORMALIZED_PAIR },
+		{ "logoAlignment", STRING },
+		{ "maxLogoCount", FLOAT },
+		{ "defaultTransition", STRING },
+		{ "minLogoOpacity", FLOAT },
+		{ "transitionSpeed", FLOAT },
+		{ "scaledLogoSpacing", FLOAT },
+		{ "scrollSound", PATH },
+		{ "visible", BOOLEAN },
+		{ "zIndex", FLOAT },
+		{ "imageSource", STRING },
+		// accepted, not used (Batocera themes share these with their textlist)
+		{ "lineSpacing", FLOAT },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
+		{ "scrollbarSize", FLOAT } } },
 	{ "menuText", {
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
