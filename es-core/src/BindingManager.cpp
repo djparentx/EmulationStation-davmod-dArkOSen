@@ -198,6 +198,21 @@ std::string BindingManager::updateBoundExpression(std::string& xp, IBindable* bi
 	return evaluableExpression;
 }
 
+std::string BindingManager::evaluateBindableExpression(const std::string& xp, IBindable* bindable)
+{
+	std::string val = xp;
+	std::string evaluableExpression = updateBoundExpression(val, bindable, false);
+	auto ret = Utils::MathExpr::evaluate(evaluableExpression.c_str());
+
+	if (ret.isString())
+		return ret.string;
+
+	if (ret.isNumber())
+		return std::to_string(ret.number);
+
+	return "";
+}
+
 bool BindingManager::evaluateBoolean(const std::string& expression, IBindable* bindable)
 {
 	if (expression.empty())

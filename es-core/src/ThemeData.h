@@ -332,7 +332,12 @@ public:
 	// If expectedType is an empty string, will do no type checking.
 	const ThemeElement* getElement(const std::string& view, const std::string& element, const std::string& expectedType) const;
 
-	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad = false);
+	// perGameExtrasOnly: only the extras of a per-game file (<gameextras>, appendFile(path, true))
+	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad = false, bool perGameExtrasOnly = false);
+
+	// Batocera <gameextras>: copy of this theme (one view, or all when viewName is empty) to append a per-game file to
+	std::shared_ptr<ThemeData> clone(const std::string& viewName);
+	bool appendFile(const std::string& path, bool perGameOverride = false);
 
 	// AmberELEC view attributes extraTransition / extraTransitionSpeed (-1 = not set) / extraTransitionDirection
 	bool getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction);
@@ -385,6 +390,7 @@ private:
 
 	std::deque<std::string> mPaths;
 	float mVersion;
+	bool mPerGameOverrideTmp = false; // appendFile(path, true): extras are per-game extras (extra = 3)
 	std::string mDefaultView;
 
 	void parseTheme(const pugi::xml_node& root);

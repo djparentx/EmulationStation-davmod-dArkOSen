@@ -441,6 +441,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "zIndex", FLOAT } } },
 	{ "sound", {
 		{ "path", PATH } } },
+	{ "gameextras", {
+		{ "path", PATH } } },
 	{ "controllerActivity", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -1692,6 +1694,9 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			element.extra = 1;
 		else if (extra == "static")
 			element.extra = 2;
+
+		if (element.extra && mPerGameOverrideTmp)
+			element.extra = 3; // per-game extra (<gameextras>)
 	}
 	else if (element.extra == 0 && _autoExtraTypes.find(element.type) != _autoExtraTypes.cend())
 		element.extra = 1;
@@ -2146,7 +2151,7 @@ void ThemeData::applySelfTheme(GuiComponent* comp, const ThemeElement& elem)
 	comp->applyTheme(theme, "default", "default", ThemeFlags::ALL);
 }
 
-std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad)
+std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad, bool perGameExtrasOnly)
 {
 	std::vector<GuiComponent*> comps;
 
@@ -2157,7 +2162,7 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 	for(auto it = viewIt->second.orderedKeys.cbegin(); it != viewIt->second.orderedKeys.cend(); it++)
 	{
 		ThemeElement& elem = viewIt->second.elements.at(*it);
-		if(elem.extra)
+		if(elem.extra && (!perGameExtrasOnly || elem.extra == 3))
 		{
 			GuiComponent* comp = createExtraComponent(window, elem.type, forceLoad);
 			if (comp == nullptr)
@@ -2172,6 +2177,76 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 	}
 
 	return comps;
+}
+
+std::shared_ptr<ThemeData> ThemeData::clone(const std::string& viewName)
+{
+	auto theme = std::make_shared<ThemeData>();
+	theme->mPaths = mPaths;
+	theme->mVersion = mVersion;
+	theme->mDefaultView = mDefaultView;
+	theme->mVariables = mVariables;
+	theme->mEvaluatedVariables = mEvaluatedVariables;
+	theme->mSubsets = mSubsets;
+	theme->mColorset = mColorset;
+	theme->mIconset = mIconset;
+	theme->mMenu = mMenu;
+	theme->mSystemview = mSystemview;
+	theme->mGamelistview = mGamelistview;
+	theme->mSystemThemeFolder = mSystemThemeFolder;
+	theme->mLanguage = mLanguage;
+	theme->mRegion = mRegion;
+
+	if (!viewName.empty())
+	{
+		auto view = mViews.find(viewName);
+		if (view != mViews.cend())
+			theme->mViews.insert(std::pair<std::string, ThemeView>(viewName, view->second));
+	}
+	else
+		theme->mViews = mViews;
+
+	return theme;
+}
+
+bool ThemeData::appendFile(const std::string& path, bool perGameOverride)
+{
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(path.c_str());
+	if (!result)
+	{
+		LOG(LogWarning) << "Error parsing file: \n    " << result.description() << "    from included file \"" << path << "\"";
+		return false;
+	}
+
+	pugi::xml_node root = doc.child("theme");
+	if (!root)
+	{
+		LOG(LogWarning) << "Missing <theme> tag!    from included file \"" << path << "\"";
+		return false;
+	}
+
+	mPaths.push_back(path);
+	mVariables["currentPath"] = Utils::FileSystem::getParent(path);
+	mPerGameOverrideTmp = perGameOverride;
+
+	try
+	{
+		parseVariables(root);
+		parseTheme(root);
+	}
+	catch (ThemeException& e)
+	{
+		LOG(LogWarning) << e.what();
+	}
+
+	mPerGameOverrideTmp = false;
+	mPaths.pop_back();
+
+	if (mPaths.size())
+		mVariables["currentPath"] = Utils::FileSystem::getParent(mPaths.back());
+
+	return true;
 }
 
 std::map<std::string, ThemeSet> ThemeData::getThemeSets()

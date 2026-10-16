@@ -4,6 +4,7 @@ set(ES_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EmulationStation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileData.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileSorts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LangParser.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/PlatformId.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ScraperCmdLine.h
@@ -52,6 +53,7 @@ set(ES_HEADERS
     # Views
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/BasicGameListView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedGameListView.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedContainer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/IGameListView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/ISimpleGameListView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/GridGameListView.h
@@ -68,6 +70,7 @@ set(ES_HEADERS
 set(ES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileData.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileSorts.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LangParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MetaData.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/PlatformId.cpp
@@ -116,6 +119,7 @@ set(ES_SOURCES
     # Views
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/BasicGameListView.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedGameListView.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/DetailedContainer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/IGameListView.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/ISimpleGameListView.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/views/gamelist/GridGameListView.cpp

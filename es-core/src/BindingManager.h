@@ -60,6 +60,9 @@ public:
 	// storyboard <animation enabled="..."> and other boolean conditions
 	static bool          evaluateBoolean(const std::string& xp, IBindable* bindable);
 
+	// value of an expression with {game:...} / {system:...} bindings (e.g. a <gameextras> path)
+	static std::string   evaluateBindableExpression(const std::string& xp, IBindable* bindable);
+
 private:
 	static void          bindValues(IBindable* current, std::string& xp, bool showDefaultText, std::string& evaluableExpression);
 	static std::string   updateBoundExpression(std::string& xp, IBindable* bindable, bool showDefaultText);

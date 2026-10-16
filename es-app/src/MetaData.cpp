@@ -33,7 +33,22 @@ MetaDataDecl gameDecls[] = {
 	{ 20, "lastplayed",  MD_TIME,                "0",                true,       "last played",          "enter last played date"},
 	{ 21, "arcadesystemname",  MD_STRING,        "",                 false,      "arcade system",        "enter arcade system name"},
 	{ 22, "gametime",    MD_INT,                 "0",                true,       "time played",          "enter total time played in seconds"},
-	{ 23, "lastsession", MD_INT,                 "0",                true,       "last session",         "last session length in seconds"}
+	{ 23, "lastsession", MD_INT,                 "0",                true,       "last session",         "last session length in seconds"},
+
+	// Batocera media / info (kept in gamelist.xml, used by theme md_* elements and {game:...} bindings) - not shown in the editor
+	{ 24, "fanart",      MD_PATH,                "",                 true,       "fan art",              "enter path to fan art"},
+	{ 25, "titleshot",   MD_PATH,                "",                 true,       "title shot",           "enter path to title shot"},
+	{ 26, "manual",      MD_PATH,                "",                 true,       "manual",               "enter path to manual"},
+	{ 27, "magazine",    MD_PATH,                "",                 true,       "magazine",             "enter path to magazine"},
+	{ 28, "map",         MD_PATH,                "",                 true,       "map",                  "enter path to map"},
+	{ 29, "cartridge",   MD_PATH,                "",                 true,       "cartridge",            "enter path to cartridge"},
+	{ 30, "boxart",      MD_PATH,                "",                 true,       "box art",              "enter path to box art"},
+	{ 31, "boxback",     MD_PATH,                "",                 true,       "box back",             "enter path to box back"},
+	{ 32, "wheel",       MD_PATH,                "",                 true,       "wheel",                "enter path to wheel"},
+	{ 33, "mix",         MD_PATH,                "",                 true,       "mix",                  "enter path to mix"},
+	{ 34, "lang",        MD_STRING,              "",                 true,       "languages",            "enter languages"},
+	{ 35, "region",      MD_STRING,              "",                 true,       "region",               "enter region"},
+	{ 36, "crc32",       MD_STRING,              "",                 true,       "crc32",                "enter crc32"}
 };
 
 const std::vector<MetaDataDecl> gameMDD(gameDecls, gameDecls + sizeof(gameDecls) / sizeof(gameDecls[0]));
