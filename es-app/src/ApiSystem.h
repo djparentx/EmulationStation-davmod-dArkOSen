@@ -47,7 +47,6 @@ public:
 	void	setGamma(float value);
 	int	getTone();
 	void	setTone(int value);
-	void	setTone(int value);
 	int	getEffectiveTone();
 	bool	isNightFilterActive();
 	bool	getNightFilterEnabled();
