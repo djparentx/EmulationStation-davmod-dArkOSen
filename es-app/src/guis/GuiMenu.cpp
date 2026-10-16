@@ -486,6 +486,18 @@ void GuiMenu::openNightFilterSettings(std::shared_ptr<SliderComponent> displayTo
 		return std::string(buf);
 	};
 
+	// --- TEMPERATURE (live preview while in this menu) ---
+	int initTone = api->getNightFilterTone();
+	auto toneSlider = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
+	toneSlider->setReversed(true);
+	toneSlider->setRepeat(false);
+	toneSlider->setValue((float)initTone);
+	toneSlider->setOnValueChanged([](const float &newVal)
+	{
+		ApiSystem::getInstance()->previewNightTone((int)Math::round(newVal));
+	});
+	s->addWithLabel(_("TEMPERATURE"), toneSlider);
+
 	// --- START TIME (15 min steps) ---
 	int initStart = api->getNightFilterStart();
 	auto startList = std::make_shared<OptionListComponent<int>>(mWindow, _("START TIME"), false);
@@ -499,18 +511,6 @@ void GuiMenu::openNightFilterSettings(std::shared_ptr<SliderComponent> displayTo
 	for (int m = 0; m < 1440; m += 15)
 		endList->add(timeLabel(m), m, m == initEnd);
 	s->addWithLabel(_("END TIME"), endList);
-
-	// --- TEMPERATURE (live preview while in this menu) ---
-	int initTone = api->getNightFilterTone();
-	auto toneSlider = std::make_shared<SliderComponent>(mWindow, 2700.f, 6500.f, 100.f, "K");
-	toneSlider->setReversed(true);
-	toneSlider->setRepeat(false);
-	toneSlider->setValue((float)initTone);
-	toneSlider->setOnValueChanged([](const float &newVal)
-	{
-		ApiSystem::getInstance()->previewNightTone((int)Math::round(newVal));
-	});
-	s->addWithLabel(_("TEMPERATURE"), toneSlider);
 
 	api->previewNightTone(initTone);
 
