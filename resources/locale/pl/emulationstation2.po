@@ -3475,3 +3475,7 @@ msgstr "INTENSYWNOŚĆ WIBRACJI"
 #:
 msgid "TEMPERATURE"
 msgstr "TEMPERATURA"
+
+#:
+msgid "CLOCK FONT"
+msgstr "CZCIONKA ZEGARA"

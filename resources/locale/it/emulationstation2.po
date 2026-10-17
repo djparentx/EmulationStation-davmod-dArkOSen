@@ -3382,3 +3382,7 @@ msgstr "INTENSITÀ VIBRAZIONE"
 #:
 msgid "TEMPERATURE"
 msgstr "TEMPERATURA"
+
+#:
+msgid "CLOCK FONT"
+msgstr "CARATTERE OROLOGIO"

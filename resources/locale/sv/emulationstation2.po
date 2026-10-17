@@ -3938,3 +3938,7 @@ msgstr "VIBRATIONSSTYRKA"
 #:
 msgid "TEMPERATURE"
 msgstr "TEMPERATUR"
+
+#:
+msgid "CLOCK FONT"
+msgstr "KLOCKTYPSNITT"

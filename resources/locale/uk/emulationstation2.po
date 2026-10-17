@@ -4264,3 +4264,7 @@ msgstr "СИЛА ВІБРАЦІЇ"
 #:
 msgid "TEMPERATURE"
 msgstr "ТЕМПЕРАТУРА"
+
+#:
+msgid "CLOCK FONT"
+msgstr "ШРИФТ ГОДИННИКА"

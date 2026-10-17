@@ -2969,3 +2969,7 @@ msgstr "ΕΝΤΑΣΗ ΔΟΝΗΣΗΣ"
 #:
 msgid "TEMPERATURE"
 msgstr "ΘΕΡΜΟΚΡΑΣΙΑ"
+
+#:
+msgid "CLOCK FONT"
+msgstr "ΓΡΑΜΜΑΤΟΣΕΙΡΑ ΡΟΛΟΓΙΟΥ"

@@ -2285,3 +2285,7 @@ msgstr "진동 강도"
 #:
 msgid "TEMPERATURE"
 msgstr "온도"
+
+#:
+msgid "CLOCK FONT"
+msgstr "시계 글꼴"

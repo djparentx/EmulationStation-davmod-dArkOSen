@@ -2030,3 +2030,7 @@ msgstr "振動の強さ"
 #:
 msgid "TEMPERATURE"
 msgstr "温度"
+
+#:
+msgid "CLOCK FONT"
+msgstr "時計のフォント"

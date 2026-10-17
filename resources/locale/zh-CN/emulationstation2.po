@@ -4185,3 +4185,7 @@ msgstr "振动强度"
 #:
 msgid "TEMPERATURE"
 msgstr "温度"
+
+#:
+msgid "CLOCK FONT"
+msgstr "时钟字体"
