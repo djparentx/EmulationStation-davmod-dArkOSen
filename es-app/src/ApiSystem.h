@@ -47,6 +47,15 @@ public:
 	void	setGamma(float value);
 	int	getTone();
 	void	setTone(int value);
+	int	getEffectiveTone();
+	bool	isNightFilterActive();
+	bool	getNightFilterEnabled();
+	int	getNightFilterStart();
+	int	getNightFilterEnd();
+	int	getNightFilterTone();
+	void	setNightFilter(bool enabled, int start, int end, int tone);
+	void	previewNightTone(int tone);
+	void	endNightPreview();
     BatteryInformation getBatteryInformation(bool summary = true);
 
 protected:
