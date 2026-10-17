@@ -2495,3 +2495,7 @@ msgstr "CƯỜNG ĐỘ RUNG"
 #:
 msgid "TEMPERATURE"
 msgstr "NHIỆT ĐỘ"
+
+#:
+msgid "CLOCK FONT"
+msgstr "PHÔNG CHỮ ĐỒNG HỒ"

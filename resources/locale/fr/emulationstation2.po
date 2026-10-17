@@ -2141,3 +2141,7 @@ msgstr "INTENSITÉ DE VIBRATION"
 #:
 msgid "TEMPERATURE"
 msgstr "TEMPÉRATURE"
+
+#:
+msgid "CLOCK FONT"
+msgstr "POLICE DE L'HORLOGE"

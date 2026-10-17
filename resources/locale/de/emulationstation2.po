@@ -3150,3 +3150,7 @@ msgstr "VIBRATIONSSTÄRKE"
 #:
 msgid "TEMPERATURE"
 msgstr "TEMPERATUR"
+
+#:
+msgid "CLOCK FONT"
+msgstr "UHRSCHRIFTART"
