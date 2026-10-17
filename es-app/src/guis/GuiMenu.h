@@ -10,6 +10,7 @@
 
 class GuiSettings;
 class SystemData;
+class SliderComponent;
 
 class GuiMenu : public GuiComponent
 {
@@ -62,6 +63,7 @@ private:
 
 	void createInputTextRow(GuiSettings *gui, std::string title, const char *settingsID, bool password);
 	void openDisplaySettings();
+	void openNightFilterSettings(std::shared_ptr<SliderComponent> displayTone);
 	void openDateTimeSettings();
 	void openManualDateTimeSettings(std::function<void()> onApplied = nullptr);
 

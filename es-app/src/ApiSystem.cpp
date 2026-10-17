@@ -19,6 +19,7 @@
 #include <sstream>
 #include <iomanip>
 #include <unistd.h> 
+#include <ctime>
 
 ApiSystem* ApiSystem::instance = nullptr;
 
@@ -564,18 +565,79 @@ void ApiSystem::setBrighness(int value)
 #endif
 }
 
-float ApiSystem::getGamma()
+// ---- Display LUT: gamma, temperature, night filter ----
+#define GAMMA_CONF    "/etc/gamma-settings.conf"
+#define NIGHT_PREVIEW "/dev/shm/NIGHT_PREVIEW"
+
+struct GammaConf
 {
+	float gamma        = 1.0f;
+	int   tone         = 5500;
+	bool  nightEnabled = false;
+	int   nightStart   = 1260; // 9:00 PM (minutes since midnight)
+	int   nightEnd     = 420;  // 7:00 AM
+	int   nightTone    = 3400;
+};
+
+static bool validTone(int t)   { return t >= 2700 && t <= 6500; }
+static bool validMinute(int m) { return m >= 0 && m < 1440 && m % 15 == 0; }
+
+static GammaConf readGammaConf()
+{
+	GammaConf c;
 #if !WIN32
-	std::ifstream conf("/etc/gamma-settings.conf");
+	std::ifstream conf(GAMMA_CONF);
 	std::string line;
 	while (std::getline(conf, line))
 	{
-		if (line.rfind("GAMMA=", 0) == 0)
-			return (float) atof(line.substr(6).c_str());
+		size_t eq = line.find('=');
+		if (eq == std::string::npos)
+			continue;
+
+		std::string key = line.substr(0, eq);
+		std::string val = line.substr(eq + 1);
+		int iv = atoi(val.c_str());
+
+		if (key == "GAMMA")              c.gamma = (float)atof(val.c_str());
+		else if (key == "TONE")          { if (validTone(iv)) c.tone = iv; }
+		else if (key == "NIGHT_ENABLED") c.nightEnabled = (iv == 1);
+		else if (key == "NIGHT_START")   { if (validMinute(iv)) c.nightStart = iv; }
+		else if (key == "NIGHT_END")     { if (validMinute(iv)) c.nightEnd = iv; }
+		else if (key == "NIGHT_TONE")    { if (validTone(iv)) c.nightTone = iv; }
 	}
 #endif
-	return 1.0f;
+	return c;
+}
+
+static void writeGammaConf(const GammaConf& c)
+{
+#if !WIN32
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd),
+		"printf 'GAMMA=%.1f\\nTONE=%d\\nNIGHT_ENABLED=%d\\nNIGHT_START=%d\\nNIGHT_END=%d\\nNIGHT_TONE=%d\\n' | sudo tee " GAMMA_CONF " > /dev/null 2>&1",
+		c.gamma, c.tone, c.nightEnabled ? 1 : 0, c.nightStart, c.nightEnd, c.nightTone);
+	runSystemCommand(cmd, "", nullptr);
+#endif
+}
+
+static bool nightActive(const GammaConf& c)
+{
+	if (!c.nightEnabled || c.nightStart == c.nightEnd)
+		return false;
+
+	time_t now = time(nullptr);
+	struct tm t = *localtime(&now);
+	int m = t.tm_hour * 60 + t.tm_min;
+
+	if (c.nightStart < c.nightEnd)
+		return m >= c.nightStart && m < c.nightEnd;
+
+	return m >= c.nightStart || m < c.nightEnd; // window crosses midnight
+}
+
+static int effectiveTone(const GammaConf& c)
+{
+	return nightActive(c) ? c.nightTone : c.tone;
 }
 
 static void applyDisplayLut(float gamma, int tone)
@@ -584,10 +646,6 @@ static void applyDisplayLut(float gamma, int tone)
 	char cmd[96];
 	sprintf(cmd, "/usr/local/bin/gamma -s %.1f -t %d > /dev/null 2>&1", gamma, tone);
 	runSystemCommand(cmd, "", nullptr);
-
-	char confCmd[160];
-	sprintf(confCmd, "printf 'GAMMA=%.1f\\nTONE=%d\\n' | sudo tee /etc/gamma-settings.conf > /dev/null 2>&1", gamma, tone);
-	runSystemCommand(confCmd, "", nullptr);
 
 	std::ofstream shmGamma("/dev/shm/CURRENT_GAMMA");
 	shmGamma << std::fixed << std::setprecision(1) << gamma;
@@ -599,32 +657,78 @@ static void applyDisplayLut(float gamma, int tone)
 #endif
 }
 
+float ApiSystem::getGamma()
+{
+	return readGammaConf().gamma;
+}
+
 void ApiSystem::setGamma(float value)
 {
-	applyDisplayLut(value, getTone());
+	GammaConf c = readGammaConf();
+	c.gamma = value;
+	writeGammaConf(c);
+	applyDisplayLut(c.gamma, effectiveTone(c));
 }
 
 int ApiSystem::getTone()
 {
-#if !WIN32
-	std::ifstream conf("/etc/gamma-settings.conf");
-	std::string line;
-	while (std::getline(conf, line))
-	{
-		if (line.rfind("TONE=", 0) == 0)
-		{
-			int tone = atoi(line.substr(5).c_str());
-			if (tone >= 2700 && tone <= 6500)
-				return tone;
-		}
-	}
-#endif
-	return 5500;
+	return readGammaConf().tone;
 }
 
 void ApiSystem::setTone(int value)
 {
-	applyDisplayLut(getGamma(), value);
+	GammaConf c = readGammaConf();
+	c.tone = value;
+	writeGammaConf(c);
+	applyDisplayLut(c.gamma, effectiveTone(c));
+}
+
+int ApiSystem::getEffectiveTone()
+{
+	return effectiveTone(readGammaConf());
+}
+
+bool ApiSystem::isNightFilterActive()
+{
+	return nightActive(readGammaConf());
+}
+
+bool ApiSystem::getNightFilterEnabled() { return readGammaConf().nightEnabled; }
+int  ApiSystem::getNightFilterStart()   { return readGammaConf().nightStart; }
+int  ApiSystem::getNightFilterEnd()     { return readGammaConf().nightEnd; }
+int  ApiSystem::getNightFilterTone()    { return readGammaConf().nightTone; }
+
+void ApiSystem::setNightFilter(bool enabled, int start, int end, int tone)
+{
+	GammaConf c = readGammaConf();
+	if (c.nightEnabled == enabled && c.nightStart == start && c.nightEnd == end && c.nightTone == tone)
+		return; // nothing changed
+
+	c.nightEnabled = enabled;
+	c.nightStart   = start;
+	c.nightEnd     = end;
+	c.nightTone    = tone;
+	writeGammaConf(c);
+}
+
+void ApiSystem::previewNightTone(int tone)
+{
+#if !WIN32
+	std::ofstream flag(NIGHT_PREVIEW); // tells night_filter.sh to stand down
+	flag.close();
+#endif
+	applyDisplayLut(readGammaConf().gamma, tone);
+}
+
+void ApiSystem::endNightPreview()
+{
+#if !WIN32
+	if (access(NIGHT_PREVIEW, F_OK) != 0)
+		return; // no preview running
+	unlink(NIGHT_PREVIEW);
+#endif
+	GammaConf c = readGammaConf();
+	applyDisplayLut(c.gamma, effectiveTone(c));
 }
 
 BatteryInformation ApiSystem::getBatteryInformation(bool summary)

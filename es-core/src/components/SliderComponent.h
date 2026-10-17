@@ -29,6 +29,7 @@ public:
 
 	inline void setOnValueChanged(const std::function<void(const float&)>& callback) { mValueChanged = callback; }
 	inline void setReversed(bool reversed) { mReversed = reversed; onValueChanged(); }
+	inline void setRepeat(bool repeat) { mRepeat = repeat; if (!repeat) mMoveRate = 0; }
 	
 private:
 	void onValueChanged();
@@ -40,6 +41,7 @@ private:
 	int mPrecision;
 	int mMoveAccumulator;
 	bool mReversed;
+	bool mRepeat;
 	
 	ImageComponent mKnob;
 
