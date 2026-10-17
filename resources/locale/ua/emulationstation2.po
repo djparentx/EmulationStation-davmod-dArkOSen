@@ -4406,3 +4406,55 @@ msgstr "ТЕМПЕРАТУРА"
 #:
 msgid "CLOCK FONT"
 msgstr "ШРИФТ ГОДИННИКА"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "ГОЛОСОВЕ ПОПЕРЕДЖЕННЯ ТАЙМЕРА ГРИ"
+
+#:
+msgid "PLAY TIMER"
+msgstr "ТАЙМЕР ГРИ"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "ЗАЛИШИЛОСЯ СЬОГОДНІ"
+
+#:
+msgid "MIN"
+msgstr "ХВ"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "ДЕННИЙ ЛІМІТ ІГРОВОГО ЧАСУ ВИЧЕРПАНО"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "ПОВЕРТАЙСЯ ЗАВТРА!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "ЗАЛИШОК ІГРОВОГО ЧАСУ СЬОГОДНІ: %i ХВ"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "ЗАЛИШОК ІГРОВОГО ЧАСУ СЬОГОДНІ: < 1 ХВ"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "НІЧНИЙ ФІЛЬТР"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "УВІМКНУТИ ФІЛЬТР"
+
+#:
+msgid "START TIME"
+msgstr "ЧАС ПОЧАТКУ"
+
+#:
+msgid "END TIME"
+msgstr "ЧАС ЗАВЕРШЕННЯ"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "НІЧНИЙ ФІЛЬТР АКТИВНИЙ"

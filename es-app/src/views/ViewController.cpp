@@ -255,9 +255,16 @@ void ViewController::launch(FileData* game, Vector3f center, int entrySlot)
 	if (playRemaining > 0)
 	{
 		int minutesLeft = playRemaining / 60;
-		std::string msg = minutesLeft == 0 ? "LESS THAN 1 MINUTE OF PLAY TIME LEFT TODAY"
-			: std::to_string(minutesLeft) + (minutesLeft == 1 ? " MINUTE" : " MINUTES") + " OF PLAY TIME LEFT TODAY";
-		mWindow->pushGui(new GuiMsgBox(mWindow, msg, "OK", [this, game, center, entrySlot] { doLaunch(game, center, entrySlot); }));
+		std::string msg;
+		if (minutesLeft == 0)
+			msg = _("PLAY TIME LEFT TODAY: < 1 MIN");
+		else
+		{
+			char strbuf[256];
+			snprintf(strbuf, sizeof(strbuf), _("PLAY TIME LEFT TODAY: %i MIN").c_str(), minutesLeft);
+			msg = strbuf;
+		}
+		mWindow->pushGui(new GuiMsgBox(mWindow, msg, _("OK"), [this, game, center, entrySlot] { doLaunch(game, center, entrySlot); }));
 		return;
 	}
 

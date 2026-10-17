@@ -2034,3 +2034,55 @@ msgstr "温度"
 #:
 msgid "CLOCK FONT"
 msgstr "時計のフォント"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "プレイタイマー音声警告"
+
+#:
+msgid "PLAY TIMER"
+msgstr "プレイタイマー"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "今日の残り時間"
+
+#:
+msgid "MIN"
+msgstr "分"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "1日のプレイ時間の上限に達しました"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "また明日遊んでね！"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "今日の残りプレイ時間: %i 分"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "今日の残りプレイ時間: 1 分未満"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "ナイトフィルター"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "フィルターを有効にする"
+
+#:
+msgid "START TIME"
+msgstr "開始時刻"
+
+#:
+msgid "END TIME"
+msgstr "終了時刻"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "ナイトフィルター有効"

@@ -3942,3 +3942,55 @@ msgstr "TEMPERATUR"
 #:
 msgid "CLOCK FONT"
 msgstr "KLOCKTYPSNITT"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "RÖSTVARNING FÖR SPELTIMER"
+
+#:
+msgid "PLAY TIMER"
+msgstr "SPELTIMER"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "TID KVAR IDAG"
+
+#:
+msgid "MIN"
+msgstr "MIN"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "DAGLIG SPELTIDSGRÄNS NÅDD"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "KOM TILLBAKA IMORGON!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "SPELTID KVAR IDAG: %i MIN"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "SPELTID KVAR IDAG: < 1 MIN"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "NATTFILTER"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "AKTIVERA FILTER"
+
+#:
+msgid "START TIME"
+msgstr "STARTTID"
+
+#:
+msgid "END TIME"
+msgstr "SLUTTID"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "NATTFILTER AKTIVT"

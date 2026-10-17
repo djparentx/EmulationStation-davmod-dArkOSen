@@ -2289,3 +2289,55 @@ msgstr "온도"
 #:
 msgid "CLOCK FONT"
 msgstr "시계 글꼴"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "플레이 타이머 음성 경고"
+
+#:
+msgid "PLAY TIMER"
+msgstr "플레이 타이머"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "오늘 남은 시간"
+
+#:
+msgid "MIN"
+msgstr "분"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "일일 플레이 시간 한도에 도달했습니다"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "내일 다시 만나요!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "오늘 남은 플레이 시간: %i 분"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "오늘 남은 플레이 시간: 1 분 미만"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "야간 필터"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "필터 사용"
+
+#:
+msgid "START TIME"
+msgstr "시작 시간"
+
+#:
+msgid "END TIME"
+msgstr "종료 시간"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "야간 필터 활성화됨"

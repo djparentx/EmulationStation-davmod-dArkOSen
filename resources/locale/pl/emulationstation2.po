@@ -3479,3 +3479,55 @@ msgstr "TEMPERATURA"
 #:
 msgid "CLOCK FONT"
 msgstr "CZCIONKA ZEGARA"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "GŁOSOWE OSTRZEŻENIE MINUTNIKA GRY"
+
+#:
+msgid "PLAY TIMER"
+msgstr "MINUTNIK GRY"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "POZOSTAŁY CZAS DZIŚ"
+
+#:
+msgid "MIN"
+msgstr "MIN"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "OSIĄGNIĘTO DZIENNY LIMIT CZASU GRY"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "WRÓĆ JUTRO!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "POZOSTAŁY CZAS GRY DZIŚ: %i MIN"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "POZOSTAŁY CZAS GRY DZIŚ: < 1 MIN"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "FILTR NOCNY"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "WŁĄCZ FILTR"
+
+#:
+msgid "START TIME"
+msgstr "GODZINA ROZPOCZĘCIA"
+
+#:
+msgid "END TIME"
+msgstr "GODZINA ZAKOŃCZENIA"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "FILTR NOCNY AKTYWNY"

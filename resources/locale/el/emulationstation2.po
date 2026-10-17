@@ -2973,3 +2973,55 @@ msgstr "ΘΕΡΜΟΚΡΑΣΙΑ"
 #:
 msgid "CLOCK FONT"
 msgstr "ΓΡΑΜΜΑΤΟΣΕΙΡΑ ΡΟΛΟΓΙΟΥ"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "ΦΩΝΗΤΙΚΗ ΠΡΟΕΙΔΟΠΟΙΗΣΗ ΧΡΟΝΟΜΕΤΡΟΥ ΠΑΙΧΝΙΔΙΟΥ"
+
+#:
+msgid "PLAY TIMER"
+msgstr "ΧΡΟΝΟΜΕΤΡΟ ΠΑΙΧΝΙΔΙΟΥ"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "ΥΠΟΛΟΙΠΟΣ ΧΡΟΝΟΣ ΣΗΜΕΡΑ"
+
+#:
+msgid "MIN"
+msgstr "ΛΕΠ"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "ΕΠΙΤΕΥΧΘΗΚΕ ΤΟ ΗΜΕΡΗΣΙΟ ΟΡΙΟ ΠΑΙΧΝΙΔΙΟΥ"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "ΕΛΑ ΞΑΝΑ ΑΥΡΙΟ!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "ΥΠΟΛΟΙΠΟΣ ΧΡΟΝΟΣ ΠΑΙΧΝΙΔΙΟΥ ΣΗΜΕΡΑ: %i ΛΕΠ"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "ΥΠΟΛΟΙΠΟΣ ΧΡΟΝΟΣ ΠΑΙΧΝΙΔΙΟΥ ΣΗΜΕΡΑ: < 1 ΛΕΠ"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "ΝΥΧΤΕΡΙΝΟ ΦΙΛΤΡΟ"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "ΕΝΕΡΓΟΠΟΙΗΣΗ ΦΙΛΤΡΟΥ"
+
+#:
+msgid "START TIME"
+msgstr "ΩΡΑ ΕΝΑΡΞΗΣ"
+
+#:
+msgid "END TIME"
+msgstr "ΩΡΑ ΛΗΞΗΣ"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "ΝΥΧΤΕΡΙΝΟ ΦΙΛΤΡΟ ΕΝΕΡΓΟ"

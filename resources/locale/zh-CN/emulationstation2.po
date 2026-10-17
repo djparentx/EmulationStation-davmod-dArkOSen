@@ -4189,3 +4189,55 @@ msgstr "温度"
 #:
 msgid "CLOCK FONT"
 msgstr "时钟字体"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "游戏计时器语音提醒"
+
+#:
+msgid "PLAY TIMER"
+msgstr "游戏计时器"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "今日剩余时间"
+
+#:
+msgid "MIN"
+msgstr "分钟"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "已达到每日游戏时间上限"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "明天再来吧！"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "今日剩余游戏时间：%i 分钟"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "今日剩余游戏时间：不足 1 分钟"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "夜间滤镜"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "启用滤镜"
+
+#:
+msgid "START TIME"
+msgstr "开始时间"
+
+#:
+msgid "END TIME"
+msgstr "结束时间"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "夜间滤镜已启用"
