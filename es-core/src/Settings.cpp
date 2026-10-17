@@ -195,6 +195,7 @@ void Settings::setDefaults()
 	mBoolMap["DateTimeScreenSaverShowDate"] = true;
 	mBoolMap["DateTimeScreenSaverShowSeconds"] = true;
 	mStringMap["DateTimeScreenSaverClockColor"] = "Neon Green";
+	mStringMap["DateTimeScreenSaverClockFont"] = "Digital";
 
 	mBoolMap["ShowFilenames"] = false;
 

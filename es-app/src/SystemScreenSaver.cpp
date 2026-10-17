@@ -1102,6 +1102,11 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	else if (clockColor == "White")       mClockColor = 0xFFFFFFCC;
 	else                                  mClockColor = 0x39FF14CC; // Neon Green
 
+	// CLOCK FONT (Number mode): time / date font files
+	bool exoFont = settings->getString("DateTimeScreenSaverClockFont") == "Exo";
+	std::string timeFontFile = exoFont ? ":/Exo2-Light.ttf"      : ":/DS-DIGIT.TTF";
+	std::string dateFontFile = exoFont ? ":/Exo2-ExtraLight.ttf" : ":/DS-DIGII.TTF";
+
 	// Background
 	if (mBgMode == "Color")
 	{
@@ -1132,7 +1137,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Date
 	if (mShowDate)
 	{
-		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(":/DS-DIGII.TTF"));
+		auto font = Font::get((int)(h / 15.0f), dateTimeFontPath(dateFontFile));
 		int lh = (int)font->getLetterHeight();
 
 		mDate = new TextComponent(mWindow);
@@ -1150,7 +1155,7 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Digital time
 	if (mClockType == "Number")
 	{
-		auto font = Font::get((int)(h / 5.0f), dateTimeFontPath(":/DS-DIGIT.TTF"));
+		auto font = Font::get((int)(h / 5.0f), dateTimeFontPath(timeFontFile));
 		int lh = (int)font->getLetterHeight();
 
 		mTime = new TextComponent(mWindow);

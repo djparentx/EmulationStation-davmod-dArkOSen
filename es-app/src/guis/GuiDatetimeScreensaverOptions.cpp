@@ -33,6 +33,12 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 			settings->getString("DateTimeScreenSaverClockColor"));
 		addWithLabel(_("CLOCK COLOR"), clock_color);
 		addSaveFunc([clock_color] { Settings::getInstance()->setString("DateTimeScreenSaverClockColor", clock_color->getSelected()); });
+
+		// CLOCK FONT (Number only)
+		auto clock_font = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK FONT"), false);
+		clock_font->addRange(OptionPairs{ { "Digital", "Digital" }, { "Exo", "Exo" } }, settings->getString("DateTimeScreenSaverClockFont"));
+		addWithLabel(_("CLOCK FONT"), clock_font);
+		addSaveFunc([clock_font] { Settings::getInstance()->setString("DateTimeScreenSaverClockFont", clock_font->getSelected()); });
 	}
 
 	// CLOCK STYLE (analog only)
