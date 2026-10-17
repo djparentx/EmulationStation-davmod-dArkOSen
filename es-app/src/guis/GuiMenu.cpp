@@ -1998,6 +1998,12 @@ void GuiMenu::openSoundSettings()
 		}
 	});
 
+	// Verbal Play Timer Warning
+	auto VerbalPlayTimer = std::make_shared<OptionListComponent<std::string> >(mWindow, _("VERBAL PLAY TIMER WARNING"), false);
+	VerbalPlayTimer->addRange({ { _("OFF"), "no" },{ _("ON"), "yes" } }, Settings::getInstance()->getString("VerbalPlayTimerWarning"));
+	s->addWithLabel(_("VERBAL PLAY TIMER WARNING"), VerbalPlayTimer);
+	s->addSaveFunc([VerbalPlayTimer] { Settings::getInstance()->setString("VerbalPlayTimerWarning", VerbalPlayTimer->getSelected()); });
+	
 	// Boot Volume
 	auto BootVol = std::make_shared< OptionListComponent<std::string> >(mWindow, _("BOOT VOLUME (%)"), false);
 	std::vector<std::string> abootvol;
