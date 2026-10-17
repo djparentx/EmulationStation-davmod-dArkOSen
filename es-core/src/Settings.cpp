@@ -111,6 +111,7 @@ void Settings::setDefaults()
 	mStringMap["ShowBattery"] = "text";
 	mStringMap["VerbalBatteryVoice"] = "male1";
 	mStringMap["VerbalBatteryWarning"] = "no";
+	mStringMap["VerbalPlayTimerWarning"] = "no";
 	mStringMap["VerbalBatteryThreshold"] = "Default";
 	mStringMap["GlobalPerformanceGovernor"] = "performance";
 	mStringMap["AutoSuspendTimeout"] = "Off";

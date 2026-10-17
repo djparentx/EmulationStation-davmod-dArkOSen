@@ -23,6 +23,7 @@
 #include <sstream>
 #include <ctime>
 #include <unistd.h>
+#include "EsLocale.h"
 
 FileData::FileData(FileType type, const std::string& path, SystemData* system)
 	: mType(type), mSystem(system), mParent(NULL), mMetadata(type == GAME ? GAME_METADATA : FOLDER_METADATA) // metadata is REALLY set in the constructor!
@@ -284,7 +285,7 @@ void FileData::launchGame(Window* window, int entrySlot)
 	int playLimit = Settings::getInstance()->getInt("PlayTimer");
 	if (playLimit > 0 && getPlayTimeRemaining() == 0)
 	{
-		window->pushGui(new GuiMsgBox(window, "DAILY PLAY TIME LIMIT REACHED\nCOME BACK TOMORROW!", "OK"));
+		window->pushGui(new GuiMsgBox(window, _("DAILY PLAY TIME LIMIT REACHED") + "\n" + _("COME BACK TOMORROW!"), _("OK")));
 		return;
 	}
 

@@ -2499,3 +2499,55 @@ msgstr "NHIỆT ĐỘ"
 #:
 msgid "CLOCK FONT"
 msgstr "PHÔNG CHỮ ĐỒNG HỒ"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "CẢNH BÁO BẰNG GIỌNG NÓI HẸN GIỜ CHƠI"
+
+#:
+msgid "PLAY TIMER"
+msgstr "HẸN GIỜ CHƠI"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "THỜI GIAN CÒN LẠI HÔM NAY"
+
+#:
+msgid "MIN"
+msgstr "PHÚT"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "ĐÃ ĐẠT GIỚI HẠN THỜI GIAN CHƠI HÔM NAY"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "HẸN GẶP LẠI NGÀY MAI!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "THỜI GIAN CHƠI CÒN LẠI HÔM NAY: %i PHÚT"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "THỜI GIAN CHƠI CÒN LẠI HÔM NAY: < 1 PHÚT"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "BỘ LỌC BAN ĐÊM"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "BẬT BỘ LỌC"
+
+#:
+msgid "START TIME"
+msgstr "GIỜ BẮT ĐẦU"
+
+#:
+msgid "END TIME"
+msgstr "GIỜ KẾT THÚC"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "BỘ LỌC BAN ĐÊM ĐANG BẬT"

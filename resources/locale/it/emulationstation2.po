@@ -3386,3 +3386,55 @@ msgstr "TEMPERATURA"
 #:
 msgid "CLOCK FONT"
 msgstr "CARATTERE OROLOGIO"
+
+#:
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "AVVISO VOCALE TIMER DI GIOCO"
+
+#:
+msgid "PLAY TIMER"
+msgstr "TIMER DI GIOCO"
+
+#:
+msgid "TIME LEFT TODAY"
+msgstr "TEMPO RIMANENTE OGGI"
+
+#:
+msgid "MIN"
+msgstr "MIN"
+
+#:
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "LIMITE GIORNALIERO DI GIOCO RAGGIUNTO"
+
+#:
+msgid "COME BACK TOMORROW!"
+msgstr "TORNA DOMANI!"
+
+#:
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "TEMPO DI GIOCO RIMANENTE OGGI: %i MIN"
+
+#:
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "TEMPO DI GIOCO RIMANENTE OGGI: < 1 MIN"
+
+#:
+msgid "NIGHT FILTER"
+msgstr "FILTRO NOTTURNO"
+
+#:
+msgid "ENABLE FILTER"
+msgstr "ATTIVA FILTRO"
+
+#:
+msgid "START TIME"
+msgstr "ORA DI INIZIO"
+
+#:
+msgid "END TIME"
+msgstr "ORA DI FINE"
+
+#:
+msgid "NIGHT FILTER ACTIVE"
+msgstr "FILTRO NOTTURNO ATTIVO"
