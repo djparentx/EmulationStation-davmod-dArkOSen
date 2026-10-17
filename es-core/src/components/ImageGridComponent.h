@@ -1,4 +1,5 @@
 #include <string>
+#include <cmath>
 #pragma once
 #ifndef ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
 #define ES_CORE_COMPONENTS_IMAGE_GRID_COMPONENT_H
@@ -12,6 +13,8 @@
 #include "Settings.h"
 #include "Sound.h"
 #include "EsLocale.h"
+#include "BindingManager.h"
+#include <type_traits>
 
 #define EXTRAITEMS 2
 
@@ -81,6 +84,7 @@ public:
 	void setThemeName(std::string name) { mName = name; };
 
 	virtual void topWindow(bool isTop);
+	void setOpacity(unsigned char opacity) override; // AmberELEC: theme / storyboard <opacity> also fades the tiles
 	virtual void onShow();
 	virtual void onHide();
 	virtual void onScreenSaverActivate();
@@ -103,6 +107,10 @@ private:
 	void buildTiles();
 	void updateTiles(bool allowAnimation = true, bool updateSelectedState = true);
 	void updateTileAtPos(int tilePos, int imgPos, bool allowAnimation = true, bool updateSelectedState = true);
+
+	// AmberELEC <itemTemplate>: T is bindable when it's a FileData* / SystemData*
+	template <typename U> static IBindable* toBindable(const U& obj, std::true_type) { return static_cast<IBindable*>(obj); }
+	template <typename U> static IBindable* toBindable(const U& /*obj*/, std::false_type) { return nullptr; }
 	void calcGridDimension();
 	
 	bool isVertical() { return mScrollDirection == SCROLL_VERTICALLY; };
@@ -111,6 +119,7 @@ private:
 	int mLastCursor;
 	std::string mDefaultGameTexture;
 	std::string mDefaultFolderTexture;
+	std::string mDefaultLogoBackgroundTexture; // Batocera <logoBackgroundImage>
 
 	// TILES
 	bool mLastRowPartial;
@@ -247,6 +256,15 @@ void ImageGridComponent<T>::update(int deltaTime)
 	
 	for(auto it = mTiles.begin(); it != mTiles.end(); it++)
 		(*it)->update(deltaTime);
+}
+
+template<typename T>
+void ImageGridComponent<T>::setOpacity(unsigned char opacity)
+{
+	GuiComponent::setOpacity(opacity);
+
+	for (auto tile : mTiles)
+		tile->setOpacity(opacity);
 }
 
 template<typename T>
@@ -462,10 +480,42 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 			mMargin = elem->get<Vector2f>("margin") * screen;
 
 		if (elem->has("padding"))
-			mPadding = elem->get<Vector4f>("padding") * Vector4f(screen.x(), screen.y(), screen.x(), screen.y());
+		{
+			auto padding = elem->get<Vector4f>("padding");
+			if (std::fabs(padding.x()) < 1 && std::fabs(padding.y()) < 1 && std::fabs(padding.z()) < 1 && std::fabs(padding.w()) < 1)
+				mPadding = padding * Vector4f(screen.x(), screen.y(), screen.x(), screen.y());
+			else
+				mPadding = padding; // AmberELEC: values >= 1 are pixels
+		}
 
 		if (elem->has("autoLayout"))
-			mAutoLayout = elem->get<Vector2f>("autoLayout");		
+		{
+			mAutoLayout = elem->get<Vector2f>("autoLayout");
+
+			// AmberELEC: a 0 column/row count is computed from the grid proportion and <cellProportion>
+			float screenProportion = (float)Renderer::getScreenWidth() / (float)Renderer::getScreenHeight();
+
+			if (properties & ThemeFlags::SIZE && elem->has("size"))
+			{
+				Vector2f scale = GuiComponent::getParent() ? GuiComponent::getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+				auto size = elem->get<Vector2f>("size") * scale;
+				if (size.y() != 0)
+					screenProportion = size.x() / size.y();
+			}
+
+			float cellProportion = 1;
+			if (elem->has("cellProportion"))
+			{
+				cellProportion = elem->get<float>("cellProportion");
+				if (cellProportion == 0)
+					cellProportion = 1;
+			}
+
+			if (mAutoLayout.y() == 0)
+				mAutoLayout.y() = Math::round(mAutoLayout.x() / screenProportion * cellProportion);
+			else if (mAutoLayout.x() == 0)
+				mAutoLayout.x() = Math::round(mAutoLayout.y() * screenProportion / cellProportion);
+		}
 
 		if (elem->has("animateSelection"))
 			mAnimateSelection = elem->get<bool>("animateSelection");
@@ -573,6 +623,23 @@ void ImageGridComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, 
 					if ((*it).data.texturePath == oldDefaultFolderTexture)
 						(*it).data.texturePath = mDefaultFolderTexture;
 				}
+			}
+		}
+
+		if (elem->has("logoBackgroundImage"))
+		{
+			std::string path = elem->get<std::string>("logoBackgroundImage");
+
+			if (!ResourceManager::getInstance()->fileExists(path))
+				LOG(LogWarning) << "Could not find logo background image, check path: " << path;
+			else
+			{
+				std::string oldTexture = mDefaultLogoBackgroundTexture;
+				mDefaultLogoBackgroundTexture = path;
+
+				for (auto it = mEntries.begin(); it != mEntries.end(); it++)
+					if (!oldTexture.empty() && (*it).data.texturePath == oldTexture)
+						(*it).data.texturePath = mDefaultLogoBackgroundTexture;
 			}
 		}
 	}
@@ -897,27 +964,62 @@ void ImageGridComponent<T>::updateTileAtPos(int tilePos, int imgPos, bool allowA
 		else
 			tile->setLabel(_U("\uF006 ") + name);
 
+		// AmberELEC <itemTemplate>: the template shows the item, bound to its object ({game:...})
+		if (tile->hasItemTemplate())
+		{
+			const T& obj = mEntries.at(imgPos).object;
+			IBindable* bindable = toBindable(obj, std::integral_constant<bool, std::is_convertible<T, IBindable*>::value>());
+
+			tile->setItemTemplateBinding(bindable, mEntries.at(imgPos).data.favorite ? _U("\uF006 ") + name : name);
+
+			if (updateSelectedState)
+				tile->setSelected(!loopedIndex && imgPos == mCursor, allowAnimation);
+
+			return;
+		}
+
 		std::string imagePath = mEntries.at(imgPos).data.texturePath;
+
+		std::string marqueePath = mEntries.at(imgPos).data.marqueePath;
+		bool setMarquee = true;
 
 		if (ResourceManager::getInstance()->fileExists(imagePath))
 		{
 			if (mEntries.at(imgPos).data.virtualFolder)
+			{
 				tile->setLabel(""); // _U("\uF114"));
 
-			tile->setImage(imagePath, mEntries.at(imgPos).data.virtualFolder);
+				// Batocera <logoBackgroundImage>: logo over the background image
+				if (!mDefaultLogoBackgroundTexture.empty() && tile->isMinSizeTile())
+				{
+					tile->setImage(mDefaultLogoBackgroundTexture);
+					tile->forceMarquee(imagePath);
+					setMarquee = false;
+				}
+				else
+					tile->setImage(imagePath, true);
+			}
+			else
+				tile->setImage(imagePath, false);
 		}
 		else if (mEntries.at(imgPos).data.folder)
 			tile->setImage(mDefaultFolderTexture, mDefaultFolderTexture == ":/folder.svg");
+		else if (!mDefaultLogoBackgroundTexture.empty() && tile->hasMarquee() && !marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
+			tile->setImage(mDefaultLogoBackgroundTexture);
 		else
 			tile->setImage(mDefaultGameTexture, mDefaultGameTexture == ":/cartridge.svg");
 		
 		// Marquee
-		std::string marqueePath = mEntries.at(imgPos).data.marqueePath;
+		if (setMarquee)
+		{
+			if (!mDefaultLogoBackgroundTexture.empty() && tile->isMinSizeTile())
+				tile->forceMarquee("");
 
-		if (!marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
-			tile->setMarquee(marqueePath);
-		else
-			tile->setMarquee("");
+			if (!marqueePath.empty() && ResourceManager::getInstance()->fileExists(marqueePath))
+				tile->setMarquee(marqueePath);
+			else
+				tile->setMarquee("");
+		}
 
 		tile->setFavorite(mEntries.at(imgPos).data.favorite);
 
@@ -1019,6 +1121,9 @@ void ImageGridComponent<T>::buildTiles()
 
 			if (mAutoLayout.x() != 0 && mAutoLayout.y() != 0)
 				tile->forceSize(mTileSize, mAutoLayoutZoom);
+
+			if (GuiComponent::getOpacity() != 255)
+				tile->setOpacity(GuiComponent::getOpacity());
 
 			mTiles.push_back(tile);
 		}

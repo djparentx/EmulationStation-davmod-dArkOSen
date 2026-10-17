@@ -6,6 +6,7 @@
 #include "math/Vector2f.h"
 #include "math/Vector4f.h"
 #include "utils/FileSystemUtil.h"
+#include "utils/MathExpr.h"
 #include <deque>
 #include <map>
 #include <unordered_map>
@@ -128,6 +129,26 @@ struct MenuBackground
 	std::string path;
 	std::string fadePath;	
 	Vector2f cornerSize;	
+
+	// Batocera menu scrollbar: color 0 = none, 1 = auto (text color)
+	unsigned int scrollbarColor;
+	float scrollbarSize;
+	float scrollbarCorner;
+	std::string scrollbarAlignment;
+};
+
+// Batocera <menuGrid>: separator lines of the menu grids (default: the menu text separator color)
+struct GridElement
+{
+	bool hasSeparatorColor;
+	unsigned int separatorColor;
+};
+
+// Batocera <menuButton><cornerSize>
+struct ButtonElement
+{
+	bool hasCornerSize;
+	Vector2f cornerSize;
 };
 
 // <menuGroup> (AmberELEC): group header rows in menus. Defaults keep the previous look
@@ -165,7 +186,9 @@ public:
 	public:
 		ThemeMenu(ThemeData* theme);
 
-		MenuBackground Background{ 0xFFFFFFFF, 0xFFFFFFFF, ":/frame.png", ":/scroll_gradient.png", Vector2f(16, 16) };
+		MenuBackground Background{ 0xFFFFFFFF, 0xFFFFFFFF, ":/frame.png", ":/scroll_gradient.png", Vector2f(16, 16), 0, 0.0025f, 0.01f, "innerright" };
+		GridElement Grid{ false, 0 };
+		ButtonElement Button{ false, Vector2f(16, 16) };
 		MenuElement Title{ 0x555555FF, 0x555555FF, 0x555555FF, 0xFFFFFFFF, 0x555555FF, true, "", nullptr };
 		MenuElement Text{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
 		MenuElement TextSmall{ 0x777777FF, 0xFFFFFFFF, 0x878787FF, 0xC6C7C6FF, 0x878787FF, true, "", nullptr };
@@ -195,9 +218,9 @@ public:
 
 		std::string type;
 
-		// Name (view element key) of the container element (e.g. a stackpanel) this
-		// element is nested under in the theme XML. Empty if this is a top-level element.
-		std::string parent;
+		// nested theme elements (AmberELEC): <container name="x"><image name="y"/></container>,
+		// created as child components of this element's component (GuiComponent::loadThemedChildren)
+		std::vector<std::pair<std::string, ThemeElement>> children;
 
 		// <storyboard event="..."> blocks, keyed by event name ("" = no event)
 		std::map<std::string, std::shared_ptr<ThemeStoryboard>> storyboards;
@@ -276,6 +299,11 @@ private:
 		std::string displayName;
 
 		bool isCustomView;
+
+		// AmberELEC <view name="system" extraTransition="" extraTransitionSpeed="" extraTransitionDirection="">
+		std::string extraTransition;
+		float extraTransitionSpeed = -1.0f;
+		std::string extraTransitionDirection;
 	};
 
 public:
@@ -304,7 +332,23 @@ public:
 	// If expectedType is an empty string, will do no type checking.
 	const ThemeElement* getElement(const std::string& view, const std::string& element, const std::string& expectedType) const;
 
-	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window);
+	// perGameExtrasOnly: only the extras of a per-game file (<gameextras>, appendFile(path, true))
+	static std::vector<GuiComponent*> makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad = false, bool perGameExtrasOnly = false);
+
+	// Batocera <gameextras>: copy of this theme (one view, or all when viewName is empty) to append a per-game file to
+	std::shared_ptr<ThemeData> clone(const std::string& viewName);
+	bool appendFile(const std::string& path, bool perGameOverride = false);
+
+	// AmberELEC view attributes extraTransition / extraTransitionSpeed (-1 = not set) / extraTransitionDirection
+	bool getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction);
+
+	// board name for ifArch / ifNotArch / ${global.architecture} (Batocera batocera.arch)
+	static std::string getArchString();
+
+	// component for a theme element type (extras and nested elements), nullptr if not supported
+	static GuiComponent* createExtraComponent(Window* window, const std::string& type, bool forceLoad = false);
+	// applies a standalone element (e.g. a nested child) to a component
+	static void applySelfTheme(GuiComponent* comp, const ThemeElement& elem);
 
 	static const std::shared_ptr<ThemeData>& getDefault();
 
@@ -346,6 +390,7 @@ private:
 
 	std::deque<std::string> mPaths;
 	float mVersion;
+	bool mPerGameOverrideTmp = false; // appendFile(path, true): extras are per-game extras (extra = 3)
 	std::string mDefaultView;
 
 	void parseTheme(const pugi::xml_node& root);
@@ -358,7 +403,10 @@ private:
 	void parseCustomView(const pugi::xml_node& node, const pugi::xml_node& root);	
 	void parseViewElement(const pugi::xml_node& node);
 	void parseView(const pugi::xml_node& viewNode, ThemeView& view, bool overwriteElements = true);
-	void parseElement(const pugi::xml_node& elementNode, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, bool overwrite = true);
+	void parseElement(const pugi::xml_node& elementNode, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, ThemeView& view, bool overwrite = true);
+	void processElement(const pugi::xml_node& root, ThemeElement& element, const std::string& name, const std::string& value, ElementPropertyType type, const std::string& rawValue);
+	static bool findPropertyFromBaseClass(const std::string& typeName, const std::string& propertyName, ElementPropertyType& type);
+	static std::map<std::string, std::string> sBaseClasses;
 	bool parseRegion(const pugi::xml_node& node);
 	bool parseSubset(const pugi::xml_node& node);
 	bool isFirstSubset(const pugi::xml_node& node);
@@ -381,6 +429,9 @@ private:
 	std::string mRegion;
 
 	std::map<std::string, std::string> mVariables;
+	// AmberELEC: values of <variables> computed from expressions, typed for "if" expressions
+	Utils::MathExpr::ValueMap mEvaluatedVariables;
+	Utils::MathExpr::ValueMap getEvaluatorVariables();
 	
 	class UnsortedViewMap : public std::vector<std::pair<std::string, ThemeView>>
 	{

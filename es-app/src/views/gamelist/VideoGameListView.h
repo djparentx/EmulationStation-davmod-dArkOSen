@@ -3,12 +3,8 @@
 #ifndef ES_APP_VIEWS_GAME_LIST_VIDEO_GAME_LIST_VIEW_H
 #define ES_APP_VIEWS_GAME_LIST_VIDEO_GAME_LIST_VIEW_H
 
-#include "components/DateTimeComponent.h"
-#include "components/RatingComponent.h"
-#include "components/ScrollableContainer.h"
 #include "views/gamelist/BasicGameListView.h"
-
-class VideoComponent;
+#include "views/gamelist/DetailedContainer.h"
 
 class VideoGameListView : public BasicGameListView
 {
@@ -35,34 +31,8 @@ protected:
 
 private:
 	void updateInfoPanel();
-	void createImage();
-	void createThumbnail();
 
-	void initMDLabels();
-	void initMDValues();
-
-	ImageComponent mMarquee;
-	VideoComponent* mVideo;
-	ImageComponent* mImage;
-	ImageComponent* mThumbnail;
-
-	TextComponent mLblRating, mLblReleaseDate, mLblDeveloper, mLblPublisher, mLblGenre, mLblPlayers, mLblLastPlayed, mLblPlayCount;
-
-	RatingComponent mRating;
-	DateTimeComponent mReleaseDate;
-	TextComponent mDeveloper;
-	TextComponent mPublisher;
-	TextComponent mGenre;
-	TextComponent mPlayers;
-	DateTimeComponent mLastPlayed;
-	TextComponent mPlayCount;
-	TextComponent mName;
-
-	std::vector<TextComponent*> getMDLabels();
-	std::vector<GuiComponent*> getMDValues();
-
-	ScrollableContainer mDescContainer;
-	TextComponent mDescription;
+	DetailedContainer* mDetails = nullptr;
 
 	bool		mVideoPlaying;
 

@@ -55,13 +55,28 @@ public:
 
 	void setGlowColor(unsigned int color) { mGlowColor = color; };
 	void setGlowSize(unsigned int size) { mGlowSize = size; };
+	void setGlowOffset(float x, float y) { mGlowOffset = Vector2f(x, y); };
 
-	void setPadding(const Vector4f padding) { mPadding = padding; }
 
 	virtual void update(int deltaTime);
 
 	bool getAutoScroll() { return mAutoScroll; }
 	void setAutoScroll(bool value);
+
+	// Batocera <multiLine>: true / false / auto (default: multi line when the box is taller than ~2 lines)
+	enum MultiLineType : unsigned int
+	{
+		MULTILINE_AUTO = 0,
+		MULTILINE = 1,
+		SINGLELINE = 2
+	};
+
+	MultiLineType getMultiLine() { return mMultiLine; }
+	void setMultiLine(MultiLineType value);
+
+	// Batocera <extraTextColor>: color of the text inside () and []
+	void setExtraTextColor(unsigned int color);
+	void resetExtraTextColor();
 
 	// theme bindings (AmberELEC)
 	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
@@ -82,6 +97,7 @@ private:
 	void renderGlow(const Transform4x4f& parentTrans, float yOff, float xOff);
 
 	void onColorChanged();
+	bool isMultiLine();
 
 	unsigned int mColor;
 	unsigned int mBgColor;
@@ -98,7 +114,6 @@ private:
 	unsigned int mGlowColor;
 	unsigned int mGlowSize;
 	Vector2f	 mGlowOffset;
-	Vector4f	 mPadding;
 	
 	Vector2f	mReflection;
 	bool		mReflectOnBorders;
@@ -108,6 +123,10 @@ private:
 	int mMarqueeTime;
 
 	bool mAutoScroll;
+
+	MultiLineType mMultiLine = MULTILINE_AUTO;
+	bool         mHasExtraColor = false;
+	unsigned int mExtraColor = 0;
 
 	// <emptyTextDefaults>: bound empty / "0" values display as "Unknown" / "None"
 	bool mBindingDefaults = true;

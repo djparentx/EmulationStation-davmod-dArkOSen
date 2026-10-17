@@ -183,7 +183,7 @@ void TextureResource::cancelAsync(std::shared_ptr<TextureResource> texture)
 		sTextureDataManager.cancelAsync(texture.get());
 }
 
-std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, bool tile, bool linear, bool forceLoad, bool dynamic, bool asReloadable, MaxSizeInfo maxSize, float saturation)
+std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, bool tile, bool linear, bool forceLoad, bool dynamic, bool asReloadable, MaxSizeInfo maxSize, float saturation, const std::string& shareId)
 {
 	std::shared_ptr<ResourceManager>& rm = ResourceManager::getInstance();
 
@@ -199,7 +199,8 @@ std::shared_ptr<TextureResource> TextureResource::get(const std::string& path, b
 	if (canonicalPath.length() > 0 && canonicalPath[0] == ':')
 		dynamic = false;
 
-	TextureKeyType key(canonicalPath, tile, linear, (int)(saturation * 1000.0f));
+	// shareId (Batocera image <shared>false</shared>): a separate texture instead of the one shared by every user of the file
+	TextureKeyType key(canonicalPath, tile, linear, (int)(saturation * 1000.0f), shareId);
 	auto foundTexture = sTextureMap.find(key);
 	if(foundTexture != sTextureMap.cend())
 	{

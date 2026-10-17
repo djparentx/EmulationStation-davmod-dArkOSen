@@ -10,6 +10,8 @@
 
 class ISimpleGameListView : public IGameListView
 {
+	friend class DetailedContainer;
+
 public:
 	ISimpleGameListView(Window* window, FolderData* root);
 	virtual ~ISimpleGameListView();

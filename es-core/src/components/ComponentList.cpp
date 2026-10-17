@@ -4,11 +4,13 @@
 
 #define TOTAL_HORIZONTAL_PADDING_PX 20
 
-ComponentList::ComponentList(Window* window) : IList<ComponentListRow, void*>(window, LIST_SCROLL_STYLE_SLOW, LIST_NEVER_LOOP)
+ComponentList::ComponentList(Window* window) : IList<ComponentListRow, void*>(window, LIST_SCROLL_STYLE_SLOW, LIST_NEVER_LOOP), mScrollbar(window)
 {
 	mSelectorBarOffset = 0;
 	mCameraOffset = 0;
 	mFocused = false;
+
+	mScrollbar.loadFromMenuTheme();
 }
 
 void ComponentList::addRow(const ComponentListRow& row, bool setCursorHere)
@@ -121,6 +123,8 @@ bool ComponentList::input(InputConfig* config, Input input)
 
 void ComponentList::update(int deltaTime)
 {
+	mScrollbar.update(deltaTime);
+
 	listUpdate(deltaTime);
 
 	if(size())
@@ -133,6 +137,8 @@ void ComponentList::update(int deltaTime)
 
 void ComponentList::onCursorChanged(const CursorState& state)
 {
+	mScrollbar.onCursorChanged();
+
 	// update the selector bar position
 	// in the future this might be animated
 	mSelectorBarOffset = 0;
@@ -281,6 +287,14 @@ void ComponentList::render(const Transform4x4f& parentTrans)
 	Renderer::drawRect(0.0f, y, mSize.x(), 1.0f, separatorColor);
 
 	Renderer::popClipRect();
+
+	if (mScrollbar.isEnabled() && mEntries.size() > 0)
+	{
+		mScrollbar.setContainerBounds(getPosition(), getSize());
+		mScrollbar.setRange(0, getTotalRowHeight(), mSize.y());
+		mScrollbar.setScrollPosition(mCameraOffset);
+		mScrollbar.render(parentTrans);
+	}
 }
 
 float ComponentList::getRowHeight(const ComponentListRow& row) const

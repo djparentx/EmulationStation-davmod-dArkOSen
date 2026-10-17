@@ -116,7 +116,11 @@ public:
 		return MaxSizeInfo(mTargetSize, mTargetIsMax);		
 	};
 
-	void setPadding(const Vector4f padding) { mPadding = padding; updateVertices(); }
+	// AmberELEC <padding>: the image is fitted inside its target size minus the padding
+	void onPaddingChanged() override { resize(); }
+	void recalcLayout() override;
+
+	bool getTargetIsMax() const { return mTargetIsMax; }
 
 	void setHorizontalAlignment(Alignment align) { mHorizontalAlignment = align; }
 	void setVerticalAlignment(Alignment align) { mVerticalAlignment = align; }
@@ -179,7 +183,6 @@ private:
 	std::string mPath;
 	std::shared_ptr<TextureResource> mLoadingTexture;
 
-	Vector4f	mPadding;
 	Alignment mHorizontalAlignment;
 	Alignment mVerticalAlignment;
 
@@ -188,6 +191,7 @@ private:
 	float mPlaylistTimer;
 
 	bool mLinear;
+	bool mSharedTexture = true; // Batocera <shared>
 };
 
 #endif // ES_CORE_COMPONENTS_IMAGE_COMPONENT_H

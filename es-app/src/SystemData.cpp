@@ -883,6 +883,39 @@ void SystemData::loadTheme()
 		sysData.insert(std::pair<std::string, std::string>("system.name", getName()));
 		sysData.insert(std::pair<std::string, std::string>("system.theme", getThemeFolder()));
 		sysData.insert(std::pair<std::string, std::string>("system.fullName", getFullName()));
+
+		// AmberELEC / Batocera theme variables
+		sysData["global.help"] = Settings::getInstance()->getBool("ShowHelpPrompts") ? "true" : "false";
+		sysData["global.clock"] = Settings::getInstance()->getBool("DrawClock") ? "true" : "false";
+		sysData["global.architecture"] = ThemeData::getArchString();
+		sysData["global.cheevos"] = "false";           // no RetroAchievements support in this ES
+		sysData["global.cheevos.username"] = "";
+		sysData["cheevos.username"] = "";              // AmberELEC retrocompatibility
+		sysData["global.netplay"] = "false";           // no netplay support in this ES
+		sysData["global.netplay.username"] = "";
+
+		sysData["system.cheevos"] = "false";
+		sysData["system.netplay"] = "false";
+		sysData["system.savestates"] = "false";
+		sysData["system.collection"] = isCollection() ? "true" : "false";
+		sysData["system.manufacturer"] = getSystemMetadata().manufacturer;
+		sysData["system.hardwareType"] = getSystemMetadata().hardwareType;
+		sysData["system.command"] = mEnvData != nullptr ? mEnvData->mLaunchCommand : "";
+
+		if (Settings::getInstance()->getString("SortSystems") == "hardware")
+			sysData["system.sortedBy"] = getSystemMetadata().hardwareType;
+		else
+			sysData["system.sortedBy"] = getSystemMetadata().manufacturer;
+
+		sysData["system.showSystemName"] = ((!isGameSystem() || isCollection()) && Settings::getInstance()->getBool("CollectionShowSystemInfo")) ? "true" : "false";
+
+		if (getSystemMetadata().releaseYear > 0)
+		{
+			sysData["system.releaseYearOrNull"] = std::to_string(getSystemMetadata().releaseYear);
+			sysData["system.releaseYear"] = std::to_string(getSystemMetadata().releaseYear);
+		}
+		else
+			sysData["system.releaseYear"] = _("Unknown");
 		
 		mTheme->loadFile(getThemeFolder(), sysData, path);
 	} 
@@ -968,6 +1001,19 @@ BindableProperty SystemData::getProperty(const std::string& name)
 {
 	if (name == "name")
 		return getName();
+
+	// AmberELEC: the theme's system logo (system imagegrid tiles, {system:image})
+	if (name == "image" || name == "logo")
+	{
+		if (getTheme() != nullptr)
+		{
+			const ThemeData::ThemeElement* logoElem = getTheme()->getElement("system", "logo", "image");
+			if (logoElem && logoElem->has("path"))
+				return BindableProperty(logoElem->get<std::string>("path"), BindablePropertyType::Path);
+		}
+
+		return BindableProperty("", BindablePropertyType::Path);
+	}
 
 	if (name == "fullName")
 		return getFullName();

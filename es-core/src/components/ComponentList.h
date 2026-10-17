@@ -4,6 +4,7 @@
 #define ES_CORE_COMPONENTS_COMPONENT_LIST_H
 
 #include "IList.h"
+#include "components/ScrollbarComponent.h"
 
 struct ComponentListElement
 {
@@ -106,6 +107,8 @@ private:
 
 	float mSelectorBarOffset;
 	float mCameraOffset;
+
+	ScrollbarComponent mScrollbar; // Batocera <menuBackground> scrollbar
 
 	std::function<void(CursorState state)> mCursorChangedCallback;
 };

@@ -27,6 +27,7 @@ public:
 	void render(const Transform4x4f& parentTrans);
 
 	void onSizeChanged() override;
+	void onPaddingChanged() override { onSizeChanged(); }
 
 	void setOpacity(unsigned char opacity) override;
 
@@ -37,11 +38,16 @@ public:
 
 	virtual std::vector<HelpPrompt> getHelpPrompts() override;
 
+	// AmberELEC: <value> / {game:rating} binding (normalized 0..1)
+	ThemeData::ThemeElement::Property getProperty(const std::string name) override;
+	void setProperty(const std::string name, const ThemeData::ThemeElement::Property& value) override;
+
 private:
 	void updateVertices();
 	void updateColors();
 
 	float mValue;
+	bool  mAlignRight = false; // Batocera <horizontalAlignment>right</horizontalAlignment>
 
 	Renderer::Vertex mVertices[8];
 

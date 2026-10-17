@@ -12,6 +12,13 @@ class InputConfig;
 class Window;
 union SDL_Event;
 
+struct PlayerDeviceInfo
+{
+	int  index;        // SDL joystick instance id (InputConfig::getDeviceId)
+	int  batteryLevel; // 0-100, -1 when unknown / wired
+	bool isWheel;
+};
+
 //you should only ever instantiate one of these, by the way
 class InputManager
 {
@@ -59,6 +66,9 @@ public:
 	std::string getDeviceGUIDString(int deviceId);
 
 	InputConfig* getInputConfigByDevice(int deviceId);
+
+	// configured joysticks, in connection order (used by the themable controllerActivity element)
+	std::vector<PlayerDeviceInfo> getConnectedPads();
 
 	bool parseEvent(const SDL_Event& ev, Window* window);
 	void rumble(int level, int durationMs);

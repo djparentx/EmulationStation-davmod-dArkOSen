@@ -120,6 +120,12 @@ void VideoVlcComponent::setMinSize(float width, float height)
 	resize();
 }
 
+void VideoVlcComponent::onPaddingChanged()
+{
+	VideoComponent::onPaddingChanged();
+	resize();
+}
+
 void VideoVlcComponent::onVideoStarted()
 {
 	VideoComponent::onVideoStarted();
@@ -142,12 +148,15 @@ void VideoVlcComponent::resize()
 	// (you'll see this scattered throughout the function)
 	// this is probably not the best way, so if you're familiar with this problem and have a better solution, please make a pull request!
 
+	// AmberELEC <padding>: fit inside the target size minus the padding
+	const Vector2f targetSize = mTargetSize - Vector2f(mPadding.x() + mPadding.z(), mPadding.y() + mPadding.w());
+
 	if (mTargetIsMax)
 	{
 
 		mSize = textureSize;
 
-		Vector2f resizeScale((mTargetSize.x() / mSize.x()), (mTargetSize.y() / mSize.y()));
+		Vector2f resizeScale((targetSize.x() / mSize.x()), (targetSize.y() / mSize.y()));
 
 		if (resizeScale.x() < resizeScale.y())
 		{
@@ -166,23 +175,23 @@ void VideoVlcComponent::resize()
 	}
 	else if (mTargetIsMin)
 	{
-		mSize = ImageIO::adjustExternPictureSizef(textureSize, mTargetSize);
+		mSize = ImageIO::adjustExternPictureSizef(textureSize, targetSize);
 	}
 	else {
 		// if both components are set, we just stretch
 		// if no components are set, we don't resize at all
-		mSize = mTargetSize == Vector2f::Zero() ? textureSize : mTargetSize;
+		mSize = targetSize == Vector2f::Zero() ? textureSize : targetSize;
 
 		// if only one component is set, we resize in a way that maintains aspect ratio
 		// for SVG rasterization, we always calculate width from rounded height (see comment above)
-		if (!mTargetSize.x() && mTargetSize.y())
+		if (!targetSize.x() && targetSize.y())
 		{
-			mSize[1] = Math::round(mTargetSize.y());
+			mSize[1] = Math::round(targetSize.y());
 			mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
 		}
-		else if (mTargetSize.x() && !mTargetSize.y())
+		else if (targetSize.x() && !targetSize.y())
 		{
-			mSize[1] = Math::round((mTargetSize.x() / textureSize.x()) * textureSize.y());
+			mSize[1] = Math::round((targetSize.x() / textureSize.x()) * textureSize.y());
 			mSize[0] = (mSize.y() / textureSize.y()) * textureSize.x();
 		}
 	}
@@ -249,7 +258,7 @@ void VideoVlcComponent::render(const Transform4x4f& parentTrans)
 		{
 			if (mTexture == nullptr)
 			{
-				mTexture = TextureResource::get("");
+				mTexture = TextureResource::get("", false, mLinearSmooth);
 				resize();
 			}
 
@@ -334,6 +343,14 @@ void VideoVlcComponent::render(const Transform4x4f& parentTrans)
 		vertices[1] = { { 0.0f     , mSize.y() },{ 0.0f, 1.0f }, color };
 		vertices[2] = { { mSize.x(), 0.0f },{ 1.0f, 0.0f }, color };
 		vertices[3] = { { mSize.x(), mSize.y() },{ 1.0f, 1.0f }, color };
+	}
+
+	// AmberELEC <padding>: the video sits inside the padded area
+	if (mPadding != Vector4f::Zero())
+	{
+		Vector2f paddingOffset = Vector2f(mPadding.x() - (mPadding.x() + mPadding.z()) * mOrigin.x(), mPadding.y() - (mPadding.y() + mPadding.w()) * mOrigin.y());
+		for (int i = 0; i < 4; ++i)
+			vertices[i].pos = vertices[i].pos + paddingOffset;
 	}
 
 	// round vertices
@@ -489,7 +506,7 @@ void VideoVlcComponent::handleLooping()
 				}
 			}
 
-			if (!Settings::getInstance()->getBool("VideoAudio"))
+			if (!Settings::getInstance()->getBool("VideoAudio") || !getPlayAudio())
 			{
 				libvlc_audio_set_mute(mMediaPlayer, 1);
 			}
@@ -591,7 +608,7 @@ void VideoVlcComponent::startVideo()
 			
 				if (hasAudioTrack)
 				{
-					if (!Settings::getInstance()->getBool("VideoAudio"))
+					if (!Settings::getInstance()->getBool("VideoAudio") || !getPlayAudio())
 						libvlc_audio_set_mute(mMediaPlayer, 1);
 					else
 						AudioManager::setVideoPlaying(true);
@@ -661,6 +678,9 @@ void VideoVlcComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	{
 		if (elem && elem->has("color"))
 			setColorShift(elem->get<unsigned int>("color"));
+
+		if (elem && elem->has("linearSmooth"))
+			mLinearSmooth = elem->get<bool>("linearSmooth");
 	}
 
 	if (elem && elem->has("loops"))

@@ -215,6 +215,35 @@ void InputManager::deinit()
 
 int InputManager::getNumJoysticks() { return (int)mJoysticks.size(); }
 
+std::vector<PlayerDeviceInfo> InputManager::getConnectedPads()
+{
+	std::vector<PlayerDeviceInfo> ret;
+
+	for (auto it : mJoysticks)
+	{
+		auto cfg = mInputConfigs.find(it.first);
+		if (cfg == mInputConfigs.cend() || cfg->second == nullptr || !cfg->second->isConfigured())
+			continue;
+
+		PlayerDeviceInfo dev;
+		dev.index = it.first;
+		dev.isWheel = SDL_JoystickGetType(it.second) == SDL_JOYSTICK_TYPE_WHEEL;
+
+		switch (SDL_JoystickCurrentPowerLevel(it.second))
+		{
+		case SDL_JOYSTICK_POWER_EMPTY:  dev.batteryLevel = 5; break;
+		case SDL_JOYSTICK_POWER_LOW:    dev.batteryLevel = 20; break;
+		case SDL_JOYSTICK_POWER_MEDIUM: dev.batteryLevel = 70; break;
+		case SDL_JOYSTICK_POWER_FULL:   dev.batteryLevel = 100; break;
+		default:                        dev.batteryLevel = -1; break;
+		}
+
+		ret.push_back(dev);
+	}
+
+	return ret;
+}
+
 int InputManager::getAxisCountByDevice(SDL_JoystickID id)
 {
 	return SDL_JoystickNumAxes(mJoysticks[id]);

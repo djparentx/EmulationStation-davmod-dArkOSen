@@ -109,6 +109,39 @@ void VideoComponent::onSizeChanged()
 	mStaticImage.onSizeChanged();
 }
 
+void VideoComponent::onPaddingChanged()
+{
+	// AmberELEC <padding>: the snapshot image uses the same padding
+	mStaticImage.setPadding(mPadding);
+}
+
+// nested theme element: follow the parent's client area (AmberELEC)
+void VideoComponent::recalcLayout()
+{
+	if (!mThemedChild || getParent() == nullptr)
+		return;
+
+	Vector4f clientRect = getParent()->getClientRect();
+	Vector2f newPos = Vector2f(mSourceBounds.x() * clientRect.z() + clientRect.x(), mSourceBounds.y() * clientRect.w() + clientRect.y());
+	Vector2f newSize = Vector2f(mSourceBounds.z() * clientRect.z(), mSourceBounds.w() * clientRect.w());
+
+	if (Vector2f(mPosition.x(), mPosition.y()) != newPos)
+	{
+		setPosition(newPos.x(), newPos.y(), mPosition.z());
+		mStaticImage.setPosition(newPos.x(), newPos.y(), mPosition.z());
+	}
+
+	if (mTargetSize != newSize)
+	{
+		if (mTargetIsMax)
+			setMaxSize(newSize);
+		else if (mTargetIsMin)
+			setMinSize(newSize);
+		else
+			setResize(newSize);
+	}
+}
+
 bool VideoComponent::setVideo(std::string path)
 {
 	if (path == mVideoPath)
@@ -218,11 +251,16 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	setScaleOrigin(elem->has("scaleOrigin") ? elem->get<Vector2f>("scaleOrigin") : Vector2f(0.0f, 0.0f));
 	mStaticImage.setSaturation(elem->has("saturation") ? elem->get<float>("saturation") : 1.0f);
 
-	Vector2f scale = getParent() ? getParent()->getSize() : Vector2f((float)Renderer::getScreenWidth(), (float)Renderer::getScreenHeight());
+	// normalized coordinates are relative to the parent's client area (AmberELEC)
+	Vector4f clientRect = getParentClientRect();
+	Vector2f scale = Vector2f(clientRect.z(), clientRect.w());
+	Vector2f offset = Vector2f(clientRect.x(), clientRect.y());
 
 	if ((properties & POSITION) && elem->has("pos"))
 	{
-		Vector2f denormalized = elem->get<Vector2f>("pos") * scale;
+		Vector2f pos = elem->get<Vector2f>("pos");
+		mSourceBounds.x() = pos.x(); mSourceBounds.y() = pos.y();
+		Vector2f denormalized = pos * scale + offset;
 		setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
 		mStaticImage.setPosition(Vector3f(denormalized.x(), denormalized.y(), 0));
 	}
@@ -230,26 +268,43 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 	// same standalone <x>/<y> gap as ImageComponent - see comment there
 	if ((properties & POSITION) && elem->has("x"))
 	{
-		float x = elem->get<float>("x") * scale.x();
+		mSourceBounds.x() = elem->get<float>("x");
+		float x = mSourceBounds.x() * scale.x() + offset.x();
 		setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
 		mStaticImage.setPosition(Vector3f(x, mPosition.y(), mPosition.z()));
 	}
 
 	if ((properties & POSITION) && elem->has("y"))
 	{
-		float y = elem->get<float>("y") * scale.y();
+		mSourceBounds.y() = elem->get<float>("y");
+		float y = mSourceBounds.y() * scale.y() + offset.y();
 		setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 		mStaticImage.setPosition(Vector3f(mPosition.x(), y, mPosition.z()));
 	}
 
+	// padding before sizing, the video is fitted inside it
+	applyThemePadding(elem);
+
 	if(properties & ThemeFlags::SIZE)
 	{
-		if(elem->has("size"))
-			setResize(elem->get<Vector2f>("size") * scale);
-		else if(elem->has("maxSize"))
-			setMaxSize(elem->get<Vector2f>("maxSize") * scale);
-		else if (elem->has("minSize"))
-			setMinSize(elem->get<Vector2f>("minSize") * scale);
+		const char* sizeProps[] = { "size", "maxSize", "minSize" };
+		for (auto prop : sizeProps)
+		{
+			if (!elem->has(prop))
+				continue;
+
+			Vector2f sz = elem->get<Vector2f>(prop);
+			mSourceBounds.z() = sz.x(); mSourceBounds.w() = sz.y();
+
+			if (prop == sizeProps[0])
+				setResize(sz * scale);
+			else if (prop == sizeProps[1])
+				setMaxSize(sz * scale);
+			else
+				setMinSize(sz * scale);
+
+			break;
+		}
 	}
 
 	// position + size also implies origin
@@ -258,6 +313,18 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 
 	if(elem->has("default"))
 		mConfig.defaultVideoPath = elem->get<std::string>("default");
+
+	// Batocera: image shown when the game has no snapshot
+	if (elem->has("defaultSnapshot"))
+		mStaticImage.setDefaultImage(elem->get<std::string>("defaultSnapshot"));
+
+	if (elem->has("linearSmooth"))
+		mStaticImage.setIsLinear(elem->get<bool>("linearSmooth"));
+
+	mEnabled = elem->has("enabled") ? elem->get<bool>("enabled") : true;
+
+	if (properties & ThemeFlags::VISIBLE)
+		setPlayAudio(elem->has("audio") ? elem->get<bool>("audio") : true);
 
 	if((properties & ThemeFlags::DELAY) && elem->has("delay"))
 		mConfig.startDelay = (unsigned)(elem->get<float>("delay") * 1000.0f);
@@ -295,6 +362,9 @@ void VideoComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const s
 		setVisible(elem->get<bool>("visible"));
 	else
 		setVisible(true);
+
+	applyThemeOpacityAndScale(elem, properties);
+	applyThemeLayout(elem, properties);
 
 	if (elem->has("path"))
 	{
@@ -431,7 +501,7 @@ void VideoComponent::manageState()
 
 	// We will only show if the component is on display and the screensaver
 	// is not active
-	bool show = mShowing && !mScreensaverActive && !mDisable;
+	bool show = mShowing && !mScreensaverActive && !mDisable && mEnabled;
 	if (!show)
 		mStartDelayed = false;
 
@@ -529,6 +599,12 @@ ThemeData::ThemeElement::Property VideoComponent::getProperty(const std::string 
 	if (name == "path")
 		return mVideoPath;
 
+	if (name == "enabled")
+		return mEnabled;
+
+	if (name == "audio")
+		return mPlayAudio;
+
 	return GuiComponent::getProperty(name);
 }
 
@@ -541,6 +617,13 @@ void VideoComponent::setProperty(const std::string name, const ThemeData::ThemeE
 		else
 			setVideo(mConfig.defaultVideoPath);
 	}
+	else if (value.type == ThemeData::ThemeElement::Property::PropertyType::Bool && name == "enabled")
+	{
+		mEnabled = value.b;
+		manageState();
+	}
+	else if (value.type == ThemeData::ThemeElement::Property::PropertyType::Bool && name == "audio")
+		setPlayAudio(value.b);
 	else
 		GuiComponent::setProperty(name, value);
 }

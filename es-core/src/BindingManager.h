@@ -52,6 +52,35 @@ public:
 	virtual IBindable* getBindableParent() { return nullptr; };
 };
 
+// AmberELEC: a themed child of an <itemTemplate>, exposed as {name:property} (<image name="cover"> -> {cover:visible})
+class ComponentBinding : public IBindable
+{
+public:
+	ComponentBinding(GuiComponent* comp, IBindable* parent);
+
+	BindableProperty getProperty(const std::string& name) override;
+	std::string getBindableTypeName() override { return mTypeName; }
+	IBindable* getBindableParent() override { return mParent; };
+
+protected:
+	IBindable*    mParent;
+	std::string   mTypeName;
+	GuiComponent* mComponent;
+};
+
+// AmberELEC: the <itemTemplate> root, exposed as {grid:label} / {grid:h} / {grid:y}
+class GridTemplateBinding : public ComponentBinding
+{
+public:
+	GridTemplateBinding(GuiComponent* comp, const std::string& label, IBindable* parent);
+	BindableProperty getProperty(const std::string& name) override;
+
+	std::string getBindableTypeName() override { return "grid"; }
+
+protected:
+	std::string   mLabel;
+};
+
 class BindingManager
 {
 public:
@@ -59,6 +88,9 @@ public:
 
 	// storyboard <animation enabled="..."> and other boolean conditions
 	static bool          evaluateBoolean(const std::string& xp, IBindable* bindable);
+
+	// value of an expression with {game:...} / {system:...} bindings (e.g. a <gameextras> path)
+	static std::string   evaluateBindableExpression(const std::string& xp, IBindable* bindable);
 
 private:
 	static void          bindValues(IBindable* current, std::string& xp, bool showDefaultText, std::string& evaluableExpression);

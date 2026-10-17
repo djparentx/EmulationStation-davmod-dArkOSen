@@ -20,6 +20,7 @@
 #include "AudioManager.h"
 #include "components/VolumeInfoComponent.h"
 #include "components/BrightnessInfoComponent.h"
+#include "Splash.h"
 
 Window::Window() : mNormalizeNextUpdate(false), mFrameTimeElapsed(0), mFrameCountElapsed(0), mAverageDeltaTime(10),
   mAllowSleep(true), mSleeping(false), mTimeSinceLastInput(0), mScreenSaver(NULL), mRenderScreenSaver(false), mInfoPopup(NULL), mClockElapsed(0),
@@ -127,6 +128,10 @@ bool Window::init(bool initRenderer)
 	if (Settings::getInstance()->getBool("VolumePopup") && (mVolumeInfo == nullptr))
 		mVolumeInfo = std::make_shared<VolumeInfoComponent>(this);
 
+	// themable <controllerActivity> (screen view): only created when enabled in es_settings.cfg (no menu entry)
+	if (mControllerActivity == nullptr && Settings::getInstance()->getBool("ShowControllerActivity"))
+		mControllerActivity = std::make_shared<ControllerActivityComponent>(this);
+
 	if (mBatteryIndicator == nullptr)
 		mBatteryIndicator = std::make_shared<BatteryIndicatorComponent>(this);
 
@@ -191,6 +196,9 @@ void Window::input(InputConfig* config, Input input)
 
 	if (mIgnoreKeys)
 		return;
+
+	if (mControllerActivity != nullptr)
+		mControllerActivity->input(config, input);
 
 	if (mScreenSaver) {
 		if (mScreenSaver->isScreenSaverActive() && Settings::getInstance()->getBool("ScreenSaverControls") &&
@@ -364,6 +372,10 @@ void Window::update(int deltaTime)
 
 	if (mBatteryIndicator)
 		mBatteryIndicator->update(deltaTime);
+
+	// after the battery indicator: it must consume the /tmp/es-*-changed flag files first
+	if (mControllerActivity)
+		mControllerActivity->update(deltaTime);
 		
 	AudioManager::update(deltaTime);
 }
@@ -419,6 +431,9 @@ void Window::render()
 
 		mClockFont->renderTextCache(mClockText.get());*/
 	}
+
+	if (mControllerActivity != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
+		mControllerActivity->render(transform);
 
 	if (mBatteryIndicator != nullptr && (mGuiStack.size() < 2 || !Renderer::isSmallScreen()))
 		mBatteryIndicator->render(transform);
@@ -481,10 +496,33 @@ void Window::endRenderLoadingScreen()
 {
 	mSplash = NULL;
 	mCustomSplash = "";
+
+	mThemedSplash = nullptr;
+	mThemedGameSplash = nullptr;
+	mThemedSplashChecked = false;
 }
 
 void Window::renderLoadingScreen(std::string text, float percent, unsigned char opacity)
 {	
+	// Batocera <theme>/splash.xml (checked once per theme)
+	std::string themeSet = Settings::getInstance()->getString("ThemeSet");
+	if (!mThemedSplashChecked || mThemedSplashSet != themeSet)
+	{
+		mThemedSplashChecked = true;
+		mThemedSplashSet = themeSet;
+
+		mThemedSplash = std::make_shared<Splash>(this, ":/splash.svg", true);
+		if (!mThemedSplash->isThemed())
+			mThemedSplash = nullptr;
+	}
+
+	if (mThemedSplash != nullptr)
+	{
+		mThemedSplash->update(text, percent);
+		mThemedSplash->render(opacity / 255.0f);
+		return;
+	}
+
 	if (mSplash == NULL)
 		mSplash = TextureResource::get(":/splash.svg", false, true, false, false);
 
@@ -536,12 +574,22 @@ void Window::renderLoadingScreen(std::string text, float percent, unsigned char 
 #endif
 }
 
-void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string customText)
+void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string customText, IBindable* bindable)
 {
-	if (!Utils::FileSystem::exists(imagePath))
+	if (Settings::getInstance()->getBool("HideWindow"))
 		return;
 
-	if (Settings::getInstance()->getBool("HideWindow"))
+	// Batocera <theme>/gamesplash.xml (with the game's bindings)
+	mThemedGameSplash = std::make_shared<Splash>(this, imagePath, false, bindable);
+	if (mThemedGameSplash->isThemed())
+	{
+		mThemedGameSplash->update(customText);
+		return;
+	}
+
+	mThemedGameSplash = nullptr;
+
+	if (!Utils::FileSystem::exists(imagePath))
 		return;
 
 	if (mSplash != NULL)
@@ -556,6 +604,12 @@ void Window::loadCustomImageLoadingScreen(std::string imagePath, std::string cus
 
 void Window::renderGameLoadingScreen(float opacity, bool swapBuffers)
 {
+	if (mThemedGameSplash != nullptr)
+	{
+		mThemedGameSplash->render(opacity, swapBuffers);
+		return;
+	}
+
 	if (mSplash == NULL)
 		mSplash = TextureResource::get(":/splash.svg", false, true, false, false);
 
@@ -875,6 +929,9 @@ void Window::onThemeChanged(const std::shared_ptr<ThemeData>& theme)
 
 	if (Settings::getInstance()->getBool("BrightnessPopup"))
 		mBrightnessInfo = std::make_shared<BrightnessInfoComponent>(this);
+
+	if (mControllerActivity)
+		mControllerActivity->applyTheme(theme, "screen", "controllerActivity", ThemeFlags::ALL ^ (ThemeFlags::TEXT));
 
 	if (mBatteryIndicator)
 		mBatteryIndicator->applyTheme(theme, "screen", "batteryIndicator", ThemeFlags::ALL);

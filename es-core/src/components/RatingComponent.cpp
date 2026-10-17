@@ -57,14 +57,16 @@ void RatingComponent::setColorShift(unsigned int color)
 
 void RatingComponent::onSizeChanged()
 {
+	// <padding> (AmberELEC): the stars are drawn inside it
 	if(mSize.y() == 0)
-		mSize[1] = mSize.x() / NUM_RATING_STARS;
+		mSize[1] = (mSize.x() - mPadding.x() - mPadding.z()) / NUM_RATING_STARS + mPadding.y() + mPadding.w();
 	else if(mSize.x() == 0)
-		mSize[0] = mSize.y() * NUM_RATING_STARS;
+		mSize[0] = (mSize.y() - mPadding.y() - mPadding.w()) * NUM_RATING_STARS + mPadding.x() + mPadding.z();
 
-	if(mSize.y() > 0)
+	const float starHeight = mSize.y() - mPadding.y() - mPadding.w();
+	if(starHeight > 0)
 	{
-		size_t heightPx = (size_t)Math::round(mSize.y());
+		size_t heightPx = (size_t)Math::round(starHeight);
 		if (mFilledTexture)
 			mFilledTexture->rasterizeAt(heightPx, heightPx);
 		if(mUnfilledTexture)
@@ -77,20 +79,24 @@ void RatingComponent::onSizeChanged()
 void RatingComponent::updateVertices()
 {
 	const float        numStars = NUM_RATING_STARS;
-	const float        h        = getSize().y(); // is the same as a single star's width
-	const float        w        = getSize().y() * mValue * numStars;
-	const float        fw       = getSize().y() * numStars;
+	const float        h        = getSize().y() - mPadding.y() - mPadding.w(); // is the same as a single star's width
+	const float        fw       = h * numStars;
 	const unsigned int color    = Renderer::convertColor(mColorShift);
 
-	mVertices[0] = { { 0.0f, 0.0f }, { 0.0f,              1.0f }, color };
-	mVertices[1] = { { 0.0f, h    }, { 0.0f,              0.0f }, color };
-	mVertices[2] = { { w,    0.0f }, { mValue * numStars, 1.0f }, color };
-	mVertices[3] = { { w,    h    }, { mValue * numStars, 0.0f }, color };
+	// stars inside the padding; Batocera only implements right alignment ("center" draws like left)
+	const float x = mAlignRight ? getSize().x() - mPadding.z() - fw : mPadding.x();
+	const float y = mPadding.y();
+	const float w = x + h * mValue * numStars;
 
-	mVertices[4] = { { 0.0f, 0.0f }, { 0.0f,              1.0f }, color };
-	mVertices[5] = { { 0.0f, h    }, { 0.0f,              0.0f }, color };
-	mVertices[6] = { { fw,   0.0f }, { numStars,          1.0f }, color };
-	mVertices[7] = { { fw,   h    }, { numStars,          0.0f }, color };
+	mVertices[0] = { { x,      y     }, { 0.0f,              1.0f }, color };
+	mVertices[1] = { { x,      y + h }, { 0.0f,              0.0f }, color };
+	mVertices[2] = { { w,      y     }, { mValue * numStars, 1.0f }, color };
+	mVertices[3] = { { w,      y + h }, { mValue * numStars, 0.0f }, color };
+
+	mVertices[4] = { { x,      y     }, { 0.0f,              1.0f }, color };
+	mVertices[5] = { { x,      y + h }, { 0.0f,              0.0f }, color };
+	mVertices[6] = { { x + fw, y     }, { numStars,          1.0f }, color };
+	mVertices[7] = { { x + fw, y + h }, { numStars,          0.0f }, color };
 
 	// round vertices
 	for(int i = 0; i < 8; ++i)
@@ -190,8 +196,40 @@ void RatingComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const 
 			mUnfilledColor = mColorShift;
 	}
 
+	if (properties & ALIGNMENT)
+	{
+		mAlignRight = elem->has("horizontalAlignment") && elem->get<std::string>("horizontalAlignment") == "right";
+		updateVertices();
+	}
+
+	// AmberELEC <value> (normalized 0..1)
+	if (elem->has("value"))
+	{
+		mValue = Math::clamp(elem->get<float>("value"), 0.0f, 1.0f);
+		updateVertices();
+	}
+
 	if(imgChanged)
 		onSizeChanged();
+}
+
+ThemeData::ThemeElement::Property RatingComponent::getProperty(const std::string name)
+{
+	if (name == "value")
+		return mValue;
+
+	return GuiComponent::getProperty(name);
+}
+
+void RatingComponent::setProperty(const std::string name, const ThemeData::ThemeElement::Property& value)
+{
+	if (name == "value" && value.type == ThemeData::ThemeElement::Property::PropertyType::Float)
+	{
+		mValue = Math::clamp(value.f, 0.0f, 1.0f);
+		updateVertices();
+	}
+	else
+		GuiComponent::setProperty(name, value);
 }
 
 std::vector<HelpPrompt> RatingComponent::getHelpPrompts()

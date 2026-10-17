@@ -87,6 +87,23 @@ public:
     void setSize(float w, float h);
     virtual void onSizeChanged() {};
 
+	// AmberELEC layout: <padding> shrinks the client area nested theme elements are laid out in
+	virtual Vector4f getPadding() { return mPadding; }
+	virtual void setPadding(const Vector4f padding);
+	virtual void onPaddingChanged() {};
+	Vector4f getClientRect();
+
+	// nested theme elements (AmberELEC): position / size relative to the parent's client area
+	virtual void recalcLayout();
+	void recalcChildrenLayout();
+	bool isThemedChild() const { return mThemedChild; }
+
+	// AmberELEC <offset> / <offsetX> / <offsetY> (screen-relative translation) and <clipRect>
+	Vector2f getScreenOffset() const { return mScreenOffset; }
+	void setScreenOffset(const Vector2f& offset) { mScreenOffset = offset; }
+	void setClipRect(const Vector4f& rect) { mClipRect = rect; }
+	void setClipChildren(bool value) { mClipChildren = value; }
+
 	virtual void setColor(unsigned int color) {};
 
 	virtual Vector2f getRotationSize() const { return getSize(); };
@@ -158,6 +175,13 @@ public:
 	// Default implementation just handles <pos> and <size> tags as normalized float pairs.
 	// You probably want to keep this behavior for any derived classes as well as add your own.
 	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties);
+	void applyThemeOpacityAndScale(const ThemeData::ThemeElement* elem, unsigned int properties);
+	// AmberELEC: offset / clipRect / clipChildren / padding and nested theme elements (children)
+	void applyThemeLayout(const ThemeData::ThemeElement* elem, unsigned int properties);
+	void applyThemePadding(const ThemeData::ThemeElement* elem);
+	void loadThemedChildren(const ThemeData::ThemeElement* elem);
+	// parent client area for normalized theme coordinates: (x, y) offset, (z, w) size
+	Vector4f getParentClientRect() const;
 
 	// Returns a list of help prompts.
 	virtual std::vector<HelpPrompt> getHelpPrompts() { return std::vector<HelpPrompt>(); };
@@ -185,6 +209,7 @@ public:
 	void pauseStoryboard();
 	bool isStoryboardRunning(const std::string& event = "");
 	bool isStoryboardSelected(const std::string& event) const;
+	bool storyboardHasProperty(const std::string& event, const std::string& propertyName) const; // AmberELEC storyBoardExists(name, propertyName)
 	void enableStoryboardProperty(const std::string& name, bool enable);
 
 	// theme bindings (AmberELEC): "<property>_binding" expressions, resolved by BindingManager
@@ -226,6 +251,14 @@ protected:
 	std::map<std::string, std::string> mBindingExpressions;
 
 	std::string mStoryboardSound; // storyboard <sound> currently playing
+
+	Vector4f mPadding = Vector4f(0, 0, 0, 0);
+	Vector4f mSourceBounds = Vector4f(0, 0, 0, 0); // normalized theme pos (xy) / size (zw), for recalcLayout()
+	Vector2f mScreenOffset = Vector2f(0, 0);
+	Vector4f mClipRect = Vector4f(0, 0, 0, 0);
+	bool mClipChildren = false;
+	bool mThemedChild = false;            // created from a nested theme element, owned by the parent
+	unsigned char mThemeOpacity = 255;    // theme <opacity> of a nested element, combined with the parent's
 
 public:
 	const static unsigned char MAX_ANIMATIONS = 4;

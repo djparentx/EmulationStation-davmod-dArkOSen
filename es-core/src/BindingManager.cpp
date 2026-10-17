@@ -1,8 +1,7 @@
 #include "BindingManager.h"
 
 // Ported from AmberELEC ES (es-core/src/BindingManager.cpp)
-// Not ported: ComponentBinding / GridTemplateBinding (no item templates in this fork),
-// nested bindables ({game:system:name}), and AmberELEC-only globals (netplay, cheevos, ip...)
+// Not ported: nested bindables ({game:system:name}), and AmberELEC-only globals (netplay, cheevos, ip...)
 
 #include "components/TextComponent.h"
 #include "components/StackPanelComponent.h"
@@ -198,6 +197,21 @@ std::string BindingManager::updateBoundExpression(std::string& xp, IBindable* bi
 	return evaluableExpression;
 }
 
+std::string BindingManager::evaluateBindableExpression(const std::string& xp, IBindable* bindable)
+{
+	std::string val = xp;
+	std::string evaluableExpression = updateBoundExpression(val, bindable, false);
+	auto ret = Utils::MathExpr::evaluate(evaluableExpression.c_str());
+
+	if (ret.isString())
+		return ret.string;
+
+	if (ret.isNumber())
+		return std::to_string(ret.number);
+
+	return "";
+}
+
 bool BindingManager::evaluateBoolean(const std::string& expression, IBindable* bindable)
 {
 	if (expression.empty())
@@ -345,4 +359,74 @@ void BindingManager::updateBindings(GuiComponent* comp, IBindable* bindable, boo
 		if (stack != nullptr)
 			stack->onSizeChanged();
 	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// ComponentBinding (AmberELEC)
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+ComponentBinding::ComponentBinding(GuiComponent* comp, IBindable* parent)
+{
+	mParent = parent;
+	mComponent = comp;
+	mTypeName = mComponent->getTag();
+}
+
+BindableProperty ComponentBinding::getProperty(const std::string& name)
+{
+	typedef ThemeData::ThemeElement::Property::PropertyType PropType;
+
+	auto prop = mComponent->getProperty(name);
+
+	switch (prop.type)
+	{
+	case PropType::String:
+		return prop.s;
+	case PropType::Int:
+		return (int)prop.i;
+	case PropType::Bool:
+		return prop.b;
+	case PropType::Float:
+		return prop.f;
+	default:
+		break;
+	}
+
+	return BindableProperty::Null;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// GridTemplateBinding (AmberELEC)
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+GridTemplateBinding::GridTemplateBinding(GuiComponent* comp, const std::string& label, IBindable* parent)
+	: ComponentBinding(comp, parent)
+{
+	mLabel = label;
+}
+
+BindableProperty GridTemplateBinding::getProperty(const std::string& name)
+{
+	if (name == "label")
+		return mLabel;
+
+	if (name == "h")
+	{
+		auto size = mComponent->getSize();
+		if (size.x() != 0)
+			return (size.y() / size.x());
+
+		return 1.0f;
+	}
+
+	if (name == "y")
+	{
+		auto size = mComponent->getSize();
+		if (size.y() != 0)
+			return (size.x() / size.y());
+
+		return 1.0f;
+	}
+
+	return ComponentBinding::getProperty(name);
 }

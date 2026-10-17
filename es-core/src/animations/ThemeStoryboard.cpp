@@ -109,6 +109,10 @@ static const std::map<std::string, ThemeData::ElementPropertyType> commonAnimata
 	{ "scale",          ThemeData::FLOAT },
 	{ "zIndex",         ThemeData::FLOAT },
 	{ "visible",        ThemeData::BOOLEAN },
+	{ "offset",         ThemeData::NORMALIZED_PAIR },
+	{ "offsetX",        ThemeData::FLOAT },
+	{ "offsetY",        ThemeData::FLOAT },
+	{ "padding",        ThemeData::NORMALIZED_RECT },
 };
 
 static int parseRepeat(const std::string& value)

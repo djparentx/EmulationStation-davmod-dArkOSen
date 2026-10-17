@@ -43,6 +43,8 @@ void ControllerActivityComponent::init()
 	mHotkeyColor = 0x0000FF66;
 
 	mPadTexture = nullptr;
+	mGunTexture = nullptr;
+	mWheelTexture = nullptr;
 	mHorizontalAlignment = ALIGN_LEFT;
 	mSpacing = (int)(Renderer::getScreenHeight() / 200.0f);
 
@@ -52,8 +54,8 @@ void ControllerActivityComponent::init()
 	float margin = (int)(Renderer::getScreenHeight() / 280.0f);
 	mPosition = Vector3f(margin, Renderer::getScreenHeight() - mSize.y() - margin, 0.0f);
 
-	/*for (int i = 0; i < MAX_PLAYERS; i++)
-		mPads[i].reset(); */
+	for (int i = 0; i < MAX_PLAYERS; i++)
+		mPads[i].reset();
 
 	updateNetworkInfo();
 	updateBluetoothInfo();
@@ -87,28 +89,30 @@ void ControllerActivityComponent::onSizeChanged()
 		size_t heightPx = (size_t)Math::round(mSize.y());
 		mPadTexture->rasterizeAt(heightPx, heightPx);
 	}	
+
+	if (mSize.y() > 0 && mWheelTexture)
+	{
+		size_t heightPx = (size_t)Math::round(mSize.y());
+		mWheelTexture->rasterizeAt(heightPx, heightPx);
+	}
 }
 
 bool ControllerActivityComponent::input(InputConfig* config, Input input)
 {
-/*
-	if (config->getDeviceIndex() != -1 && (input.type == TYPE_BUTTON || input.type == TYPE_HAT))
+	// pads are identified by their SDL joystick instance id (see InputManager::getConnectedPads)
+	if ((mView & CONTROLLERS) && config->getDeviceId() >= 0 && input.value != 0 && (input.type == TYPE_BUTTON || input.type == TYPE_HAT || input.type == TYPE_AXIS))
 	{
-		int idx = config->getDeviceIndex();
-		if (idx >= 0 && idx < MAX_PLAYERS)
+		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
-			for (int i = 0; i < MAX_PLAYERS; i++)
+			if (mPads[i].index == config->getDeviceId())
 			{
-				if (mPads[i].index == idx)
-				{
-					mPads[i].keyState = config->isMappedTo("hotkey", input) ? 2 : 1;
-					mPads[i].timeOut = PLAYER_PAD_TIME_MS;
-					break;
-				}
+				mPads[i].keyState = config->isMappedTo("HotKeyEnable", input) ? 2 : 1;
+				mPads[i].timeOut = PLAYER_PAD_TIME_MS;
+				break;
 			}
 		}
 	}
-*/
+
 	return false;
 }
 
@@ -154,7 +158,7 @@ void ControllerActivityComponent::update(int deltaTime)
 		}
 	}
 
-	/*if (mView & CONTROLLERS)
+	if (mView & CONTROLLERS)
 	{
 		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
@@ -169,7 +173,7 @@ void ControllerActivityComponent::update(int deltaTime)
 				pad.keyState = 0;
 			}
 		}
-	}*/
+	}
 }
 
 void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
@@ -193,31 +197,36 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 	int itemsWidth = 0;
 	float batteryTextOffset = 0;
 
-	//bool showControllerActivity = Settings::getInstance()->getBool("ShowControllerActivity");
-	//bool showControllerBattery = showControllerActivity && Settings::getInstance()->getBool("ShowBatteryIndicator");
-/*
+	bool showControllerActivity = Settings::getInstance()->getBool("ShowControllerActivity");
+	bool showControllerBattery = showControllerActivity && Settings::getInstance()->getBool("ShowControllerBattery");
+
 	if ((mView & CONTROLLERS) && showControllerActivity)
 	{	
-		auto playerJoysticks = InputManager::getInstance()->lastKnownPlayersDeviceIndexes();
-
-		int padCount = 0;
-
-		for (int player = 0; player < MAX_PLAYERS; player++)
-			mPads[player].index = -1;
+		auto pads = InputManager::getInstance()->getConnectedPads();
 
 		for (int player = 0; player < MAX_PLAYERS; player++)
 		{
-			auto it = playerJoysticks.find(player);
-			if (it == playerJoysticks.cend() || it->second.index < 0 || it->second.index >= MAX_PLAYERS)
+			PlayerPad& pad = mPads[player];
+			if (player >= (int)pads.size())
+			{
+				pad.index = -1;
 				continue;
+			}
 
-			mPads[player].index = it->second.index;
-			mPads[player].batteryLevel = it->second.batteryLevel;
+			if (pad.index != pads[player].index)
+			{
+				pad.keyState = 0;
+				pad.timeOut = 0;
+			}
+
+			pad.index = pads[player].index;
+			pad.batteryLevel = pads[player].batteryLevel;
+			pad.isWheel = pads[player].isWheel;
 		}
 
 		for (int idx = 0; idx < MAX_PLAYERS; idx++)
 		{
-			auto pad = mPads[idx];
+			PlayerPad& pad = mPads[idx];
 			if (pad.index < 0)
 				continue;
 
@@ -232,18 +241,17 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 
 				auto sz = mBatteryFont->sizeText(batteryTextValue, 1.0);
 
-				if (mPads[idx].batteryTextValue != batteryTextValue)
-					mPads[idx].batteryText = nullptr;
+				if (pad.batteryTextValue != batteryTextValue)
+					pad.batteryText = nullptr;
 
-				mPads[idx].batteryTextValue = batteryTextValue;
-				mPads[idx].batteryTextSize = sz.x();
+				pad.batteryTextValue = batteryTextValue;
+				pad.batteryTextSize = sz.x();
 
 				itemsWidth += sz.x() + mSpacing;
 				batteryTextOffset = mSize.y() / 2.0f - sz.y() / 2.0f;
 			}
 		}
 	}
-*/
 	if ((mView & NETWORK) && (mNetworkImage != nullptr || mNetworkActiveImage != nullptr || mNetworkOffImage != nullptr || mNetworkShareImage != nullptr || mNetworkServiceImage != nullptr))
 		itemsWidth += szW + mSpacing; // getTextureSize(mNetworkImage).x()
 
@@ -270,11 +278,11 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 	else if (mHorizontalAlignment == ALIGN_RIGHT)
 		x = mSize.x() - itemsWidth;
 
-	/*if ((mView & CONTROLLERS) && showControllerActivity)
+	if ((mView & CONTROLLERS) && showControllerActivity)
 	{
 		for (int idx = 0; idx < MAX_PLAYERS; idx++)
 		{
-			auto pad = mPads[idx];
+			PlayerPad& pad = mPads[idx];
 			if (pad.index < 0)
 				continue;
 
@@ -284,27 +292,40 @@ void ControllerActivityComponent::render(const Transform4x4f& parentTrans)
 			else if (pad.keyState == 2)
 				padcolor = mHotkeyColor;
 
-			if (mPadTexture && mPadTexture->bind())
-				x += renderTexture(x, szW, mPadTexture, padcolor);
+			if (pad.isWheel)
+			{
+				if (mWheelTexture && mWheelTexture->bind())
+					x += renderTexture(x, szW, mWheelTexture, padcolor);
+				else
+				{
+					Renderer::drawRoundRect(x, 0.0f, szW, szH, szW / 2.0f, padcolor);
+					x += szW + mSpacing;
+				}
+			}
 			else
 			{
-				Renderer::drawRect(x, 0.0f, szW, szH, padcolor);
-				x += szW + mSpacing;
+				if (mPadTexture && mPadTexture->bind())
+					x += renderTexture(x, szW, mPadTexture, padcolor);
+				else
+				{
+					Renderer::drawRect(x, 0.0f, szW, szH, padcolor, padcolor);
+					x += szW + mSpacing;
+				}
 			}
 
 			if (showControllerBattery && pad.batteryLevel >= 0 && mBatteryFont != nullptr)
 			{
-				if (mPads[idx].batteryText == nullptr)
-					mPads[idx].batteryText = std::unique_ptr<TextCache>(mBatteryFont->buildTextCache(pad.batteryTextValue, Vector2f(x, batteryTextOffset), mColorShift, mSize.x(), Alignment::ALIGN_LEFT, 1.0f));
+				if (pad.batteryText == nullptr)
+					pad.batteryText = std::unique_ptr<TextCache>(mBatteryFont->buildTextCache(pad.batteryTextValue, Vector2f(x, batteryTextOffset), mColorShift, mSize.x(), Alignment::ALIGN_LEFT, 1.0f));
 
-				mPads[idx].batteryText->setColor(padcolor);
-				mBatteryFont->renderTextCache(mPads[idx].batteryText.get());
+				pad.batteryText->setColor(padcolor);
+				mBatteryFont->renderTextCache(pad.batteryText.get());
 				x += pad.batteryTextSize + mSpacing;
 			}
 			else
-				mPads[idx].batteryText = nullptr;
+				pad.batteryText = nullptr;
 		}
-	}*/
+	}
 	
 	if ((mView & NETWORK) && mNetworkState == 3 && mNetworkShareImage != nullptr)
 		x += renderTexture(x, szW, mNetworkShareImage, mColorShift);
@@ -364,6 +385,12 @@ void ControllerActivityComponent::applyTheme(const std::shared_ptr<ThemeData>& t
 		// Controllers
 		if (elem->has("imagePath") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("imagePath")))
 			mPadTexture = TextureResource::get(elem->get<std::string>("imagePath"), false, true);
+
+		if (elem->has("gunPath") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("gunPath")))
+			mGunTexture = TextureResource::get(elem->get<std::string>("gunPath"), false, true);
+
+		if (elem->has("wheelPath") && ResourceManager::getInstance()->fileExists(elem->get<std::string>("wheelPath")))
+			mWheelTexture = TextureResource::get(elem->get<std::string>("wheelPath"), false, true);
 
 		// Wifi
 		if (elem->has("networkIcon"))

@@ -67,7 +67,9 @@ protected:
 
 protected:
 	// Pads
-	std::shared_ptr<TextureResource> mPadTexture;	
+	std::shared_ptr<TextureResource> mPadTexture;
+	std::shared_ptr<TextureResource> mGunTexture;   // accepted (Batocera gunPath) - no lightgun support on this platform
+	std::shared_ptr<TextureResource> mWheelTexture;
 
 	class PlayerPad
 	{
@@ -81,6 +83,7 @@ protected:
 		int  batteryLevel;
 		int  keyState;
 		int  timeOut;
+		bool isWheel;
 
 		std::shared_ptr<TextCache>	batteryText;
 
@@ -93,6 +96,7 @@ protected:
 			batteryLevel = -1;
 			keyState = 0;
 			timeOut = 0;
+			isWheel = false;
 		}
 	};
 

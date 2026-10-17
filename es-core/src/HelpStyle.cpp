@@ -9,6 +9,9 @@ HelpStyle::HelpStyle()
 	origin = Vector2f(0.0f, 0.0f);
 	iconColor = 0x777777FF;
 	textColor = 0x777777FF;
+	glowColor = 0;
+	glowSize = 0;
+	glowOffset = Vector2f::Zero();
 	font = nullptr;
 
 	if (FONT_SIZE_SMALL != 0)
@@ -32,6 +35,14 @@ void HelpStyle::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::s
 
 	if(elem->has("iconColor"))
 		iconColor = elem->get<unsigned int>("iconColor");
+
+	glowColor = elem->has("glowColor") ? elem->get<unsigned int>("glowColor") : 0;
+
+	if (elem->has("glowSize"))
+		glowSize = (unsigned int)elem->get<float>("glowSize");
+
+	if (elem->has("glowOffset"))
+		glowOffset = elem->get<Vector2f>("glowOffset");
 
 	if(elem->has("fontPath") || elem->has("fontSize"))
 		font = Font::getFromTheme(elem, ThemeFlags::ALL, font);
@@ -68,4 +79,7 @@ void HelpStyle::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::s
 
 	if (elem->has("iconSelect"))
 		iconMap["select"] = elem->get<std::string>("iconSelect");
+
+	if (elem->has("iconF1"))
+		iconMap["F1"] = elem->get<std::string>("iconF1");
 }

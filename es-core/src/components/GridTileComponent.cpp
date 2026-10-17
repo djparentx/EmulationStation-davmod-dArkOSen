@@ -204,7 +204,7 @@ void GridTileComponent::resize()
 		mLabel.setColor(0xFFFFFFFF);
 		mLabel.setGlowColor(0x00000010);
 		mLabel.setGlowSize(2);
-		mLabel.setOpacity(255);
+		mLabel.setOpacity(mOpacity);
 		mLabel.setPosition(mSize.x() * 0.1, mSize.y() * 0.2);
 		mLabel.setSize(mSize.x() - mSize.x() * 0.2, mSize.y() - mSize.y() * 0.3);
 	}
@@ -284,14 +284,40 @@ void GridTileComponent::resize()
 	mBackground.setImagePath(currentProperties.Background.path);
 	*/
 	if (mSelected && mAnimPosition == Vector3f(0, 0, 0) && mSelectedZoomPercent != 1.0)
-		mBackground.setOpacity(mSelectedZoomPercent * 255);
+		mBackground.setOpacity(mSelectedZoomPercent * mOpacity);
 	else
-		mBackground.setOpacity(255);
+		mBackground.setOpacity(mOpacity);
+}
+
+// the grid's opacity (AmberELEC imagegrid <opacity>)
+void GridTileComponent::setOpacity(unsigned char opacity)
+{
+	if (mOpacity == opacity)
+		return;
+
+	GuiComponent::setOpacity(opacity); // background, image, label
+
+	if (mMarquee != nullptr)
+		mMarquee->setOpacity(opacity);
+
+	if (mFavorite != nullptr)
+		mFavorite->setOpacity(opacity);
+
+	if (mImageOverlay != nullptr)
+		mImageOverlay->setOpacity(opacity);
+
+	if (mVideo != nullptr)
+		mVideo->setOpacity(opacity);
+
+	resize();
 }
 
 void GridTileComponent::update(int deltaTime)
 {
 	GuiComponent::update(deltaTime);
+
+	if (mItemTemplate != nullptr)
+		mItemTemplate->update(deltaTime);
 
 	if (mVideo != nullptr && mVideo->isPlaying() && mVideo->isFading())
 		resize();
@@ -299,7 +325,7 @@ void GridTileComponent::update(int deltaTime)
 
 void GridTileComponent::renderBackground(const Transform4x4f& parentTrans)
 {
-	if (!mVisible)
+	if (!mVisible || mItemTemplate != nullptr)
 		return;
 
 	Transform4x4f trans = getTransform() * parentTrans;
@@ -316,6 +342,15 @@ void GridTileComponent::renderContent(const Transform4x4f& parentTrans)
 	Vector2f clipPos(trans.translation().x(), trans.translation().y());
 	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), mSize.x(), mSize.y()))
 		return;
+
+	if (mItemTemplate != nullptr)
+	{
+		if (mItemTemplate->getSize() != mSize)
+			mItemTemplate->setSize(mSize);
+
+		mItemTemplate->render(trans);
+		return;
+	}
 
 	auto currentProperties = getCurrentProperties(false);
 
@@ -622,7 +657,25 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 
 	resetProperties();
 
-	const ThemeData::ThemeElement* grid = theme->getElement(view, "gamegrid", "imagegrid");
+	const ThemeData::ThemeElement* grid = theme->getElement(view, view == "system" ? "imagegrid" : "gamegrid", "imagegrid");
+
+	// AmberELEC <itemTemplate>
+	mItemTemplate = nullptr;
+	if (grid != nullptr)
+	{
+		for (auto& child : grid->children)
+		{
+			if (child.first != "itemTemplate")
+				continue;
+
+			mItemTemplate = std::make_shared<ItemTemplateComponent>("", mWindow);
+			mItemTemplate->setScaleOrigin(Vector2f(0.0f, 0.0f));
+			mItemTemplate->setSize(mSize);
+			mItemTemplate->loadTemplatedChildren(&child.second);
+			break;
+		}
+	}
+
 	if (grid && grid->has("showVideoAtDelay"))
 	{
 		createVideo();
@@ -673,6 +726,7 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	elem = theme->getElement(view, "gridtile.marquee", "image");
 	if (elem)
 	{
+		mHasStandardMarquee = true;
 		createMarquee();
 		mMarquee->applyTheme(theme, view, "gridtile.marquee", ThemeFlags::ALL ^ (ThemeFlags::PATH));
 
@@ -686,10 +740,13 @@ void GridTileComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, cons
 	}
 	else if (mMarquee != nullptr)
 	{
+		mHasStandardMarquee = false;
 		removeChild(mMarquee);
 		delete mMarquee;
 		mMarquee = nullptr;
 	}
+	else
+		mHasStandardMarquee = false;
 
 
 	// Apply theme to the <image name="gridtile.marquee"> element
@@ -853,6 +910,51 @@ void GridTileComponent::setMarquee(const std::string& path)
 	resize();
 }
 
+bool GridTileComponent::isMinSizeTile()
+{
+	auto currentProperties = getCurrentProperties(false);
+	return currentProperties.Image.sizeMode == "minSize";
+}
+
+void GridTileComponent::forceMarquee(const std::string& path)
+{
+	if (mHasStandardMarquee)
+	{
+		setMarquee(path);
+		return;
+	}
+
+	if (!path.empty())
+	{
+		if (mMarquee == nullptr)
+		{
+			createMarquee();
+
+			mMarquee->setOrigin(0.5, 0.5);
+			mMarquee->setPosition(0.5, 0.5);
+			mMarquee->setSize(0.5, 0.5);
+			mMarquee->setIsLinear(true);
+
+			mDefaultProperties.Marquee = GridImageProperties();
+			mDefaultProperties.Marquee.size = Vector2f(0.55f, 0.55f);
+			mDefaultProperties.Marquee.Visible = true;
+			mDefaultProperties.Marquee.Loaded = true;
+			mSelectedProperties.Marquee = mDefaultProperties.Marquee;
+			mSelectedProperties.Marquee.size = Vector2f(0.65f, 0.65f);
+		}
+
+		setMarquee(path);
+	}
+	else if (mMarquee != nullptr)
+	{
+		removeChild(mMarquee);
+		delete mMarquee;
+		mMarquee = nullptr;
+
+		mCurrentMarquee = "";
+	}
+}
+
 void GridTileComponent::setFavorite(bool favorite)
 {
 	if (mFavorite == nullptr)
@@ -931,10 +1033,31 @@ void GridTileComponent::stopVideo()
 		mVideo->setVideo("");
 }
 
+void GridTileComponent::setItemTemplateBinding(IBindable* bindable, const std::string& label)
+{
+	if (mItemTemplate == nullptr)
+		return;
+
+	mItemTemplate->setLabel(label);
+	mItemTemplate->updateTemplateBindings(bindable);
+}
+
 void GridTileComponent::setSelected(bool selected, bool allowAnimation, Vector3f* pPosition, bool force)
 {
 	if (!mShown || !ALLOWANIMATIONS)
 		allowAnimation = false;
+
+	// AmberELEC <itemTemplate>: "activate" / "deactivate" when the selection changes, "scroll" for the others
+	if (mItemTemplate != nullptr)
+	{
+		if (mSelected != selected)
+			mItemTemplate->playDefaultActivationStoryboard(selected);
+		else if (!selected)
+			mItemTemplate->playStoryboard("scroll");
+
+		mSelected = selected;
+		return;
+	}
 
 	if (mSelected == selected && !force)
 	{

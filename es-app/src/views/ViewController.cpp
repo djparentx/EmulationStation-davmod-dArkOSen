@@ -11,6 +11,7 @@
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/GridGameListView.h"
 #include "views/gamelist/VideoGameListView.h"
+#include "views/gamelist/CarouselGameListView.h"
 #include "views/SystemView.h"
 #include "views/UIModeController.h"
 #include "FileFilterIndex.h"
@@ -278,7 +279,7 @@ void ViewController::doLaunch(FileData* game, Vector3f center, int entrySlot)
 	mWindow->stopInfoPopup(); // make sure we disable any existing info popup
 	mLockInput = true;
 
-	mWindow->loadCustomImageLoadingScreen(game->getImagePath(), game->getName());
+	mWindow->loadCustomImageLoadingScreen(game->getImagePath(), game->getName(), game);
 
 	std::string transition_style = Settings::getInstance()->getString("GameTransitionStyle");
 	if(transition_style == "fade")
@@ -342,6 +343,7 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 
 	bool themeHasVideoView = system->getTheme()->hasView("video");
 	bool themeHasGridView = system->getTheme()->hasView("grid");
+	bool themeHasGamecarouselView = system->getTheme()->hasView("gamecarousel");
 
 	//decide type
 	GameListViewType selectedViewType = AUTOMATIC;
@@ -398,6 +400,8 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 		selectedViewType = GRID;
 	else if (viewPreference.compare("video") == 0)
 		selectedViewType = VIDEO;
+	else if (themeHasGamecarouselView && viewPreference.compare("gamecarousel") == 0)
+		selectedViewType = GAMECAROUSEL;
 
 	if (!forceView && (selectedViewType == AUTOMATIC || allowDetailedDowngrade))
 	{		
@@ -443,6 +447,9 @@ std::shared_ptr<IGameListView> ViewController::getGameListView(SystemData* syste
 			break;
 		case DETAILED:
 			view = std::shared_ptr<IGameListView>(new DetailedGameListView(mWindow, system->getRootFolder()));
+			break;
+		case GAMECAROUSEL:
+			view = std::shared_ptr<IGameListView>(new CarouselGameListView(mWindow, system->getRootFolder()));
 			break;
 		case GRID:		
 			{

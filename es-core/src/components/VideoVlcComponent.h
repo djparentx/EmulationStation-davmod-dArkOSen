@@ -80,6 +80,8 @@ public:
 
 	void	setColorShift(unsigned int color);
 
+	void onPaddingChanged() override;
+
 private:
 	// Calculates the correct mSize from our resizing information (set by setResize/setMaxSize).
 	// Used internally whenever the resizing parameters or texture change.
@@ -104,6 +106,7 @@ private:
 	libvlc_media_player_t*			mMediaPlayer;
 	VideoContext					mContext;
 	std::shared_ptr<TextureResource> mTexture;
+	bool							mLinearSmooth = false; // Batocera <linearSmooth>
 
 	std::string					    mSubtitlePath;
 	std::string					    mSubtitleTmpFile;

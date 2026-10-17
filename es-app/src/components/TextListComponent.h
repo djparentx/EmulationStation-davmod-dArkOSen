@@ -4,13 +4,16 @@
 #define ES_APP_COMPONENTS_TEXT_LIST_COMPONENT_H
 
 #include "components/IList.h"
+#include "components/ItemTemplateComponent.h"
 #include "components/ScrollbarComponent.h"
+#include "BindingManager.h"
 #include "math/Misc.h"
 #include "utils/StringUtil.h"
 #include "Log.h"
 #include "Sound.h"
 #include "Settings.h"
 #include <memory>
+#include <type_traits>
 
 class TextCache;
 
@@ -18,6 +21,7 @@ struct TextListData
 {
 	unsigned int colorId;
 	std::shared_ptr<TextCache> textCache;
+	std::shared_ptr<ItemTemplateComponent> itemTemplate; // AmberELEC <itemTemplate>
 };
 
 //A graphical list. Supports multiple colors for rows and scrolling.
@@ -82,11 +86,26 @@ public:
 	inline void setColor(unsigned int id, unsigned int color) { mColors[id] = color; }
 	inline void setLineSpacing(float lineSpacing) { mLineSpacing = lineSpacing; }
 
+	// Batocera <extraTextColor> / <extraTextSelectedColor>: color of the text inside () and []
+	inline void setExtraTextColor(unsigned int color) { mExtraColor = color; mHasExtraColor = true; }
+	inline void setExtraTextSelectedColor(unsigned int color) { mExtraSelectedColor = color; mHasExtraSelectedColor = true; }
+
 protected:
 	virtual void onScroll(int /*amt*/) { if(!mScrollSound.empty()) Sound::get(mScrollSound)->play(); }
 	virtual void onCursorChanged(const CursorState& state);
 
 private:
+	// AmberELEC <itemTemplate>: the rows are drawn from the template, bound to the row object ({game:...})
+	template <typename U> static IBindable* toBindable(const U& obj, std::true_type) { return static_cast<IBindable*>(obj); }
+	template <typename U> static IBindable* toBindable(const U& /*obj*/, std::false_type) { return nullptr; }
+	IBindable* getBindable(const typename IList<TextListData, T>::Entry& entry) { return toBindable(entry.object, std::integral_constant<bool, std::is_convertible<T, IBindable*>::value>()); }
+
+	void renderItemTemplates(const Transform4x4f& trans, int startEntry, int listCutoff, float entrySize);
+
+	ThemeData::ThemeElement mItemTemplate;
+	bool mHasItemTemplate = false;
+	int  mLastCursor = -1;
+
 	int mMarqueeOffset;
 	int mMarqueeOffset2;
 	int mMarqueeTime;
@@ -114,6 +133,15 @@ private:
 	// AmberELEC <lines> (fixed number of rows) and scrollbar
 	int mLineCount;
 	ScrollbarComponent mScrollbar;
+
+	unsigned int mExtraColor = 0;
+	bool mHasExtraColor = false;
+	unsigned int mExtraSelectedColor = 0;
+	bool mHasExtraSelectedColor = false;
+
+	unsigned int mGlowColor = 0;
+	unsigned int mGlowSize = 2;
+	Vector2f mGlowOffset = Vector2f::Zero();
 };
 
 template <typename T>
@@ -152,8 +180,23 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	if(size() == 0)
 		return;
 
-	Vector2f clipPos(trans.translation().x(), trans.translation().y());
-	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), mSize.x(), mSize.y()))
+	// rotated list (Batocera <rotation>): clip / cull on the screen bounding box
+	const bool rotated = GuiComponent::getRotation() != 0;
+	Vector2f boundsMin(trans.translation().x(), trans.translation().y());
+	Vector2f boundsMax(boundsMin.x() + mSize.x(), boundsMin.y() + mSize.y());
+	if (rotated)
+	{
+		const Vector3f corners[4] = { trans * Vector3f(0, 0, 0), trans * Vector3f(mSize.x(), 0, 0), trans * Vector3f(0, mSize.y(), 0), trans * Vector3f(mSize.x(), mSize.y(), 0) };
+		boundsMin = boundsMax = Vector2f(corners[0].x(), corners[0].y());
+		for (int c = 1; c < 4; c++)
+		{
+			boundsMin = Vector2f(Math::min(boundsMin.x(), corners[c].x()), Math::min(boundsMin.y(), corners[c].y()));
+			boundsMax = Vector2f(Math::max(boundsMax.x(), corners[c].x()), Math::max(boundsMax.y(), corners[c].y()));
+		}
+	}
+
+	Vector2f clipPos(boundsMin.x(), boundsMin.y());
+	if (!Renderer::isVisibleOnScreen(clipPos.x(), clipPos.y(), boundsMax.x() - boundsMin.x(), boundsMax.y() - boundsMin.y()))
 		return;
 
 	if (Settings::getInstance()->getBool("DebugGrid"))
@@ -187,24 +230,42 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	if(listCutoff > size())
 		listCutoff = size();
 
+	// AmberELEC: <opacity> (theme / storyboards) applies to the selector and the entries
+	const float opacity = GuiComponent::getOpacity() / 255.0f;
+	auto applyOpacity = [opacity](unsigned int color) { return (color & 0xFFFFFF00) | (unsigned int)((color & 0xFF) * opacity); };
+
 	// draw selector bar
-	if(startEntry < listCutoff)
+	if(startEntry < listCutoff && !mHasItemTemplate)
 	{
 		if (mSelectorImage.hasImage()) {
 			mSelectorImage.setPosition(0.f, (mCursor - startEntry)*entrySize + mSelectorOffsetY, 0.f);
+			mSelectorImage.setOpacity(GuiComponent::getOpacity());
 			mSelectorImage.render(trans);
 		} else {
 			Renderer::setMatrix(trans);
 			Renderer::drawRect(0.0f, (mCursor - startEntry)*entrySize + mSelectorOffsetY, mSize.x(),
-					mSelectorHeight, mSelectorColor, mSelectorColorEnd, mSelectorColorGradientHorizontal);
+					mSelectorHeight, applyOpacity(mSelectorColor), applyOpacity(mSelectorColorEnd), mSelectorColorGradientHorizontal);
 		}
 	}
 
 	// clip to inside margins
-	Vector3f dim(mSize.x(), mSize.y(), 0);
-	dim = trans * dim - trans.translation();
-	Renderer::pushClipRect(Vector2i((int)(trans.translation().x() + mHorizontalMargin), (int)trans.translation().y()), 
-		Vector2i((int)(dim.x() - mHorizontalMargin*2), (int)dim.y()));
+	if (rotated)
+		Renderer::pushClipRect(Vector2i((int)boundsMin.x(), (int)boundsMin.y()), Vector2i((int)(boundsMax.x() - boundsMin.x()), (int)(boundsMax.y() - boundsMin.y())));
+	else
+	{
+		Vector3f dim(mSize.x(), mSize.y(), 0);
+		dim = trans * dim - trans.translation();
+		Renderer::pushClipRect(Vector2i((int)(trans.translation().x() + mHorizontalMargin), (int)trans.translation().y()), 
+			Vector2i((int)(dim.x() - mHorizontalMargin*2), (int)dim.y()));
+	}
+
+	const bool glow = (mGlowColor & 0x000000FF) != 0 && mGlowSize > 0;
+
+	if (mHasItemTemplate)
+	{
+		renderItemTemplates(trans, startEntry, listCutoff, entrySize);
+		listCutoff = startEntry; // no text rows
+	}
 
 	for(int i = startEntry; i < listCutoff; i++)
 	{
@@ -219,7 +280,12 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		if(!entry.data.textCache)
 			entry.data.textCache = std::unique_ptr<TextCache>(font->buildTextCache(mUppercase ? Utils::String::toUpper(entry.name) : entry.name, 0, 0, 0x000000FF));
 
-		entry.data.textCache->setColor(color);
+		if (mCursor == i && mHasExtraSelectedColor)
+			entry.data.textCache->setColors(applyOpacity(color), applyOpacity(mExtraSelectedColor));
+		else if (mHasExtraColor)
+			entry.data.textCache->setColors(applyOpacity(color), applyOpacity(mExtraColor));
+		else
+			entry.data.textCache->setColor(applyOpacity(color));
 
 		Vector3f offset(0, y, 0);
 
@@ -253,8 +319,13 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		else
 			drawTrans.translate(offset);
 
-		Renderer::setMatrix(drawTrans);
-		font->renderTextCache(entry.data.textCache.get());
+		if (glow)
+			font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, GuiComponent::getOpacity());
+		else
+		{
+			Renderer::setMatrix(drawTrans);
+			font->renderTextCache(entry.data.textCache.get());
+		}
 
 		// render currently selected item text again if
 		// marquee is scrolled far enough for it to repeat
@@ -262,8 +333,14 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 		{
 			drawTrans = trans;
 			drawTrans.translate(offset - Vector3f((float)mMarqueeOffset2, 0, 0));
-			Renderer::setMatrix(drawTrans);
-			font->renderTextCache(entry.data.textCache.get());
+
+			if (glow)
+				font->renderTextCacheEx(entry.data.textCache.get(), drawTrans, mGlowSize, mGlowColor, mGlowOffset, GuiComponent::getOpacity());
+			else
+			{
+				Renderer::setMatrix(drawTrans);
+				font->renderTextCache(entry.data.textCache.get());
+			}
 		}
 
 		y += entrySize;
@@ -283,6 +360,36 @@ void TextListComponent<T>::render(const Transform4x4f& parentTrans)
 	listRenderTitleOverlay(trans);
 
 	GuiComponent::renderChildren(trans);
+}
+
+template <typename T>
+void TextListComponent<T>::renderItemTemplates(const Transform4x4f& trans, int startEntry, int listCutoff, float entrySize)
+{
+	float y = 0;
+
+	for (int i = startEntry; i < listCutoff; i++)
+	{
+		typename IList<TextListData, T>::Entry& entry = mEntries.at((unsigned int)i);
+
+		if (!entry.data.itemTemplate)
+		{
+			auto templ = std::make_shared<ItemTemplateComponent>(entry.name, GuiComponent::mWindow);
+			templ->setScaleOrigin(Vector2f(0.0f, 0.0f));
+			templ->setSize(mSize.x(), entrySize);
+			templ->loadTemplatedChildren(&mItemTemplate);
+			templ->updateTemplateBindings(getBindable(entry));
+
+			entry.data.itemTemplate = templ;
+
+			if (mCursor == i)
+				templ->playDefaultActivationStoryboard(true);
+		}
+
+		entry.data.itemTemplate->setPosition(0.0f, y);
+		entry.data.itemTemplate->render(trans);
+
+		y += entrySize;
+	}
 }
 
 template <typename T>
@@ -331,6 +438,13 @@ void TextListComponent<T>::update(int deltaTime)
 {
 	listUpdate(deltaTime);
 	mScrollbar.update(deltaTime);
+
+	if (mHasItemTemplate)
+	{
+		for (auto& entry : mEntries)
+			if (entry.data.itemTemplate)
+				entry.data.itemTemplate->update(deltaTime);
+	}
 
 	if(!isScrolling() && size() > 0)
 	{
@@ -390,6 +504,18 @@ void TextListComponent<T>::onCursorChanged(const CursorState& state)
 
 	mScrollbar.onCursorChanged();
 
+	// AmberELEC <itemTemplate>: the selected row plays "activate", the previous one "deactivate"
+	if (mHasItemTemplate && mLastCursor != mCursor)
+	{
+		if (mCursor >= 0 && mCursor < (int)mEntries.size() && mEntries.at(mCursor).data.itemTemplate)
+			mEntries.at(mCursor).data.itemTemplate->playDefaultActivationStoryboard(true);
+
+		if (mLastCursor >= 0 && mLastCursor < (int)mEntries.size() && mEntries.at(mLastCursor).data.itemTemplate)
+			mEntries.at(mLastCursor).data.itemTemplate->playDefaultActivationStoryboard(false);
+	}
+
+	mLastCursor = mCursor;
+
 	if(mCursorChangedCallback)
 		mCursorChangedCallback(state);
 }
@@ -402,6 +528,21 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 	const ThemeData::ThemeElement* elem = theme->getElement(view, element, "textlist");
 	if(!elem)
 		return;
+
+	// AmberELEC <itemTemplate>: rows are rebuilt from the template
+	mHasItemTemplate = false;
+	mItemTemplate = ThemeData::ThemeElement();
+	for (auto& child : elem->children)
+	{
+		if (child.first == "itemTemplate")
+		{
+			mItemTemplate = child.second;
+			mHasItemTemplate = true;
+		}
+	}
+
+	for (auto& entry : mEntries)
+		entry.data.itemTemplate = nullptr;
 
 	using namespace ThemeFlags;
 	if(properties & COLOR)
@@ -421,6 +562,22 @@ void TextListComponent<T>::applyTheme(const std::shared_ptr<ThemeData>& theme, c
 			setColor(0, elem->get<unsigned int>("primaryColor"));
 		if(elem->has("secondaryColor"))
 			setColor(1, elem->get<unsigned int>("secondaryColor"));
+
+		mHasExtraColor = false;
+		if (elem->has("extraTextColor"))
+			setExtraTextColor(elem->get<unsigned int>("extraTextColor"));
+
+		mHasExtraSelectedColor = false;
+		if (elem->has("extraTextSelectedColor"))
+			setExtraTextSelectedColor(elem->get<unsigned int>("extraTextSelectedColor"));
+
+		mGlowColor = elem->has("glowColor") ? elem->get<unsigned int>("glowColor") : 0;
+
+		if (elem->has("glowSize"))
+			mGlowSize = (unsigned int)elem->get<float>("glowSize");
+
+		if (elem->has("glowOffset"))
+			mGlowOffset = elem->get<Vector2f>("glowOffset");
 	}
 
 	setFont(Font::getFromTheme(elem, properties, mFont));

@@ -3,14 +3,10 @@
 #ifndef ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H
 #define ES_APP_VIEWS_GAME_LIST_GRID_GAME_LIST_VIEW_H
 
-#include "components/DateTimeComponent.h"
-#include "components/RatingComponent.h"
-#include "components/ScrollableContainer.h"
 #include "components/ImageGridComponent.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/gamelist/BasicGameListView.h"
-
-class VideoComponent;
+#include "views/gamelist/DetailedContainer.h"
 
 class GridGameListView : public ISimpleGameListView
 {
@@ -55,37 +51,8 @@ private:
 	const std::string getImagePath(FileData* file);
 	const bool isVirtualFolder(FileData* file);
 
-	void createMarquee();
-	void createImage();
-	void createThumbnail();
-	void createVideo();
-
-	void initMDLabels();
-	void initMDValues();
-
-	TextComponent mLblRating, mLblReleaseDate, mLblDeveloper, mLblPublisher, mLblGenre, mLblPlayers, mLblLastPlayed, mLblPlayCount;
-
-	RatingComponent mRating;
-	DateTimeComponent mReleaseDate;
-	TextComponent mDeveloper;
-	TextComponent mPublisher;
-	TextComponent mGenre;
-	TextComponent mPlayers;
-	DateTimeComponent mLastPlayed;
-	TextComponent mPlayCount;
-	TextComponent mName;
-
-	ImageComponent* mImage;
-	ImageComponent* mThumbnail;
-	ImageComponent* mMarquee;
-	VideoComponent* mVideo;
+	DetailedContainer* mDetails = nullptr;
 	bool			mVideoVisible;
-
-	std::vector<TextComponent*> getMDLabels();
-	std::vector<GuiComponent*> getMDValues();
-
-	ScrollableContainer mDescContainer;
-	TextComponent mDescription;
 
 	bool	mLoaded;
 };

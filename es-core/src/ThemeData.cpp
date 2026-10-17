@@ -20,12 +20,18 @@
 #include "components/BatteryIconComponent.h"
 #include "components/BatteryTextComponent.h"
 #include "components/StackPanelComponent.h"
+#include "components/RatingComponent.h"
+#include "components/RectangleComponent.h"
+#include "components/WebImageComponent.h"
 #include "animations/ThemeStoryboard.h"
 
-std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "menu" }, { "screen" } };
-std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "z-index" }, { "visible" } };
+std::vector<std::string> ThemeData::sSupportedViews { { "system" }, { "basic" }, { "detailed" }, { "grid" }, { "video" }, { "gamecarousel" }, { "menu" }, { "screen" }, { "splash" } };
+std::vector<std::string> ThemeData::sSupportedFeatures { { "video" }, { "carousel" }, { "gamecarousel" }, { "z-index" }, { "visible" }, { "manufacturer" } };
 
 std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> ThemeData::sElementMap {
+	// Batocera <view name="splash"><splash name="splash"> in <theme>/splash.xml and gamesplash.xml
+	{ "splash", {
+		{ "backgroundColor", COLOR } } },
 	{ "image", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -53,9 +59,17 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipX", BOOLEAN },
 		{ "flipY", BOOLEAN },
 		{ "linearSmooth", BOOLEAN },
+		{ "shared", BOOLEAN },              // false: own texture (shared only with elements of the same name)
 		{ "saturation", FLOAT },
 		{ "autoFade", BOOLEAN },
 		{ "scaleOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "padding", NORMALIZED_RECT },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT },
 		{ "zIndex", FLOAT } } },
 	{ "imagegrid", {
 		{ "scrollbarColor", COLOR },
@@ -74,11 +88,16 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "padding", NORMALIZED_RECT },
 		{ "autoLayout", NORMALIZED_PAIR },
 		{ "autoLayoutSelectedZoom", FLOAT },
+		{ "cellProportion", FLOAT },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "animateSelection", BOOLEAN },
 		{ "imageSource", STRING }, // image, thumbnail, marquee
 		{ "zIndex", FLOAT },
 		{ "gameImage", PATH },
 		{ "folderImage", PATH },
+		{ "logoBackgroundImage", PATH },
 		{ "showVideoAtDelay", FLOAT },
 		{ "scrollDirection", STRING },
 		{ "scrollSound", PATH },
@@ -121,6 +140,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "glowColor", COLOR },
 		{ "glowSize", FLOAT },
 		{ "glowOffset", NORMALIZED_PAIR },
+		{ "extraTextColor", COLOR },
+		{ "multiLine", STRING },            // true, false, auto
 		{ "singleLineScroll", BOOLEAN },
 		{ "autoScroll", STRING },
 		{ "autoScrollDelay", FLOAT },
@@ -129,6 +150,12 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "padding", NORMALIZED_RECT },
 		{ "visible", BOOLEAN },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT },
 		{ "zIndex", FLOAT } } },
 	{ "stackpanel", {
 		{ "pos", NORMALIZED_PAIR },
@@ -215,7 +242,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH } } },
 	{ "networkIcon", {
-		{ "planemodeIcon", PATH },          // accepted, not used
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
 		{ "y", FLOAT },
@@ -236,6 +263,24 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "flipY", BOOLEAN },
 		{ "zIndex", FLOAT },
 		{ "networkIcon", PATH } } },
+	{ "webimage", {                         // inherits image
+		{ "path", STRING } } },             // file or http(s) url
+	{ "rectangle", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "size", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "h", FLOAT },
+		{ "w", FLOAT },
+		{ "color", COLOR },
+		{ "borderColor", COLOR },
+		{ "borderSize", FLOAT },
+		{ "roundCorners", FLOAT },
+		{ "opacity", FLOAT },
+		{ "visible", BOOLEAN },
+		{ "padding", NORMALIZED_RECT },
+		{ "clipChildren", BOOLEAN },
+		{ "zIndex", FLOAT } } },
 	{ "textlist", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -254,6 +299,13 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "selectedColor", COLOR },
 		{ "primaryColor", COLOR },
 		{ "secondaryColor", COLOR },
+		{ "extraTextColor", COLOR },
+		{ "extraTextSelectedColor", COLOR },
+		{ "glowColor", COLOR },
+		{ "glowSize", FLOAT },
+		{ "glowOffset", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
 		{ "scrollSound", PATH },
@@ -266,6 +318,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "scrollbarSize", FLOAT },
 		{ "scrollbarCorner", FLOAT },
 		{ "scrollbarAlignment", STRING },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "container", {
 		{ "pos", NORMALIZED_PAIR },
@@ -276,7 +331,41 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "size", NORMALIZED_PAIR },
 	 	{ "origin", NORMALIZED_PAIR },
 	 	{ "visible", BOOLEAN },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "padding", NORMALIZED_RECT },
+		{ "clipChildren", BOOLEAN },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT },
 	 	{ "zIndex", FLOAT } } },
+	// AmberELEC: <control name="x"> overrides these common properties on any existing element
+	// (keeping its type); as an extra it is a plain box like <container>
+	{ "control", {
+		{ "pos", NORMALIZED_PAIR },
+		{ "size", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "h", FLOAT },
+		{ "w", FLOAT },
+		{ "origin", NORMALIZED_PAIR },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "zIndex", FLOAT },
+		{ "visible", BOOLEAN },
+		{ "padding", NORMALIZED_RECT },
+		{ "clipChildren", BOOLEAN },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT } } },
 	{ "ninepatch", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -292,6 +381,12 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "edgeColor", COLOR },
 		{ "animateColor", COLOR },
 		{ "animateColorTime", FLOAT },
+		{ "padding", NORMALIZED_RECT },
+		{ "rotation", FLOAT },
+		{ "rotationOrigin", NORMALIZED_PAIR },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "datetime", {
 		{ "pos", NORMALIZED_PAIR },
@@ -314,6 +409,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "format", STRING },
 		{ "displayRelative", BOOLEAN },
 	 	{ "visible", BOOLEAN },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 	 	{ "zIndex", FLOAT } } },
 	{ "rating", {
 		{ "pos", NORMALIZED_PAIR },
@@ -329,9 +427,21 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "unfilledColor", COLOR },
 		{ "filledPath", PATH },
 		{ "unfilledPath", PATH },
+		{ "horizontalAlignment", STRING },  // left, right (Batocera draws center like left)
+		{ "value", FLOAT },
 		{ "visible", BOOLEAN },
+		{ "padding", NORMALIZED_RECT },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
+		{ "scaleOrigin", NORMALIZED_PAIR },
 		{ "zIndex", FLOAT } } },
 	{ "sound", {
+		{ "path", PATH } } },
+	{ "gameextras", {
 		{ "path", PATH } } },
 	{ "controllerActivity", {
 		{ "pos", NORMALIZED_PAIR },
@@ -343,9 +453,19 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "itemSpacing", FLOAT },
 		{ "horizontalAlignment", STRING },
 		{ "imagePath", PATH },
+		{ "gunPath", PATH },                // accepted, no lightgun support on this platform
+		{ "wheelPath", PATH },
 		{ "color", COLOR },
 		{ "activityColor", COLOR },
 		{ "hotkeyColor", COLOR },
+		{ "incharge", PATH },
+		{ "full", PATH },
+		{ "at75", PATH },
+		{ "at50", PATH },
+		{ "at25", PATH },
+		{ "empty", PATH },
+		{ "networkIcon", PATH },
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "batteryIndicator", {
@@ -365,7 +485,11 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "at25", PATH },
 		{ "empty", PATH },
 		{ "networkIcon", PATH },
+		{ "planemodeIcon", PATH },          // accepted, not used (no plane mode on this platform)
+		{ "imagePath", PATH },
 		{ "color", COLOR },
+		{ "activityColor", COLOR },
+		{ "hotkeyColor", COLOR },
 		{ "visible", BOOLEAN },
 		{ "zIndex", FLOAT } } },
 	{ "helpsystem", {
@@ -377,6 +501,9 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "origin", NORMALIZED_PAIR },
 		{ "textColor", COLOR },
 		{ "iconColor", COLOR },
+		{ "glowColor", COLOR },
+		{ "glowSize", FLOAT },
+		{ "glowOffset", NORMALIZED_PAIR },
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
 		{ "iconUpDown", PATH },
@@ -389,7 +516,8 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "iconL", PATH },
 		{ "iconR", PATH },
 		{ "iconStart", PATH },
-		{ "iconSelect", PATH } } },
+		{ "iconSelect", PATH },
+		{ "iconF1", PATH } } },
 	{ "video", {
 		{ "pos", NORMALIZED_PAIR },
 		{ "x", FLOAT },
@@ -414,7 +542,18 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "loops", FLOAT }, // Number of loops to do -1 (default) is infinite 
 		{ "showSnapshotNoVideo", BOOLEAN },
 		{ "showSnapshotDelay", BOOLEAN },
+		{ "defaultSnapshot", PATH },
+		{ "audio", BOOLEAN },
+		{ "enabled", BOOLEAN },
+		{ "linearSmooth", BOOLEAN },
 		{ "saturation", FLOAT },            // applied to the snapshot image only
+		{ "padding", NORMALIZED_RECT },
+		{ "offset", NORMALIZED_PAIR },
+		{ "offsetX", FLOAT },
+		{ "offsetY", FLOAT },
+		{ "clipRect", NORMALIZED_RECT },
+		{ "opacity", FLOAT },
+		{ "scale", FLOAT },
 		{ "scaleOrigin", NORMALIZED_PAIR } } },
 	{ "carousel", {
 		{ "type", STRING },
@@ -438,8 +577,44 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "systemInfoDelay", FLOAT },	
 		{ "systemInfoCountOnly", BOOLEAN },
 		{ "defaultTransition", STRING },
+		{ "transitionSpeed", FLOAT },
+		{ "minLogoOpacity", FLOAT },
+		{ "scaledLogoSpacing", FLOAT },
 		{ "scrollSound", PATH },
 		{ "zIndex", FLOAT } } },
+	{ "gamecarousel", {
+		{ "type", STRING },
+		{ "size", NORMALIZED_PAIR },
+		{ "pos", NORMALIZED_PAIR },
+		{ "x", FLOAT },
+		{ "y", FLOAT },
+		{ "w", FLOAT },
+		{ "h", FLOAT },
+		{ "origin", NORMALIZED_PAIR },
+		{ "color", COLOR },
+		{ "colorEnd", COLOR },
+		{ "gradientType", STRING },
+		{ "logoScale", FLOAT },
+		{ "logoRotation", FLOAT },
+		{ "logoRotationOrigin", NORMALIZED_PAIR },
+		{ "logoSize", NORMALIZED_PAIR },
+		{ "logoPos", NORMALIZED_PAIR },
+		{ "logoAlignment", STRING },
+		{ "maxLogoCount", FLOAT },
+		{ "defaultTransition", STRING },
+		{ "minLogoOpacity", FLOAT },
+		{ "transitionSpeed", FLOAT },
+		{ "scaledLogoSpacing", FLOAT },
+		{ "scrollSound", PATH },
+		{ "visible", BOOLEAN },
+		{ "zIndex", FLOAT },
+		{ "imageSource", STRING },
+		// accepted, not used (Batocera themes share these with their textlist)
+		{ "lineSpacing", FLOAT },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING },
+		{ "scrollbarSize", FLOAT } } },
 	{ "menuText", {
 		{ "fontPath", PATH },
 		{ "fontSize", FLOAT },
@@ -467,7 +642,13 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 		{ "fadePath", PATH },
 		{ "color", COLOR },
 		{ "centerColor", COLOR },
-		{ "cornerSize", NORMALIZED_PAIR } } },
+		{ "cornerSize", NORMALIZED_PAIR },
+		{ "scrollbarColor", COLOR },
+		{ "scrollbarSize", FLOAT },
+		{ "scrollbarCorner", FLOAT },
+		{ "scrollbarAlignment", STRING } } },     // left, right, outer left, outer right
+	{ "menuGrid", {
+		{ "separatorColor", COLOR } } },
 	{ "menuIcons", { 		
 		{ "iconSystem", PATH },
 		{ "iconUpdates", PATH },
@@ -488,6 +669,7 @@ std::map<std::string, std::map<std::string, ThemeData::ElementPropertyType>> The
 	{ "menuSlider",{
 		{ "path", PATH } } },
 	{ "menuButton",{
+		{ "cornerSize", NORMALIZED_PAIR },
 		{ "path", PATH },
 		{ "filledPath", PATH } } },
 };
@@ -598,6 +780,19 @@ void ThemeData::loadFile(const std::string system, std::map<std::string, std::st
 	mVariables["themePath"] = Utils::FileSystem::getParent(mPaths.back());
 	mVariables["currentPath"] = Utils::FileSystem::getParent(mPaths.back());
 	mVariables["root"] = Utils::FileSystem::getParent(mPaths.back());
+	mVariables["region"] = mRegion;
+	mVariables["global.language"] = EsLocale::getLanguage();
+	mEvaluatedVariables.clear();
+
+	// AmberELEC: ${settings.<name>} for every ES setting
+	for (const auto& it : Settings::getInstance()->getStringMap())
+		mVariables["settings." + it.first] = it.second;
+	for (const auto& it : Settings::getInstance()->getBoolMap())
+		mVariables["settings." + it.first] = it.second ? "true" : "false";
+	for (const auto& it : Settings::getInstance()->getIntMap())
+		mVariables["settings." + it.first] = std::to_string(it.second);
+	for (const auto& it : Settings::getInstance()->getFloatMap())
+		mVariables["settings." + it.first] = std::to_string(it.second);
 
 	// Batocera screen.* variables (used by "if" expressions, e.g. aspect-ratio auto detection)
 	{
@@ -654,8 +849,12 @@ void ThemeData::loadFile(const std::string system, std::map<std::string, std::st
 	parseVariables(root);
 	parseTheme(root);
 	
-	mMenuTheme = nullptr;
-	mDefaultTheme = this;
+	// a splash.xml / gamesplash.xml theme (Splash) must not replace the current theme's menu
+	if (system != "splash")
+	{
+		mMenuTheme = nullptr;
+		mDefaultTheme = this;
+	}
 }
 
 const std::shared_ptr<ThemeData::ThemeMenu>& ThemeData::getMenuTheme()
@@ -812,12 +1011,32 @@ void ThemeData::parseInclude(const pugi::xml_node& node)
 	if (!parseSubset(node))
 		return;
 
+	// AmberELEC: ${subset.<name>} = the selected include
+	if (node.attribute("subset"))
+	{
+		const std::string subsetAttr = resolvePlaceholders(node.attribute("subset").as_string());
+		if (!subsetAttr.empty())
+			mVariables["subset." + subsetAttr] = resolvePlaceholders(node.attribute("name").as_string());
+	}
+
 	std::string relPath = resolvePlaceholders(node.text().as_string());
 	if (relPath.empty())
 		return;
 
 	std::string path = Utils::FileSystem::resolveRelativePath(relPath, Utils::FileSystem::getParent(mPaths.back()), true);
 	path = resolveSystemVariable(mSystemThemeFolder, path);
+
+	// AmberELEC: a missing ./$system/theme.xml falls back to ./default/theme.xml
+	if (!ResourceManager::getInstance()->fileExists(path) && relPath.find("$system") != std::string::npos)
+	{
+		std::string defaultPath = resolveSystemVariable("default", Utils::FileSystem::resolveRelativePath(relPath, Utils::FileSystem::getParent(mPaths.back()), true));
+		if (ResourceManager::getInstance()->fileExists(defaultPath))
+		{
+			path = defaultPath;
+			if (mPaths.size() == 1)
+				mSystemThemeFolder = "default";
+		}
+	}
 
 	if (!ResourceManager::getInstance()->fileExists(path))
 	{
@@ -875,11 +1094,84 @@ void ThemeData::parseVariable(const pugi::xml_node& node)
 		return;
 
 	std::string val = node.text().as_string();
-	if (val.empty())
+
+	// Batocera: <variable name="x" value="y" />
+	if (key == "variable" && node.attribute("name") && node.attribute("value"))
+	{
+		key = node.attribute("name").as_string();
+		val = resolvePlaceholders(node.attribute("value").as_string());
+	}
+	else if (val.empty())
 		return;
-	
+
+	mEvaluatedVariables.erase(key);
+
+	// AmberELEC: expressions (e.g. "${screen.width} > 1000") are evaluated when the variable is defined
+	if (val != "true" && val != "false" &&
+		(val.find("${") != std::string::npos || val.find("=") != std::string::npos || val.find(">") != std::string::npos || val.find("<") != std::string::npos))
+	{
+		try
+		{
+			Utils::MathExpr::ValueMap vars = getEvaluatorVariables();
+			auto ret = Utils::MathExpr::evaluate(val.c_str(), &vars);
+			mEvaluatedVariables[key] = ret;
+			mVariables[key] = ret.isString() ? ret.toString() : std::to_string(ret.toNumber());
+			return;
+		}
+		catch (const std::exception&)
+		{
+			val = resolvePlaceholders(val.c_str()); // not an expression - plain text with variables
+		}
+	}
+
 	mVariables.erase(key);
 	mVariables.insert(std::pair<std::string, std::string>(key, val));	
+}
+
+// variables for "if" / variable expressions: numbers for screen sizes, 1/0 for booleans, evaluated results
+Utils::MathExpr::ValueMap ThemeData::getEvaluatorVariables()
+{
+	Utils::MathExpr::ValueMap vars;
+	for (const auto& v : mVariables)
+	{
+		if (v.first == "screen.width" || v.first == "screen.height")
+			vars[v.first] = Utils::String::toFloat(v.second);
+		else if (v.second == "true" || v.second == "false")
+			vars[v.first] = (v.second == "true") ? 1.0f : 0.0f;
+		else
+			vars[v.first] = v.second;
+	}
+
+	for (const auto& v : mEvaluatedVariables)
+		vars[v.first] = v.second;
+
+	return vars;
+}
+
+std::string ThemeData::getArchString()
+{
+	static std::string arch;
+	if (arch.empty())
+	{
+		// Batocera writes the board name here; dArkOSen devices are RK3326 boards
+		arch = Utils::String::toLower(Utils::String::trim(Utils::FileSystem::readAllText("/usr/share/batocera/batocera.arch")));
+		if (arch.empty())
+			arch = "rk3326";
+	}
+
+	return arch;
+}
+
+bool ThemeData::getViewExtraTransition(const std::string& view, std::string& type, float& speed, std::string& direction)
+{
+	auto viewIt = mViews.find(view);
+	if (viewIt == mViews.cend())
+		return false;
+
+	type = viewIt->second.extraTransition;
+	speed = viewIt->second.extraTransitionSpeed;
+	direction = viewIt->second.extraTransitionDirection;
+	return true;
 }
 
 void ThemeData::parseVariables(const pugi::xml_node& root)
@@ -951,16 +1243,7 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 		{
 			try
 			{
-				Utils::MathExpr::ValueMap vars;
-				for (const auto& v : mVariables)
-				{
-					if (v.first == "screen.width" || v.first == "screen.height")
-						vars[v.first] = Utils::String::toFloat(v.second);
-					else if (v.second == "true" || v.second == "false")
-						vars[v.first] = (v.second == "true") ? 1.0f : 0.0f;
-					else
-						vars[v.first] = v.second;
-				}
+				Utils::MathExpr::ValueMap vars = getEvaluatorVariables();
 
 				if (Utils::MathExpr::evaluate(ifAttr.c_str(), &vars).toNumber() == 0)
 					return false;
@@ -992,6 +1275,55 @@ bool ThemeData::parseFilterAttributes(const pugi::xml_node& node)
 			return false;
 		else if (help && helpVisibleAttr == "false")
 			return false;
+	}
+
+	// AmberELEC: verticalScreen="true|false"
+	if (node.attribute("verticalScreen"))
+	{
+		const std::string verticalAttr = node.attribute("verticalScreen").as_string();
+		bool verticalScreen = Renderer::getScreenHeight() > Renderer::getScreenWidth();
+
+		if (!verticalScreen && verticalAttr == "true")
+			return false;
+		else if (verticalScreen && verticalAttr == "false")
+			return false;
+	}
+
+	// AmberELEC: ifCheevos="true|false" (RetroAchievements of the system, ${system.cheevos})
+	if (node.attribute("ifCheevos"))
+	{
+		const std::string hasCheevosAttr = node.attribute("ifCheevos").as_string();
+
+		auto cheevos = mVariables.find("system.cheevos");
+		bool hasCheevos = cheevos != mVariables.cend() && cheevos->second == "true";
+
+		if (!hasCheevos && hasCheevosAttr == "true")
+			return false;
+		else if (hasCheevos && hasCheevosAttr == "false")
+			return false;
+	}
+
+	// AmberELEC: ifArch="a|b" / ifNotArch="a,b" (Batocera board names)
+	if (node.attribute("ifArch"))
+	{
+		const std::string arch = getArchString();
+		bool hasValue = false;
+
+		for (auto value : Utils::String::splitAny(Utils::String::toLower(Utils::String::trim(node.attribute("ifArch").as_string())), ",|"))
+			if (Utils::String::trim(value) == arch)
+				hasValue = true;
+
+		if (!hasValue)
+			return false;
+	}
+
+	if (node.attribute("ifNotArch"))
+	{
+		const std::string arch = getArchString();
+
+		for (auto value : Utils::String::splitAny(Utils::String::toLower(Utils::String::trim(node.attribute("ifNotArch").as_string())), ",|"))
+			if (Utils::String::trim(value) == arch)
+				return false;
 	}
 
 	if (node.attribute("ifSubset"))
@@ -1231,6 +1563,16 @@ void ThemeData::parseView(const pugi::xml_node& root, ThemeView& view, bool over
 	if (!parseFilterAttributes(root))
 		return;
 
+	// AmberELEC: system view extras transition overrides
+	if (root.attribute("extraTransition"))
+		view.extraTransition = resolvePlaceholders(root.attribute("extraTransition").as_string());
+
+	if (root.attribute("extraTransitionSpeed"))
+		view.extraTransitionSpeed = Utils::String::toFloat(resolvePlaceholders(root.attribute("extraTransitionSpeed").as_string()));
+
+	if (root.attribute("extraTransitionDirection"))
+		view.extraTransitionDirection = resolvePlaceholders(root.attribute("extraTransitionDirection").as_string());
+
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling())
 	{
 		if(!node.attribute("name"))
@@ -1260,49 +1602,10 @@ void ThemeData::parseView(const pugi::xml_node& root, ThemeView& view, bool over
 			off = nameAttr.find_first_of(delim, prevOff);
 
 			parseElement(node, elemTypeIt->second,
-				view.elements.insert(std::pair<std::string, ThemeElement>(elemKey, ThemeElement())).first->second, overwriteElements);
+				view.elements.insert(std::pair<std::string, ThemeElement>(elemKey, ThemeElement())).first->second, view, overwriteElements);
 
 			if (std::find(view.orderedKeys.cbegin(), view.orderedKeys.cend(), elemKey) == view.orderedKeys.cend())
 				view.orderedKeys.push_back(elemKey);
-
-			// Container elements (e.g. stackpanel) can nest real components (clock, batteryIcon,
-			// batteryText, networkIcon, image, text, ...) as XML children rather than properties.
-			// parseElement() above already parsed the container's own properties and, since these
-			// child tags aren't in the container's typeMap, logged/skipped them as unknown
-			// properties. Parse them here as ordinary top-level view elements instead, tagged with
-			// "parent" so makeExtras() can nest their GuiComponents under the container.
-			if (node.name() == std::string("stackpanel"))
-			{
-				for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling())
-				{
-					if (!childNode.attribute("name"))
-						continue;
-
-					auto childTypeIt = sElementMap.find(childNode.name());
-					if (childTypeIt == sElementMap.cend())
-						continue;
-
-					if (!parseFilterAttributes(childNode))
-						continue;
-
-					const std::string childNameAttr = childNode.attribute("name").as_string();
-					size_t cPrevOff = childNameAttr.find_first_not_of(delim, 0);
-					size_t cOff = childNameAttr.find_first_of(delim, cPrevOff);
-					while (cOff != std::string::npos || cPrevOff != std::string::npos)
-					{
-						std::string childElemKey = childNameAttr.substr(cPrevOff, cOff - cPrevOff);
-						cPrevOff = childNameAttr.find_first_not_of(delim, cOff);
-						cOff = childNameAttr.find_first_of(delim, cPrevOff);
-
-						ThemeElement& childElement = view.elements.insert(std::pair<std::string, ThemeElement>(childElemKey, ThemeElement())).first->second;
-						parseElement(childNode, childTypeIt->second, childElement, overwriteElements);
-						childElement.parent = elemKey;
-
-						if (std::find(view.orderedKeys.cbegin(), view.orderedKeys.cend(), childElemKey) == view.orderedKeys.cend())
-							view.orderedKeys.push_back(childElemKey);
-					}
-				}
-			}
 		}		
 	}
 }
@@ -1374,12 +1677,47 @@ static bool isBindingExpression(const std::string& str)
 	return str.find('{') != std::string::npos && str.find(':') != std::string::npos && str.find('}') != std::string::npos;
 }
 
-void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, bool overwrite)
+// element types that are always extras, even without extra="true" (AmberELEC)
+static std::set<std::string> _autoExtraTypes { "stackpanel", "container", "clock", "networkIcon", "webimage", "batteryText", "batteryIcon", "rectangle" };
+
+// types inheriting another type's properties (AmberELEC)
+std::map<std::string, std::string> ThemeData::sBaseClasses {
+	{ "clock", "text" },
+	{ "batteryText", "text" },
+	{ "batteryIcon", "image" },
+	{ "networkIcon", "image" },
+	{ "webimage", "image" }
+};
+
+bool ThemeData::findPropertyFromBaseClass(const std::string& typeName, const std::string& propertyName, ElementPropertyType& type)
+{
+	auto baseClassIt = sBaseClasses.find(typeName);
+	if (baseClassIt == sBaseClasses.cend())
+		return false;
+
+	auto baseElements = sElementMap.find(baseClassIt->second);
+	if (baseElements != sElementMap.cend())
+	{
+		auto it = baseElements->second.find(propertyName);
+		if (it != baseElements->second.cend())
+		{
+			type = it->second;
+			return true;
+		}
+	}
+
+	return findPropertyFromBaseClass(baseClassIt->second, propertyName, type);
+}
+
+void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::string, ElementPropertyType>& typeMap, ThemeElement& element, ThemeView& view, bool overwrite)
 {
 	// ThemeException error;
 	// error.setFiles(mPaths);
 
-	element.type = root.name();
+	// AmberELEC: <control name="x"> overrides common properties of an existing element without changing its type
+	const bool isControl = (strcmp(root.name(), "control") == 0);
+	if (element.type.empty() || !isControl)
+		element.type = root.name();
 
 	if (root.attribute("extra"))
 	{
@@ -1389,7 +1727,85 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			element.extra = 1;
 		else if (extra == "static")
 			element.extra = 2;
-	}	
+
+		if (element.extra && mPerGameOverrideTmp)
+			element.extra = 3; // per-game extra (<gameextras>)
+	}
+	else if (element.extra == 0 && _autoExtraTypes.find(element.type) != _autoExtraTypes.cend())
+		element.extra = 1;
+
+	// returns false if the property is unknown for this element
+	auto findType = [&](const std::string& name, ElementPropertyType& type)
+	{
+		auto typeIt = typeMap.find(name);
+		if (typeIt != typeMap.cend())
+		{
+			type = typeIt->second;
+			return true;
+		}
+
+		// <control> overriding an existing element: that element's own properties
+		if (isControl && element.type != "control")
+		{
+			auto elemTypeIt = sElementMap.find(element.type);
+			if (elemTypeIt != sElementMap.cend())
+			{
+				auto it = elemTypeIt->second.find(name);
+				if (it != elemTypeIt->second.cend())
+				{
+					type = it->second;
+					return true;
+				}
+			}
+		}
+
+		return findPropertyFromBaseClass(element.type, name, type);
+	};
+
+	// AmberELEC: importProperties="otherElement" copies another element's properties and storyboards
+	if (root.attribute("importProperties"))
+	{
+		std::string imports = root.attribute("importProperties").as_string();
+
+		auto importIt = view.elements.find(imports);
+		if (importIt == view.elements.cend())
+			importIt = view.elements.find(Utils::String::toLower(imports));
+
+		if (importIt != view.elements.cend() && &importIt->second != &element)
+		{
+			for (auto prop : importIt->second.properties)
+			{
+				std::string propName = prop.first;
+				if (Utils::String::endsWith(propName, "_binding"))
+					propName = propName.substr(0, propName.size() - 8);
+
+				ElementPropertyType type;
+				if (findType(propName, type))
+					element.properties[prop.first] = prop.second;
+			}
+
+			for (auto sb : importIt->second.storyboards)
+				element.storyboards[sb.first] = sb.second;
+		}
+	}
+
+	// AmberELEC: properties can also be given as attributes, e.g. <image name="x" pos="0 0" size="1 1" />
+	for (pugi::xml_attribute attribute : root.attributes())
+	{
+		const std::string name = attribute.name();
+		if (name == "extra" || name == "name" || name == "ifSubset" || name == "lang" || name == "region" || name == "verticalScreen" || name == "tinyScreen" ||
+			name == "ifHelpPrompts" || name == "ifCheevos" || name == "ifArch" || name == "ifNotArch" || name == "if" || name == "importProperties")
+			continue;
+
+		ElementPropertyType type = STRING;
+		if (!findType(name, type))
+			continue;
+
+		if (!overwrite && (element.properties.find(name) != element.properties.cend() || element.properties.find(name + "_binding") != element.properties.cend()))
+			continue;
+
+		processElement(root, element, name, resolveSystemVariable(mSystemThemeFolder, resolvePlaceholders(attribute.as_string())), type, attribute.as_string());
+	}
 
 	for(pugi::xml_node node = root.first_child(); node; node = node.next_sibling())
 	{
@@ -1413,33 +1829,89 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 		if (node.type() != pugi::node_element)
 			continue;
 
+		std::string name = node.name();
 		ElementPropertyType type = STRING;
 
-		auto typeIt = typeMap.find(node.name());
-		if(typeIt == typeMap.cend())
-		{
-			// nested element of a container (stackpanel children) - parsed as its own element
-			if (sElementMap.find(node.name()) != sElementMap.cend())
-				continue;
+		bool foundType = findType(name, type);
 
+		// <text name="x"><text name="y"><pos>...</pos></text></text> : a nested text element, not the text property
+		if (foundType && element.type == "text" && name == "text" && node.first_child() && node.first_child().type() == pugi::node_element)
+			foundType = false;
+
+		if (!foundType)
+		{
 			// Exception for menuIcons that can be extended
 			if (element.type == "menuIcons")
 				type = PATH;
+			else if (name == "animate" && element.type == "imagegrid")
+			{
+				name = "animateSelection"; // AmberELEC alias
+				type = BOOLEAN;
+			}
+			else if (name == "onclick")
+				continue; // mouse / touch action - no pointer input on these devices
+			else if (name == "itemTemplate" && (element.type == "textlist" || element.type == "imagegrid" || element.type == "carousel" || element.type == "gamecarousel"))
+			{
+				// AmberELEC <itemTemplate>: the elements drawn for each item instead of the default text / image
+				ThemeElement* child = nullptr;
+				for (auto& existing : element.children)
+					if (existing.first == "itemTemplate")
+						child = &existing.second;
+
+				if (child == nullptr)
+				{
+					element.children.push_back(std::pair<std::string, ThemeElement>("itemTemplate", ThemeElement()));
+					child = &element.children.back().second;
+				}
+
+				child->extra = 99; // never created as an extra component
+				parseElement(node, sElementMap.find("control")->second, *child, view, overwrite);
+				continue;
+			}
+			else if (sElementMap.find(name) != sElementMap.cend())
+			{
+				// AmberELEC: nested element, created as a child component of this element
+				const std::string childKey = node.attribute("name") ? node.attribute("name").as_string() : name;
+
+				ThemeElement* child = nullptr;
+				for (auto& existing : element.children)
+					if (existing.first == childKey && existing.second.type == name)
+						child = &existing.second;
+
+				if (child == nullptr)
+				{
+					element.children.push_back(std::pair<std::string, ThemeElement>(childKey, ThemeElement()));
+					child = &element.children.back().second;
+				}
+
+				child->extra = 1;
+				parseElement(node, sElementMap.find(name)->second, *child, view, overwrite);
+				continue;
+			}
 			else
 			{
-				LOG(LogWarning) << "Unknown property type \"" << node.name() << "\" (for element of type " << root.name() << ").";
+				LOG(LogWarning) << "Unknown property type \"" << name << "\" (for element of type " << root.name() << ").";
 				continue;
 			}
 		}
-		else
-			type = typeIt->second;
 		
-		if (!overwrite && (element.properties.find(node.name()) != element.properties.cend() ||
-			element.properties.find(std::string(node.name()) + "_binding") != element.properties.cend()))
+		if (!overwrite && (element.properties.find(name) != element.properties.cend() ||
+			element.properties.find(name + "_binding") != element.properties.cend()))
 			continue;
 
-		std::string str = resolveSystemVariable(mSystemThemeFolder, resolvePlaceholders(node.text().as_string()));
+		processElement(root, element, name, resolveSystemVariable(mSystemThemeFolder, resolvePlaceholders(node.text().as_string())), type, node.text().as_string());
+	}
+}
 
+void ThemeData::processElement(const pugi::xml_node& root, ThemeElement& element, const std::string& name, const std::string& value, ElementPropertyType type, const std::string& rawValue)
+{
+	const std::string& str = value;
+
+	// <webimage><path>: an url stays a string, a file is resolved like any other path
+	if (type == STRING && name == "path" && element.type == "webimage" && !Utils::String::startsWith(str, "http://") && !Utils::String::startsWith(str, "https://"))
+		type = PATH;
+
+	{
 		switch(type)
 		{
 		case NORMALIZED_RECT:
@@ -1458,7 +1930,7 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 					(float)atof(splits.at(2).c_str()), (float)atof(splits.at(3).c_str()));
 			}
 
-			element.properties[node.name()] = val;
+			element.properties[name] = val;
 			break;
 		}
 		case NORMALIZED_PAIR:
@@ -1468,27 +1940,27 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			{			
 				if (str.empty())
 				{
-					LOG(LogWarning) << "invalid normalized pair (property \"" << node.name() << "\", value \"" << str.c_str() << "\")";
+					LOG(LogWarning) << "invalid normalized pair (property \"" << name << "\", value \"" << str.c_str() << "\")";
 					break;
 				}
 
 				Vector2f val((float)atof(str.c_str()), (float)atof(str.c_str()));
-				element.properties[node.name()] = val;
+				element.properties[name] = val;
 				break;
 			}			
 
 			float first = atof(str.substr(0, divider).c_str());
 			float second = atof(str.substr(divider, std::string::npos).c_str());
-			element.properties[node.name()] = Vector2f(first, second);
+			element.properties[name] = Vector2f(first, second);
 			break;
 		}
 		case STRING:
 			if (isBindingExpression(str))
-				element.properties[std::string(node.name()) + "_binding"] = str;
+				element.properties[name + "_binding"] = str;
 			else
 			{
-				element.properties.erase(std::string(node.name()) + "_binding");
-				element.properties[node.name()] = str;
+				element.properties.erase(name + "_binding");
+				element.properties[name] = str;
 			}
 			break;
 		case PATH:
@@ -1510,7 +1982,7 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 				else if (element.type == "image" && path != "{random}" && path != "{random:thumbnail}" && path != "{random:marquee}" && path != "{random:image}")
 					LOG(LogWarning) << "unknow random element " << path;
 				else
-					element.properties[node.name()] = path;
+					element.properties[name] = path;
 
 				break;
 			}
@@ -1518,12 +1990,12 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			// AmberELEC: {game:image} / {system:theme} ... bindings are resolved per selection (BindingManager)
 			if (isBindingExpression(path))
 			{
-				element.properties[std::string(node.name()) + "_binding"] = path;
-				element.properties[node.name()] = path;
+				element.properties[name + "_binding"] = path;
+				element.properties[name] = path;
 				break;
 			}
 			else
-				element.properties.erase(std::string(node.name()) + "_binding");
+				element.properties.erase(name + "_binding");
 
 			if (path[0] == '/')
 			{
@@ -1548,33 +2020,33 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			if(!ResourceManager::getInstance()->fileExists(path))
 			{
 				std::stringstream ss;
-				ss << "Warning : could not find file \"" << node.text().get() << "\" ";
-				if(node.text().get() != path)
+				ss << "Warning : could not find file \"" << rawValue << "\" ";
+				if(rawValue != path)
 					ss << "(which resolved to \"" << path << "\") ";
 				LOG(LogWarning) << ss.str();
 			}
 			else
-				element.properties[node.name()] = path;
+				element.properties[name] = path;
 
 			break;
 		}
 		case COLOR:
 			if (isBindingExpression(str))
-				element.properties[std::string(node.name()) + "_binding"] = str;
+				element.properties[name + "_binding"] = str;
 			else
 			{
-				element.properties.erase(std::string(node.name()) + "_binding");
-				element.properties[node.name()] = getHexColor(str.c_str());
+				element.properties.erase(name + "_binding");
+				element.properties[name] = getHexColor(str.c_str());
 			}
 			break;
 		case FLOAT:
 		{
 			if (isBindingExpression(str))
-				element.properties[std::string(node.name()) + "_binding"] = str;
+				element.properties[name + "_binding"] = str;
 			else
 			{
-				element.properties.erase(std::string(node.name()) + "_binding");
-				element.properties[node.name()] = (float) atof(str.c_str());
+				element.properties.erase(name + "_binding");
+				element.properties[name] = (float) atof(str.c_str());
 			}
 			break;
 		}
@@ -1585,22 +2057,22 @@ void ThemeData::parseElement(const pugi::xml_node& root, const std::map<std::str
 			// Plain function calls without {x:y} tokens, e.g. exists("..."), are evaluated the same way
 			if (isBindingExpression(str) || str.find('(') != std::string::npos)
 			{
-				element.properties[std::string(node.name()) + "_binding"] = str;
-				element.properties[node.name()] = true;
+				element.properties[name + "_binding"] = str;
+				element.properties[name] = true;
 				break;
 			}
-			element.properties.erase(std::string(node.name()) + "_binding");
+			element.properties.erase(name + "_binding");
 
 			// only look at first char
 			char first = str[0];
 			// 1*, t* (true), T* (True), y* (yes), Y* (YES)
 			bool boolVal = (first == '1' || first == 't' || first == 'T' || first == 'y' || first == 'Y');
 
-			element.properties[node.name()] = boolVal;
+			element.properties[name] = boolVal;
 			break;
 		}
 		default:
-			LOG(LogWarning) << "Unknown ElementPropertyType for \"" << root.attribute("name").as_string() << "\", property " << node.name();
+			LOG(LogWarning) << "Unknown ElementPropertyType for \"" << root.attribute("name").as_string() << "\", property " << name;
 			break;
 		}
 	}
@@ -1688,10 +2160,10 @@ const std::shared_ptr<ThemeData>& ThemeData::getDefault()
 	return theme;
 }
 
-static GuiComponent* createThemeExtraComponent(const std::string& t, Window* window)
+GuiComponent* ThemeData::createExtraComponent(Window* window, const std::string& t, bool forceLoad)
 {
 	if(t == "image")
-		return new ImageComponent(window);
+		return new ImageComponent(window, forceLoad);
 	else if(t == "text")
 		return new TextComponent(window);
 	else if (t == "ninepatch")
@@ -1708,11 +2180,29 @@ static GuiComponent* createThemeExtraComponent(const std::string& t, Window* win
 		return new BatteryIconComponent(window);
 	else if (t == "batteryText")
 		return new BatteryTextComponent(window);
+	else if (t == "rating")
+		return new RatingComponent(window);
+	else if (t == "rectangle")
+		return new RectangleComponent(window);
+	else if (t == "webimage")
+		return new WebImageComponent(window);
+	else if (t == "container" || t == "control")
+		return new GuiComponent(window); // AmberELEC: plain box for nested elements
 
 	return nullptr;
 }
 
-std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window)
+void ThemeData::applySelfTheme(GuiComponent* comp, const ThemeElement& elem)
+{
+	auto theme = std::make_shared<ThemeData>();
+	ThemeView& view = theme->mViews.insert(std::pair<std::string, ThemeView>("default", ThemeView())).first->second;
+	view.elements["default"] = elem;
+	view.orderedKeys.push_back("default");
+
+	comp->applyTheme(theme, "default", "default", ThemeFlags::ALL);
+}
+
+std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData>& theme, const std::string& view, Window* window, bool forceLoad, bool perGameExtrasOnly)
 {
 	std::vector<GuiComponent*> comps;
 
@@ -1720,70 +2210,94 @@ std::vector<GuiComponent*> ThemeData::makeExtras(const std::shared_ptr<ThemeData
 	if(viewIt == theme->mViews.cend())
 		return comps;
 
-	// Pass 1: top-level extras (elem.parent empty) - unchanged behaviour.
-	std::map<std::string, GuiComponent*> tagToComp;
-
 	for(auto it = viewIt->second.orderedKeys.cbegin(); it != viewIt->second.orderedKeys.cend(); it++)
 	{
 		ThemeElement& elem = viewIt->second.elements.at(*it);
-		if(elem.extra && elem.parent.empty())
+		if(elem.extra && (!perGameExtrasOnly || elem.extra == 3))
 		{
-			GuiComponent* comp = createThemeExtraComponent(elem.type, window);
+			GuiComponent* comp = createExtraComponent(window, elem.type, forceLoad);
 			if (comp == nullptr)
 				continue;
 
 			comp->setIsStaticExtra(elem.extra == 2);
 			comp->setTag((*it).c_str());
 			comp->setDefaultZIndex(10);
-			comp->applyTheme(theme, view, *it, ThemeFlags::ALL);
+			comp->applyTheme(theme, view, *it, ThemeFlags::ALL); // nested elements are created here (loadThemedChildren)
 			comps.push_back(comp);
-			tagToComp[*it] = comp;
 		}
 	}
-
-	// Pass 2: elements nested inside a container (e.g. stackpanel) in the theme XML.
-	// These are NOT added to comps - they're owned/rendered/updated via the container's
-	// mChildren (the container is responsible for deleting them, see StackPanelComponent
-	// destructor) - adding them to comps as well would double-render/double-update them.
-	std::vector<GuiComponent*> touchedContainers;
-
-	for(auto it = viewIt->second.orderedKeys.cbegin(); it != viewIt->second.orderedKeys.cend(); it++)
-	{
-		ThemeElement& elem = viewIt->second.elements.at(*it);
-		if(elem.parent.empty())
-			continue;
-
-		auto parentIt = tagToComp.find(elem.parent);
-		if (parentIt == tagToComp.end())
-		{
-			LOG(LogWarning) << "Element \"" << *it << "\" declares parent \"" << elem.parent << "\" but that container was not found or is not an extra";
-			continue;
-		}
-
-		GuiComponent* comp = createThemeExtraComponent(elem.type, window);
-		if (comp == nullptr)
-			continue;
-
-		comp->setTag((*it).c_str());
-		// addChild() BEFORE applyTheme(): pos/size normalization in GuiComponent::applyTheme
-		// scales against getParent()->getSize() when a parent exists, so the child must already
-		// be parented to the stackpanel for its coordinates to resolve relative to the container
-		// instead of the full screen.
-		parentIt->second->addChild(comp);
-		comp->applyTheme(theme, view, *it, ThemeFlags::ALL);
-
-		if (std::find(touchedContainers.cbegin(), touchedContainers.cend(), parentIt->second) == touchedContainers.cend())
-			touchedContainers.push_back(parentIt->second);
-	}
-
-	// StackPanelComponent's own applyTheme() (pass 1, before any children existed) already ran
-	// performLayout() once on an empty child list. onSizeChanged() re-runs it now that the real
-	// children are in place, so they're positioned before the first render instead of waiting on
-	// a later child size change during update().
-	for (GuiComponent* container : touchedContainers)
-		container->onSizeChanged();
 
 	return comps;
+}
+
+std::shared_ptr<ThemeData> ThemeData::clone(const std::string& viewName)
+{
+	auto theme = std::make_shared<ThemeData>();
+	theme->mPaths = mPaths;
+	theme->mVersion = mVersion;
+	theme->mDefaultView = mDefaultView;
+	theme->mVariables = mVariables;
+	theme->mEvaluatedVariables = mEvaluatedVariables;
+	theme->mSubsets = mSubsets;
+	theme->mColorset = mColorset;
+	theme->mIconset = mIconset;
+	theme->mMenu = mMenu;
+	theme->mSystemview = mSystemview;
+	theme->mGamelistview = mGamelistview;
+	theme->mSystemThemeFolder = mSystemThemeFolder;
+	theme->mLanguage = mLanguage;
+	theme->mRegion = mRegion;
+
+	if (!viewName.empty())
+	{
+		auto view = mViews.find(viewName);
+		if (view != mViews.cend())
+			theme->mViews.insert(std::pair<std::string, ThemeView>(viewName, view->second));
+	}
+	else
+		theme->mViews = mViews;
+
+	return theme;
+}
+
+bool ThemeData::appendFile(const std::string& path, bool perGameOverride)
+{
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file(path.c_str());
+	if (!result)
+	{
+		LOG(LogWarning) << "Error parsing file: \n    " << result.description() << "    from included file \"" << path << "\"";
+		return false;
+	}
+
+	pugi::xml_node root = doc.child("theme");
+	if (!root)
+	{
+		LOG(LogWarning) << "Missing <theme> tag!    from included file \"" << path << "\"";
+		return false;
+	}
+
+	mPaths.push_back(path);
+	mVariables["currentPath"] = Utils::FileSystem::getParent(path);
+	mPerGameOverrideTmp = perGameOverride;
+
+	try
+	{
+		parseVariables(root);
+		parseTheme(root);
+	}
+	catch (ThemeException& e)
+	{
+		LOG(LogWarning) << e.what();
+	}
+
+	mPerGameOverrideTmp = false;
+	mPaths.pop_back();
+
+	if (mPaths.size())
+		mVariables["currentPath"] = Utils::FileSystem::getParent(mPaths.back());
+
+	return true;
 }
 
 std::map<std::string, ThemeSet> ThemeData::getThemeSets()
@@ -1868,6 +2382,25 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 
 		if (elem->has("cornerSize"))
 			Background.cornerSize = elem->get<Vector2f>("cornerSize");
+
+		if (elem->has("scrollbarColor"))
+			Background.scrollbarColor = elem->get<unsigned int>("scrollbarColor");
+
+		if (elem->has("scrollbarSize"))
+			Background.scrollbarSize = elem->get<float>("scrollbarSize");
+
+		if (elem->has("scrollbarCorner"))
+			Background.scrollbarCorner = elem->get<float>("scrollbarCorner");
+
+		if (elem->has("scrollbarAlignment"))
+			Background.scrollbarAlignment = elem->get<std::string>("scrollbarAlignment");
+	}
+
+	elem = theme->getElement("menu", "menugrid", "menuGrid");
+	if (elem && elem->has("separatorColor"))
+	{
+		Grid.hasSeparatorColor = true;
+		Grid.separatorColor = elem->get<unsigned int>("separatorColor");
 	}
 
 	elem = theme->getElement("menu", "menutitle", "menuText");
@@ -1936,6 +2469,11 @@ ThemeData::ThemeMenu::ThemeMenu(ThemeData* theme)
 			Icons.button = elem->get<std::string>("path");
 		if (elem->has("filledPath"))
 			Icons.button_filled = elem->get<std::string>("filledPath");
+		if (elem->has("cornerSize"))
+		{
+			Button.hasCornerSize = true;
+			Button.cornerSize = elem->get<Vector2f>("cornerSize");
+		}
 	}
 
 	elem = theme->getElement("menu", "menutextedit", "menuTextEdit");
@@ -2017,7 +2555,7 @@ std::vector<std::pair<std::string, std::string>> ThemeData::getViewsOfTheme()
 	std::vector<std::pair<std::string, std::string>> ret;
 	for (auto it = mViews.cbegin(); it != mViews.cend(); ++it)
 	{
-		if (it->first == "menu" || it->first == "system" || it->first == "screen")
+		if (it->first == "menu" || it->first == "system" || it->first == "screen" || it->first == "splash")
 			continue;
 
 		ret.push_back(std::pair<std::string, std::string>(it->first, it->second.displayName.empty() ? it->first : it->second.displayName));
