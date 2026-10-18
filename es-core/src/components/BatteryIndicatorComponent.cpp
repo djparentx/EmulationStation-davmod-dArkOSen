@@ -23,8 +23,9 @@ void BatteryIndicatorComponent::init()
 	}
 	else
 	{
-		setPosition(Renderer::getScreenWidth() * 0.955, Renderer::getScreenHeight() *0.0125);
-		setSize(Renderer::getScreenWidth() * 0.033, Renderer::getScreenHeight() *0.033);
+		mHorizontalAlignment = ALIGN_RIGHT;
+		setPosition(Renderer::getScreenWidth() * 0.75, Renderer::getScreenHeight() *0.0125);
+		setSize(Renderer::getScreenWidth() * 0.24, Renderer::getScreenHeight() *0.033);
 	}
 
 	// Use the same gap between icons (network/bluetooth/battery) as the one used

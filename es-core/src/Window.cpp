@@ -339,7 +339,7 @@ void Window::update(int deltaTime)
 #endif
 
 				if (Settings::getInstance()->getBool("ClockMode12"))
-					strftime(clockBuf, sizeof(clockBuf), "%I:%M %p", &clockTstruct);
+					strftime(clockBuf, sizeof(clockBuf), "%-I:%M %p", &clockTstruct);
 				else
 					strftime(clockBuf, sizeof(clockBuf), "%H:%M", &clockTstruct);
 

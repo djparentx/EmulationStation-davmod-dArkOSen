@@ -49,7 +49,7 @@ void ClockComponent::update(int deltaTime)
 			// %Y %m %d %H %M %S and silently drops %I/%p (12-hour mode rendered ":20 ")
 			char clockBuf[16];
 			if (Settings::getInstance()->getBool("ClockMode12"))
-				strftime(clockBuf, sizeof(clockBuf), "%I:%M %p", &clockTstruct);
+				strftime(clockBuf, sizeof(clockBuf), "%-I:%M %p", &clockTstruct);
 			else
 				strftime(clockBuf, sizeof(clockBuf), "%H:%M", &clockTstruct);
 
