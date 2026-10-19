@@ -78,6 +78,21 @@ void BatteryIndicatorComponent::init()
 	updateBatteryInfo();
 }
 
+void BatteryIndicatorComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
+{
+	ControllerActivityComponent::applyTheme(theme, view, element, properties);
+
+	// Theme has no batteryIndicator element -> ES default: right-aligned row ending at 0.99W.
+	// Themes that define the element keep the original init() fallbacks untouched.
+	if (theme->getElement(view, element, element) == nullptr && !Renderer::isSmallScreen())
+	{
+		mHorizontalAlignment = ALIGN_RIGHT;
+		setPosition(Renderer::getScreenWidth() * 0.6, Renderer::getScreenHeight() * 0.0125);
+		setSize(Renderer::getScreenWidth() * 0.39, Renderer::getScreenHeight() * 0.065);
+		mSpacing = (Renderer::getScreenHeight() / 200.0f) + (mSize.y() * 0.125f);
+	}
+}
+
 void ControllerActivityComponent::reloadNetworkIcons()
 {
 	// Drop the existing references first: TextureResource caches by path using a

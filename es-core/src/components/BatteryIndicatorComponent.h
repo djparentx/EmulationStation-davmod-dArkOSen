@@ -11,6 +11,9 @@ class BatteryIndicatorComponent : public ControllerActivityComponent
 public:
 	BatteryIndicatorComponent(Window* window);
 
+public:
+	virtual void applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties) override;
+
 protected:
 	virtual void init() override;
 };
