@@ -23,9 +23,8 @@ void BatteryIndicatorComponent::init()
 	}
 	else
 	{
-		mHorizontalAlignment = ALIGN_RIGHT;
-		setPosition(Renderer::getScreenWidth() * 0.75, Renderer::getScreenHeight() *0.0125);
-		setSize(Renderer::getScreenWidth() * 0.24, Renderer::getScreenHeight() *0.033);
+		setPosition(Renderer::getScreenWidth() * 0.955, Renderer::getScreenHeight() *0.0125);
+		setSize(Renderer::getScreenWidth() * 0.033, Renderer::getScreenHeight() *0.033);
 	}
 
 	// Use the same gap between icons (network/bluetooth/battery) as the one used
@@ -77,6 +76,20 @@ void BatteryIndicatorComponent::init()
 	}
 
 	updateBatteryInfo();
+}
+
+void BatteryIndicatorComponent::applyTheme(const std::shared_ptr<ThemeData>& theme, const std::string& view, const std::string& element, unsigned int properties)
+{
+	ControllerActivityComponent::applyTheme(theme, view, element, properties);
+
+	// Theme has no batteryIndicator element -> ES default: right-aligned row ending at 0.99W.
+	// Themes that define the element keep the original init() fallbacks untouched.
+	if (theme->getElement(view, element, element) == nullptr && !Renderer::isSmallScreen())
+	{
+		mHorizontalAlignment = ALIGN_RIGHT;
+		setPosition(Renderer::getScreenWidth() * 0.75, Renderer::getScreenHeight() * 0.0125);
+		setSize(Renderer::getScreenWidth() * 0.24, Renderer::getScreenHeight() * 0.033);
+	}
 }
 
 void ControllerActivityComponent::reloadNetworkIcons()
