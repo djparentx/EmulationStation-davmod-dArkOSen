@@ -33,9 +33,20 @@ private:
 		float x, y, w, h;
 		unsigned int color, colorEnd;
 		bool horizontalGradient;
+
+		// image bar (<path>): drawn in its box at any resolution
+		std::string path;
+		bool  tile = false;
+		int   sizeMode = 0; // 0 <size> (stretch), 1 <minSize> (cover), 2 <maxSize> (fit)
+		float originX = 0, originY = 0;
+		std::shared_ptr<TextureResource> texture;
+		float dx = 0, dy = 0, dw = 0, dh = 0; // drawn quad
+		float u0 = 0, v0 = 0, u1 = 1, v1 = 1; // texture area (v: 0 = top)
 	};
 
 	void loadProgressBar(const ThemeData::ThemeElement* elem, ProgressBar& bar, bool geometry);
+	void loadProgressBarImage(ProgressBar& bar);
+	void renderProgressBarImage(const ProgressBar& bar, unsigned char alpha);
 
 	bool            mThemed;
 	std::string     mThemeSet;
@@ -46,6 +57,10 @@ private:
 
 	ProgressBar     mInactiveProgressbar;
 	ProgressBar     mActiveProgressbar;
+
+	// the background picture, laid out like the progress bar drawn with the same picture
+	ProgressBar     mBackgroundBar;
+	bool            mBackgroundAsBar;
 	float           mRoundCorners;
 
 	unsigned int    mBackgroundColor;

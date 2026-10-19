@@ -396,6 +396,23 @@ void ImageComponent::updateVertices()
 	mVertices[3] = { { bottomRight.x(), bottomRight.y() },
 	{ mBottomRightCrop.x() * px, 1.0f - mBottomRightCrop.y() }, color };
 
+	// minSize: the cropped image fills the target box, placed by origin (as Batocera/AmberELEC)
+	if (mTargetIsMin)
+	{
+		Vector2f targetSize = Vector2f(mTargetSize.x() - mPadding.x() - mPadding.z(), mTargetSize.y() - mPadding.y() - mPadding.w());
+		Vector2f paddingOffset = Vector2f(mPadding.x() - (mPadding.x() + mPadding.z()) * mOrigin.x(), mPadding.y() - (mPadding.y() + mPadding.w()) * mOrigin.y());
+
+		float x = (mSize.x() - targetSize.x()) * mOrigin.x() + paddingOffset.x();
+		float y = (mSize.y() - targetSize.y()) * mOrigin.y() + paddingOffset.y();
+		float r = x + targetSize.x();
+		float b = y + targetSize.y();
+
+		mVertices[0].pos[0] = x; mVertices[0].pos[1] = y;
+		mVertices[1].pos[0] = x; mVertices[1].pos[1] = b;
+		mVertices[2].pos[0] = r; mVertices[2].pos[1] = y;
+		mVertices[3].pos[0] = r; mVertices[3].pos[1] = b;
+	}
+
 	// round vertices
 	for(int i = 0; i < 4; ++i)
 		mVertices[i].pos.round();
