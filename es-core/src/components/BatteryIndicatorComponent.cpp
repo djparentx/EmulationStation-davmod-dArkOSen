@@ -87,8 +87,9 @@ void BatteryIndicatorComponent::applyTheme(const std::shared_ptr<ThemeData>& the
 	if (theme->getElement(view, element, element) == nullptr && !Renderer::isSmallScreen())
 	{
 		mHorizontalAlignment = ALIGN_RIGHT;
-		setPosition(Renderer::getScreenWidth() * 0.75, Renderer::getScreenHeight() * 0.0125);
-		setSize(Renderer::getScreenWidth() * 0.24, Renderer::getScreenHeight() * 0.033);
+		setPosition(Renderer::getScreenWidth() * 0.6, Renderer::getScreenHeight() * 0.0125);
+		setSize(Renderer::getScreenWidth() * 0.39, Renderer::getScreenHeight() * 0.065);
+		mSpacing = (Renderer::getScreenHeight() / 200.0f) + (mSize.y() * 0.125f);
 	}
 }
 
