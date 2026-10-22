@@ -71,16 +71,6 @@ New menu between **UI Settings** and **Sound Settings** — **START > NETWORK SE
 | **Samba Sharing** | Toggle Samba on/off instantly, plus "on boot" |
 | **SSH Sharing** | Toggle SSH on/off instantly, plus "on boot" |
 
-### ⚡ Quick Settings (by Jason)
-The status line at the bottom of the **Main Menu** (`BAT: | SND: | BRT: | WIFI:`) is now clickable and opens a shortcut menu:
-
-| Entry | Jumps to |
-|-------|----------|
-| **Battery Plus** | Advanced Settings > BatteryPlus Settings |
-| **Sound** | Sound Settings |
-| **Brightness** | Display Settings and Info |
-| **Wi-Fi** | Network Settings |
-
 ### 🎮 Last 20 Played Games (by Jason)
 New menu — **START > GAME COLLECTION SETTINGS > LAST 20 PLAYED GAMES**:
 
