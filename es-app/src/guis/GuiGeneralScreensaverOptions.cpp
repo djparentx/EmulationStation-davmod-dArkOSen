@@ -206,6 +206,10 @@ void GuiGeneralScreensaverOptions::openSlideshowScreensaverOptions() {
     mWindow->pushGui(new GuiSlideshowScreensaverOptions(mWindow, _("SLIDESHOW SCREENSAVER").c_str()));
 }
 
+void GuiGeneralScreensaverOptions::openDateTimeScreensaverOptions() {
+	mWindow->pushGui(new GuiDatetimeScreensaverOptions(mWindow, _("DATE & TIME SCREENSAVER").c_str()));
+}
+
 // Aquarium settings, written straight into the aquarium's own ini
 void GuiGeneralScreensaverOptions::addAquariumOptions()
 {
