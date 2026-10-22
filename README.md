@@ -1,3 +1,5 @@
+[<img width="200" height="67" alt="ChatGPT Image Aug 12, 2026, 02_04_12 PM" img align="right"  src="https://github.com/user-attachments/assets/7eb7b583-5d57-4884-ae90-ad7127d733c4" alt="Right aligned" />](https://ko-fi.com/O8Z424G15Y)
+
 # EmulationStation davmod — dArkOSen Edition fcamod
 
 ![Platform](https://img.shields.io/badge/Platform-R36S-blue)
@@ -226,6 +228,6 @@ Every push builds automatically via GitHub Actions:
 
 ## ☕ Support the project
 
-[![Ko-fi](https://img.shields.io/badge/☕_Buy_me_a_coffee-djparentx-bleu?style=for-the-badge)](https://ko-fi.com/djparent)
+[<img width="200" height="67" alt="ChatGPT Image Aug 12, 2026, 02_04_12 PM" img align="left"  src="https://github.com/user-attachments/assets/7eb7b583-5d57-4884-ae90-ad7127d733c4" />](https://ko-fi.com/O8Z424G15Y)
 
 [![Ko-fi](https://img.shields.io/badge/☕_Buy_me_a_coffee-jason3x-red?style=for-the-badge)](https://ko-fi.com/jason3x)
