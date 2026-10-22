@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/License-Free-lightgrey)
 
 A custom fork of [christianhaitian/EmulationStation-fcamod](https://github.com/christianhaitian/EmulationStation-fcamod) (branch `351v`) targeting **dArkOSen** on the **R36S** handheld.
-Built automatically via GitHub Actions using the official Mali RK3326 libraries — no cross-compilation issues, no black screen.
+Built automatically via GitHub Actions using the official Mali RK3326 libraries.
 
 ---
 
