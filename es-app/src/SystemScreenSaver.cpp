@@ -1061,6 +1061,8 @@ static const float FLIP_AMPM_Y = 272.0f;
 static const float FLIP_AMPM_W = 40.0f;
 static const float FLIP_AMPM_H = 21.0f;
 static const float FLIP_DATE_Y = 575.0f;
+static const float FLIP_CONTENT_TOP = 206.0f;	// frame top
+static const float FLIP_CONTENT_H   = 444.0f;	// frame top -> date bottom
 static const int   FLIP_DELAY_MS = 100;
 
 static std::string dateTimeFontPath(const std::string& path)
@@ -1287,14 +1289,16 @@ void DateTimeScreenSaver::initFlip()
 {
 	mFlip12h = Settings::getInstance()->getBool("ClockMode12");
 
-	// Fit design space into viewport, aspect preserved, centered (same fit as background)
+	// Fit visible content (frame + date) into viewport: width-limited on 4:3 and 16:9,
+	// content band centred vertically; canvas outside the viewport is clipped
 	float sx = mViewport.w / FLIP_DESIGN_W;
-	float sy = mViewport.h / FLIP_DESIGN_H;
+	float sy = mViewport.h / FLIP_CONTENT_H;
 	mFlipScale = sx < sy ? sx : sy;
 	mFlipX = mViewport.x + (mViewport.w - FLIP_DESIGN_W * mFlipScale) * 0.5f;
-	mFlipY = mViewport.y + (mViewport.h - FLIP_DESIGN_H * mFlipScale) * 0.5f;
+	mFlipY = mViewport.y + mViewport.h * 0.5f - (FLIP_CONTENT_TOP + FLIP_CONTENT_H * 0.5f) * mFlipScale;
 
-	mClockFace = createClockLayer("background.png", false);
+	mClockFace = createFlipLayer(0.0f, 0.0f, FLIP_DESIGN_W, FLIP_DESIGN_H);
+	mClockFace->setImage(FLIP_DIR + "background.png");
 
 	time_t now = time(NULL);
 	std::string glyphs[4];
