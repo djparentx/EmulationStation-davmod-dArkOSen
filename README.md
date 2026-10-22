@@ -12,13 +12,22 @@ Built automatically via GitHub Actions using the official Mali RK3326 libraries 
 
 ## ✨ What's new compared to upstream
 
-### 🔋 Battery icon (by Jason)
+### **_SYSTEM WIDE_**
+- added Batocera/AmberElec theme support!
+  - fully backwards compatible with existing themes
+  - if using a theme with OS choices (ie ArkOS, Batocera, Rockinx) always choose Batocera, Amberelec or Pan4elec, not ArkOS
+  - tested on over 52 themes including OGA and fcamod originals
+  - use [ThemeGallery](https://github.com/djparentx/ThemeGallery/releases) to find supported themes
 
-- Battery level and charging state shown as a small icon in the status bar, with an optional percentage readout.
-- **Colored by charge level** (`Default` pack):
-  - <img src="https://img.shields.io/badge/-Full%20%2F%20Good%20%2F%20Medium-66c166?style=flat-square"> `> 25%`
-  - <img src="https://img.shields.io/badge/-Low-ff4848?style=flat-square"> `≤ 25%`
-  - <img src="https://img.shields.io/badge/-Charging-f7ec26?style=flat-square"> while plugged in
+---
+
+### **Distro Version**
+- click Distro Version to check for dArkOSen updates directly from the main menu.
+
+---
+
+### 🔋 Customizable Battery icon (by Jason)
+
 - **Icon pack selector** — **START > UI SETTINGS > BATTERY ICON**:
 
   | Pack | Look |
@@ -30,6 +39,8 @@ Built automatically via GitHub Actions using the official Mali RK3326 libraries 
 
 - Powered by [knubat/BatteryPlus](https://github.com/Mikhailzrick/knubat.components) — a voltage-based percentage daemon for RK3326 handhelds, with its own settings menu (see below).
 
+---
+
 ### 📶🔵 WiFi & Bluetooth icons (by Jason)
 
 - Live status icons in the status bar, each with an **off / active / connected** state (WiFi also has **sharing** and **service** states for SSH/Samba/Filebrowser).
@@ -39,37 +50,76 @@ Built automatically via GitHub Actions using the official Mali RK3326 libraries 
 - Switching either the **battery** or the **network/Bluetooth** icon pack applies **instantly**, with no EmulationStation restart required.
 - Status bar spacing is unified: the gap between the WiFi, Bluetooth and battery icons, and between the battery icon and its percentage, all match.
 
+---
+
 ### 🖥️ Display Settings
 - **Gamma slider** — adjust screen gamma (0.4 → 1.8) in real time, in **START > DISPLAY SETTINGS**.
+- **Temperature slider** — adjust screen temperature globally, affects all apps and emnulators
+- **Night Filter** — a second screen temperature setting that runs on a schedule
 - Mipmap rendering fix for crisp status bar icons at any size.
-- **Distro Version** — click to check for dArkOS EN updates directly from the main menu.
+
+---
+
+### 🖥️ UI Settings
+- **Play Timer** — set to OFF/15/30/45/60/90/120 minutes
+  - tracks actual game play, not screen on time
+  - when the timer ends it auto-saves (when possible) and exits the game
+  - launching a game after the limit is reached shows "Come back tomorrow!"
+  - popup warning in Retroarch 5 minutes before the limit is reached
+  - vibration warning every minute of last 5 minutes
+  - [optional] audio warning every minute of the last five minutes
+  - when enabled routes audio through dmix, may affect performance
+  - ducks the game volume so you can hear it clearly
+  - daily timer resets at midnight
+  - controls are hidden in kiosk or kids mode
+
+---
 
 ### 📅 Date & Time
 - Real-time clock in **START > ADVANCED SETTINGS > DATE & TIME**.
 - Set date, time and timezone directly from ES.
+
+---
 
 ### ⚡ Performance Settings w/Benchmarking
 New menu — **START > PERFORMANCE SETTINGS**:
 
 | Entry | Description |
 |-------|-------------|
+| **CPU Grade** | Silicon quality as read by the kernel |
 | **CPU Temp** | Real-time CPU temperature |
 | **CPU Cores** | Enable/disable CPU cores on the fly (1–4) |
 | **CPU Governor** | performance / ondemand / schedutil / powersave |
-| **GPU Governor** | GPU frequency governor |
-| **Global Performance** | Quick preset for the whole device |
+| **CPU Freq** | Set CPU max frequency |
+| **GPU Freq** | Set GPU max frequency |
+| **RAM Freq** | Set RAM max frequency |
+| **ZRAM Size** | Enable and set ZRAM |
 
-### 🌐 Network Settings menu (by Jason)
+- all frequency settings can be set to restore after boot
+
+---
+
+### 🌐 Network Settings menu (w/help from Jason)
 New menu between **UI Settings** and **Sound Settings** — **START > NETWORK SETTINGS**:
+- Tuned NetworkManager config (IPv6 off, background scan, buffer sizes) and a PSK fix for persistent WiFi connections
 
 | Entry | Description |
 |-------|-------------|
 | **Hostname** | Editable; shown only when SSH or Samba is active |
 | **IP Address** | Shown only when WiFi is connected |
-| **Wi-Fi Manager** | Launches `/opt/system/Wi-Fi Manager.sh` |
+| **Gateway** | Shown only when WiFi is connected |
+| **DNS** | Shown only when WiFi is connected |
+| **Wifi Enabled** | Toggle WiFi on/off instantly |
+| **Scan WiFi Networks** | Scan for nearby WiFi networks |
+| **Activate Existing Connection** | Connect to a known or saved network |
+| **Delete Existing Connection** | Delete a known or saved network |
+| **Remote Services** | Toggle remote sharing on/off near instantly |
+| **Remote Services Auto-Start** | Start remote services at boot |
+| **Root Samba Access** | Allows root access to files via SMB sharing |
+| **WiFi Monitor Service** | A WiFi keep alive service that also turns off WiFi if disconnected for a long period |
 | **Bluetooth Manager** | Launches `/opt/system/BT Manager.sh` |
-| **Samba Sharing** | Toggle Samba on/off instantly, plus "on boot" |
-| **SSH Sharing** | Toggle SSH on/off instantly, plus "on boot" |
+
+---
 
 ### 🎮 Last 20 Played Games (by Jason)
 New menu — **START > GAME COLLECTION SETTINGS > LAST 20 PLAYED GAMES**:
@@ -81,8 +131,10 @@ New menu — **START > GAME COLLECTION SETTINGS > LAST 20 PLAYED GAMES**:
 - A `*` marks entries that have a savestate available to resume from.
 - RetroArch launcher scripts are filtered out; slot injection is skipped for MAME cores and non-RetroArch emulators (PICO-8, PPSSPP standalone), which still launch normally.
 
-### 🔋 Battery Settings menu (by Jason)
-New menu — **START > BATTERY SETTINGS**:
+---
+
+### 🔋 BatteryPlus Settings menu (by Jason)
+New menu — **START > ASDVANCED > BATTERYPLUS SETTINGS**:
 
 | Entry | Description |
 |-------|-------------|
@@ -93,12 +145,22 @@ New menu — **START > BATTERY SETTINGS**:
 | **BatteryPlus Mode** | `voltage` or `pmic` |
 | **Reset Calibration** | Delete learned voltage anchors |
 
-### 📡 Remote Services
-One-click toggle that starts/stops **SSH**, **Samba** (with optional `/roms2` share) and **Filebrowser** (web file manager on port 80) together, plus:
-- **Samba Root Access** — default vs. root Samba config
-- **Auto-start at boot** for all remote services
-- **WiFi Monitor** — background service for connection stability
-- Tuned NetworkManager config (IPv6 off, background scan, buffer sizes) and a PSK fix for persistent WiFi connections
+---
+
+### 📡 Sound Settings
+- **Verbal Play Timer Warning** — a verbal warning for the play timer limit expiry, affects performance
+- **Battery Voice Warning** has been fixed — affects performance when enabled
+- **Boot Volume (%)** — set a consistent boot volume regardless of the value at shutdown
+
+---
+
+### ☁️ Scraper
+- additional systems added to Ports: PC Windows, Xbox, Android, PS4 and Switch
+  - increased chance of finding a match
+  - increased chance of auto-scraping finding the wrong match
+  - choose manually for best results
+ 
+---
 
 ### ☁️ SaveSync
 New menu — **START > ADVANCED SETTINGS > SAVESYNC SETTINGS**. Syncs your saves and savestates with a remote share:
@@ -114,9 +176,13 @@ New menu — **START > ADVANCED SETTINGS > SAVESYNC SETTINGS**. Syncs your saves
 
 Entries below the toggle appear only while SaveSync is enabled, and missing dependencies for the selected protocol are checked automatically.
 
+---
+
 ### 🌍 Translations (by Jason)
 All new strings translated into **17 languages**:
 `br` `de` `el` `es` `fr` `it` `ja` `ko` `pl` `pt` `ru` `sv` `ua` `uk` `vi` `zh-CN` `zh-TW`
+
+---
 
 ### 🔄 Auto-build (by Jason)
 Every push builds automatically via GitHub Actions:
