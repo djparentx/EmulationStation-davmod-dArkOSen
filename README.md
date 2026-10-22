@@ -1,4 +1,4 @@
-# EmulationStation fcamod — dArkOSen Edition
+# EmulationStation davmod — dArkOSen Edition fcamod
 
 ![Platform](https://img.shields.io/badge/Platform-R36S-blue)
 ![OS](https://img.shields.io/badge/OS-dArkOSen-green)
