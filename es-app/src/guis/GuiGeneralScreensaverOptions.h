@@ -15,6 +15,8 @@ private:
 	void openVideoScreensaverOptions();
 	void openSlideshowScreensaverOptions();
 	void openDateTimeScreensaverOptions();
+	void addAquariumOptions();
+	void reopen();
 };
 
 #endif // ES_APP_GUIS_GUI_GENERAL_SCREENSAVER_OPTIONS_H

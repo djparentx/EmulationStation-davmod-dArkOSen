@@ -26,9 +26,13 @@
 #include "resources/Font.h"
 #include "resources/ResourceManager.h"
 #include "utils/TimeUtil.h"
+#include "VolumeControl.h"
+#include "platform.h"
 
 #define FADE_TIME					(500)
 #define DATE_TIME_UPDATE_INTERVAL	(100)
+#define AQUARIUM_DIR				"/usr/bin/emulationstation/resources/aquarium"
+#define AQUARIUM_INI				"/home/ark/.config/aquarium.ini"
 
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
@@ -45,7 +49,9 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mSystemName(""),
 	mGameName(""),
 	mCurrentGame(NULL),
-	mLoadingNext(false)
+	mLoadingNext(false),
+	mAquariumPending(false)
+{
 {
 
 	mWindow->setScreenSaver(this);
@@ -75,7 +81,7 @@ SystemScreenSaver::~SystemScreenSaver()
 
 bool SystemScreenSaver::allowSleep()
 {
-	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr && mDateTimeScreensaver == nullptr);
+	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr && mDateTimeScreensaver == nullptr && !mAquariumPending);
 }
 
 bool SystemScreenSaver::isScreenSaverActive()
@@ -186,6 +192,17 @@ void SystemScreenSaver::startScreenSaver()
 		return;
 	}
 
+	else if (screensaver_behavior == "aquarium")
+	{
+		// separate program: started from update(), not from inside render()
+		mAquariumPending = true;
+		mState = STATE_SCREENSAVER_ACTIVE;
+		mOpacity = 0.0f;
+		PowerSaver::runningScreenSaver(true);
+		mTimer = 0;
+		return;
+	}
+
 	else if (screensaver_behavior == "datetime")
 	{
 		mDateTimeScreensaver = std::make_shared<DateTimeScreenSaver>(mWindow);
@@ -235,7 +252,8 @@ void SystemScreenSaver::stopScreenSaver()
 	mVideoScreensaver = nullptr;
 	mImageScreensaver = nullptr;
 	mDateTimeScreensaver = nullptr;
-	
+	mAquariumPending = false;
+
 	// we need this to loop through different videos
 	mState = STATE_INACTIVE;
 	PowerSaver::runningScreenSaver(false);
@@ -478,6 +496,13 @@ std::string SystemScreenSaver::pickRandomCustomImage()
 
 void SystemScreenSaver::update(int deltaTime)
 {
+	if (mAquariumPending)
+	{
+		mAquariumPending = false;
+		runAquarium();
+		return;
+	}
+{
 	// Date & time screensaver has no fade/swap cycle
 	if (mDateTimeScreensaver)
 	{
@@ -522,6 +547,38 @@ void SystemScreenSaver::update(int deltaTime)
 
 	if (mImageScreensaver)
 		mImageScreensaver->update(deltaTime);
+}
+
+// Runs the aquarium like a game launch: ES releases audio and the display,
+// waits for the aquarium to exit (any button), then comes back to the menu.
+void SystemScreenSaver::runAquarium()
+{
+	if (Utils::FileSystem::exists(AQUARIUM_DIR "/aquarium"))
+	{
+		AudioManager::getInstance()->deinit();
+		VolumeControl::getInstance()->deinit();
+
+		bool hideWindow = Settings::getInstance()->getBool("HideWindow");
+		mWindow->deinit(hideWindow);
+
+		int exitCode = runSystemCommand(AQUARIUM_DIR "/aquarium --screensaver --data " AQUARIUM_DIR " --config " AQUARIUM_INI, "", hideWindow ? NULL : mWindow);
+		if (exitCode != 0)
+			LOG(LogWarning) << "Aquarium screensaver exited with code " << exitCode;
+
+		mWindow->init(hideWindow);
+		VolumeControl::getInstance()->init();
+		AudioManager::getInstance()->init();
+		mWindow->normalizeNextUpdate();
+
+		if (Settings::getInstance()->getBool("audio.bgmusic"))
+			AudioManager::getInstance()->playRandomMusic();
+	}
+	else
+		LOG(LogError) << "Aquarium screensaver: " AQUARIUM_DIR "/aquarium not found";
+
+	// end the screensaver and restart the idle countdown
+	mWindow->cancelScreenSaver();
+	mWindow->resetIdleTimer();
 }
 
 void SystemScreenSaver::nextVideo() 

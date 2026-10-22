@@ -94,6 +94,7 @@ public:
 
 	void startScreenSaver();
 	bool cancelScreenSaver();
+	inline void resetIdleTimer() { mTimeSinceLastInput = 0; }
 	void renderScreenSaver();
 
 	void displayNotificationMessage(std::string message, int duration = -1);
