@@ -1047,6 +1047,22 @@ void VideoScreenSaver::update(int deltaTime)
 
 #define DATETIME_BG_DIR "/roms/screensaverbgs"
 
+// Flip clock layout, in background.png design pixels (1024x768)
+static const std::string FLIP_DIR = ":/clock/flip1/";
+static const float FLIP_DESIGN_W = 1024.0f;
+static const float FLIP_DESIGN_H = 768.0f;
+static const float FLIP_DIGIT_X[4] = { 163.0f, 325.0f, 550.0f, 712.0f };
+static const float FLIP_TOP_Y  = 252.0f;
+static const float FLIP_BOT_Y  = 382.0f;
+static const float FLIP_HALF_W = 148.0f;
+static const float FLIP_HALF_H = 130.0f;
+static const float FLIP_AMPM_X = 180.0f;
+static const float FLIP_AMPM_Y = 272.0f;
+static const float FLIP_AMPM_W = 40.0f;
+static const float FLIP_AMPM_H = 21.0f;
+static const float FLIP_DATE_Y = 575.0f;
+static const int   FLIP_DELAY_MS = 100;
+
 static std::string dateTimeFontPath(const std::string& path)
 {
 	return ResourceManager::getInstance()->fileExists(path) ? path : FONT_PATH_REGULAR;
@@ -1185,6 +1201,12 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		}
 	}
 
+	if (mClockStyle == "flip1")
+	{
+		initFlip();
+		return;
+	}
+
 	mClockFace = createClockLayer("clock.png", false);
 	mHourHand  = createClockLayer("hour_hand.png", true);
 	mMinHand   = createClockLayer("min_hand.png", true);
@@ -1209,6 +1231,13 @@ DateTimeScreenSaver::~DateTimeScreenSaver()
 	delete mMinHand;
 	delete mSecHand;
 	delete mBackground;
+
+	for (int i = 0; i < 4; i++)
+	{
+		delete mFlipTop[i];
+		delete mFlipBot[i];
+	}
+	delete mFlipAmPm;
 }
 
 ImageComponent* DateTimeScreenSaver::createClockLayer(const std::string& file, bool rotates)
@@ -1221,6 +1250,114 @@ ImageComponent* DateTimeScreenSaver::createClockLayer(const std::string& file, b
 	layer->setMaxSize((float)mViewport.w, (float)mViewport.h);
 	layer->setImage(":/clock/" + mClockStyle + "/" + file);
 	return layer;
+}
+
+// Flip clock: all coordinates are in the 1024x768 design space of background.png,
+// mapped to the screen through mFlipScale / mFlipX / mFlipY
+ImageComponent* DateTimeScreenSaver::createFlipLayer(float x, float y, float w, float h)
+{
+	auto layer = new ImageComponent(mWindow, true, true);
+	layer->setOrigin(0.0f, 0.0f);
+	layer->setPosition(mFlipX + x * mFlipScale, mFlipY + y * mFlipScale);
+	layer->setResize(w * mFlipScale, h * mFlipScale);
+	return layer;
+}
+
+// 12h: leading blank for 1-9 ; 24h: leading 0
+void DateTimeScreenSaver::getFlipGlyphs(const struct tm* t, std::string glyphs[4]) const
+{
+	int hour = t->tm_hour;
+
+	if (mFlip12h)
+	{
+		hour = hour % 12;
+		if (hour == 0)
+			hour = 12;
+		glyphs[0] = hour >= 10 ? "1" : "blank";
+	}
+	else
+		glyphs[0] = std::to_string(hour / 10);
+
+	glyphs[1] = std::to_string(hour % 10);
+	glyphs[2] = std::to_string(t->tm_min / 10);
+	glyphs[3] = std::to_string(t->tm_min % 10);
+}
+
+void DateTimeScreenSaver::initFlip()
+{
+	mFlip12h = Settings::getInstance()->getBool("ClockMode12");
+
+	// Fit design space into viewport, aspect preserved, centered (same fit as background)
+	float sx = mViewport.w / FLIP_DESIGN_W;
+	float sy = mViewport.h / FLIP_DESIGN_H;
+	mFlipScale = sx < sy ? sx : sy;
+	mFlipX = mViewport.x + (mViewport.w - FLIP_DESIGN_W * mFlipScale) * 0.5f;
+	mFlipY = mViewport.y + (mViewport.h - FLIP_DESIGN_H * mFlipScale) * 0.5f;
+
+	mClockFace = createClockLayer("background.png", false);
+
+	time_t now = time(NULL);
+	std::string glyphs[4];
+	getFlipGlyphs(localtime(&now), glyphs);
+
+	for (int i = 0; i < 4; i++)
+	{
+		mFlipTop[i] = createFlipLayer(FLIP_DIGIT_X[i], FLIP_TOP_Y, FLIP_HALF_W, FLIP_HALF_H);
+		mFlipBot[i] = createFlipLayer(FLIP_DIGIT_X[i], FLIP_BOT_Y, FLIP_HALF_W, FLIP_HALF_H);
+		mFlipTopGlyph[i] = glyphs[i];
+		mFlipBotGlyph[i] = glyphs[i];
+		mFlipTop[i]->setImage(FLIP_DIR + glyphs[i] + "a.png");
+		mFlipBot[i]->setImage(FLIP_DIR + glyphs[i] + "b.png");
+	}
+
+	if (mFlip12h)
+	{
+		mFlipAmPmGlyph = localtime(&now)->tm_hour < 12 ? "AM" : "PM";
+		mFlipAmPm = createFlipLayer(FLIP_AMPM_X, FLIP_AMPM_Y, FLIP_AMPM_W, FLIP_AMPM_H);
+		mFlipAmPm->setImage(FLIP_DIR + mFlipAmPmGlyph + ".png");
+	}
+
+	if (mDate)
+	{
+		mDate->setPosition((float)mViewport.x, mFlipY + FLIP_DATE_Y * mFlipScale);
+		mDate->setSize((float)mViewport.w, mViewport.h * 0.1f);
+	}
+}
+
+// Top half changes immediately, bottom half follows FLIP_DELAY_MS later
+void DateTimeScreenSaver::updateFlip(const struct tm* t, int deltaTime)
+{
+	std::string glyphs[4];
+	getFlipGlyphs(t, glyphs);
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (glyphs[i] != mFlipTopGlyph[i])
+		{
+			mFlipTopGlyph[i] = glyphs[i];
+			mFlipTop[i]->setImage(FLIP_DIR + glyphs[i] + "a.png");
+			mFlipDelay[i] = FLIP_DELAY_MS;
+		}
+		else if (mFlipBotGlyph[i] != mFlipTopGlyph[i])
+		{
+			mFlipDelay[i] -= deltaTime;
+			if (mFlipDelay[i] <= 0)
+			{
+				mFlipBotGlyph[i] = mFlipTopGlyph[i];
+				mFlipBot[i]->setImage(FLIP_DIR + mFlipBotGlyph[i] + "b.png");
+			}
+		}
+	}
+
+	if (mFlipAmPm)
+	{
+		std::string ampm = t->tm_hour < 12 ? "AM" : "PM";
+		if (ampm != mFlipAmPmGlyph)
+		{
+			mFlipAmPmGlyph = ampm;
+			mFlipAmPm->setImage(FLIP_DIR + ampm + ".png");
+		}
+	}
 }
 
 void DateTimeScreenSaver::setImage(const std::string path)
@@ -1264,6 +1401,12 @@ void DateTimeScreenSaver::update(int deltaTime)
 		return;
 	}
 
+	if (mClockStyle == "flip1")
+	{
+		updateFlip(t, deltaTime);
+		return;
+	}
+
 	mHourHand->setRotationDegrees(t->tm_hour * 30.0f + (t->tm_min / 60.0f) * 30.0f);
 	mMinHand->setRotationDegrees(t->tm_min * 6.0f);
 	if (mShowSeconds)
@@ -1288,6 +1431,21 @@ void DateTimeScreenSaver::render(const Transform4x4f& transform)
 	}
 
 	renderClipped(mClockFace, mViewport, transform);
+
+	if (mClockStyle == "flip1")
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			renderClipped(mFlipTop[i], mViewport, transform);
+			renderClipped(mFlipBot[i], mViewport, transform);
+		}
+
+		renderClipped(mFlipAmPm, mViewport, transform);
+
+		if (mDate)
+			mDate->render(transform);
+		return;
+	}
 
 	if (mDate)
 		mDate->render(transform);

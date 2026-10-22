@@ -111,6 +111,24 @@ private:
 	unsigned int	mClockColor;
 
 	std::string timeFormat() const;
+
+	// Flip clock (style "flip1")
+	void initFlip();
+	void updateFlip(const struct tm* t, int deltaTime);
+	void getFlipGlyphs(const struct tm* t, std::string glyphs[4]) const;
+	ImageComponent* createFlipLayer(float x, float y, float w, float h);
+
+	ImageComponent*	mFlipTop[4] = {};
+	ImageComponent*	mFlipBot[4] = {};
+	ImageComponent*	mFlipAmPm = nullptr;
+	std::string		mFlipTopGlyph[4];
+	std::string		mFlipBotGlyph[4];
+	std::string		mFlipAmPmGlyph;
+	int				mFlipDelay[4] = {};
+	bool			mFlip12h = false;
+	float			mFlipScale = 1.0f;
+	float			mFlipX = 0.0f;
+	float			mFlipY = 0.0f;
 };
 
 // Screensaver implementation for main window
