@@ -501,7 +501,7 @@ void SystemScreenSaver::update(int deltaTime)
 		runAquarium();
 		return;
 	}
-{
+
 	// Date & time screensaver has no fade/swap cycle
 	if (mDateTimeScreensaver)
 	{
