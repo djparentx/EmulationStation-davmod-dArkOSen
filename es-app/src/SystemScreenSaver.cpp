@@ -52,7 +52,6 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mLoadingNext(false),
 	mAquariumPending(false)
 {
-{
 
 	mWindow->setScreenSaver(this);
 	std::string path = getTitleFolder();
