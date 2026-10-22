@@ -48,7 +48,7 @@ Built automatically via GitHub Actions using the official Mali RK3326 libraries 
 - Real-time clock in **START > ADVANCED SETTINGS > DATE & TIME**.
 - Set date, time and timezone directly from ES.
 
-### ⚡ Performance Settings
+### ⚡ Performance Settings w/Benchmarking
 New menu — **START > PERFORMANCE SETTINGS**:
 
 | Entry | Description |
@@ -131,7 +131,7 @@ Every push builds automatically via GitHub Actions:
 
 - R36S running **dArkOSen**
 - No internet connection required — everything is included in the zip
-- `Wi-Fi Manager.sh` and `BT Manager.sh` in `/opt/system/` for the network manager entries
+- Application of the rootfs overlay containing all the additional scripts and binaries
 
 ---
 
