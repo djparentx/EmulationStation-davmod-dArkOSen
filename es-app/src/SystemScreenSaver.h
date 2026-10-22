@@ -115,22 +115,19 @@ private:
 	// Flip clock (style "flip1")
 	void initFlip();
 	void updateFlip(const struct tm* t, int deltaTime);
-	static const int FLIP_MAX_SLOTS = 12;	// 0-3 clock HHMM, 4-11 date YYYYMMDD
-	void getFlipGlyphs(const struct tm* t, std::string glyphs[FLIP_MAX_SLOTS]) const;
+	void getFlipGlyphs(const struct tm* t, std::string glyphs[4]) const;
 	ImageComponent* createFlipLayer(float x, float y, float w, float h);
 	bool isFlipStyle() const { return mClockStyle == "flip1" || mClockStyle == "flip2"; }
 
 	std::string		mFlipDir;
 
-	ImageComponent*	mFlipTop[FLIP_MAX_SLOTS] = {};
-	ImageComponent*	mFlipBot[FLIP_MAX_SLOTS] = {};
+	ImageComponent*	mFlipTop[4] = {};
+	ImageComponent*	mFlipBot[4] = {};
 	ImageComponent*	mFlipAmPm = nullptr;
-	ImageComponent*	mFlipDateBg = nullptr;
-	std::string		mFlipTopGlyph[FLIP_MAX_SLOTS];
-	std::string		mFlipBotGlyph[FLIP_MAX_SLOTS];
+	std::string		mFlipTopGlyph[4];
+	std::string		mFlipBotGlyph[4];
 	std::string		mFlipAmPmGlyph;
-	int				mFlipDelay[FLIP_MAX_SLOTS] = {};
-	int				mFlipSlots = 4;
+	int				mFlipDelay[4] = {};
 	bool			mFlip12h = false;
 	float			mFlipScale = 1.0f;
 	float			mFlipX = 0.0f;
