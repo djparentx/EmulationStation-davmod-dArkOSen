@@ -104,7 +104,7 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 		show_seconds->setState(settings->getBool("DateTimeScreenSaverShowSeconds"));
 		addWithLabel(_("SHOW SECONDS"), show_seconds);
 		addSaveFunc([show_seconds] { Settings::getInstance()->setBool("DateTimeScreenSaverShowSeconds", show_seconds->getState()); });
-	}show_seconds->getState()); });
+	}
 }
 
 GuiDatetimeScreensaverOptions::~GuiDatetimeScreensaverOptions()
