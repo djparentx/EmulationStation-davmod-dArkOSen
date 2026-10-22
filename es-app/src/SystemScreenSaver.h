@@ -117,6 +117,9 @@ private:
 	void updateFlip(const struct tm* t, int deltaTime);
 	void getFlipGlyphs(const struct tm* t, std::string glyphs[4]) const;
 	ImageComponent* createFlipLayer(float x, float y, float w, float h);
+	bool isFlipStyle() const { return mClockStyle == "flip1" || mClockStyle == "flip2"; }
+
+	std::string		mFlipDir;
 
 	ImageComponent*	mFlipTop[4] = {};
 	ImageComponent*	mFlipBot[4] = {};
