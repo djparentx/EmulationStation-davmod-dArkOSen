@@ -178,7 +178,7 @@ Entries below the toggle appear only while SaveSync is enabled, and missing depe
 
 ---
 
-### 🌍 Translations (by Jason)
+### 🌍 Translations (w/contributions from Jason)
 All new strings translated into **17 languages**:
 `br` `de` `el` `es` `fr` `it` `ja` `ko` `pl` `pt` `ru` `sv` `ua` `uk` `vi` `zh-CN` `zh-TW`
 
