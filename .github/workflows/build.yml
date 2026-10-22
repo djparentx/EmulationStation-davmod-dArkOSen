@@ -49,7 +49,15 @@ jobs:
           apt-cache madison libcurl4:arm64 || true
           if [ -n "$CURL_AMD64_VER" ] && apt-cache madison libcurl4:arm64 | grep -qF "$CURL_AMD64_VER"; then
             sudo apt-get install -y libcurl4:arm64="$CURL_AMD64_VER" libcurl4-openssl-dev:arm64="$CURL_AMD64_VER"
+          else
+            # Ports moved ahead of the runner image: bring amd64 up to the arm64 version
+            CURL_ARM64_VER=$(apt-cache policy libcurl4:arm64 | awk '/Candidate:/ {print $2}')
+            echo "Upgrading libcurl4 amd64 -> ${CURL_ARM64_VER}"
+            sudo apt-get install -y \
+              libcurl4:amd64="$CURL_ARM64_VER" curl:amd64="$CURL_ARM64_VER" \
+              libcurl4:arm64="$CURL_ARM64_VER" libcurl4-openssl-dev:arm64="$CURL_ARM64_VER"
           fi
+          dpkg -s libcurl4-openssl-dev:arm64 >/dev/null 2>&1 || { echo "ERROR: libcurl4-openssl-dev:arm64 not installed"; exit 1; }
           sudo apt-get install -y \
             gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
             cmake make pkg-config gettext \
