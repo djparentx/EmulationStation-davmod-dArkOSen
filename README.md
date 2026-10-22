@@ -7,6 +7,8 @@
 ![Shell](https://img.shields.io/badge/Bash-Script-yellow)
 ![License](https://img.shields.io/badge/License-Free-lightgrey)
 
+**_Dev\_Note:_** — _@Jason_2x truly made this project possible by showing me the way. Without his assistance it would have 1/10th the features and I'd still be compiling on device!_
+
 A custom fork of [christianhaitian/EmulationStation-fcamod](https://github.com/christianhaitian/EmulationStation-fcamod) (branch `351v`) targeting **dArkOSen** on the **R36S** handheld.
 Built automatically via GitHub Actions using the official Mali RK3326 libraries.
 
