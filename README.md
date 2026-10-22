@@ -24,7 +24,7 @@ Built automatically via GitHub Actions using the official Mali RK3326 libraries.
 ---
 
 ### **Distro Version**
-- click Distro Version to check for dArkOSen updates directly from the main menu.
+- click Distro Version to check for dArkOSen updates directly from the main menu
 
 ---
 
