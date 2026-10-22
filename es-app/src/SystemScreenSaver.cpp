@@ -1062,7 +1062,7 @@ static const float FLIP_AMPM_W = 40.0f;
 static const float FLIP_AMPM_H = 21.0f;
 static const float FLIP_DATE_Y = 575.0f;
 static const float FLIP_CONTENT_TOP = 206.0f;	// frame top
-static const float FLIP_CONTENT_H   = 444.0f;	// frame top -> date bottom
+static const float FLIP_CONTENT_H   = 354.0f;	// frame top -> frame bottom (560)
 static const int   FLIP_DELAY_MS = 100;
 
 static std::string dateTimeFontPath(const std::string& path)
