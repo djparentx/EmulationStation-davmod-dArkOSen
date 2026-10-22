@@ -1172,7 +1172,23 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Digital time
 	if (mClockType == "Number")
 	{
-		auto font = Font::get((int)(h / 5.0f), dateTimeFontPath(timeFontFile));
+		// 16:9 and wider: up to double size, reduced only as far as needed so the widest
+		// possible time (all '0' digits, current 12h/seconds format) keeps 5% padding each side
+		bool wide = (float)mViewport.w / (float)mViewport.h >= 1.7f;
+		int timeSize = (int)(h / 5.0f) * (wide ? 2 : 1);
+		auto font = Font::get(timeSize, dateTimeFontPath(timeFontFile));
+		if (wide)
+		{
+			bool h12 = Settings::getInstance()->getBool("ClockMode12");
+			std::string widest = mShowSeconds ? "00:00:00" : "00:00";
+			float textW = font->sizeText(widest).x();
+			if (h12)
+				textW = std::max(font->sizeText(widest + " AM").x(), font->sizeText(widest + " PM").x());
+
+			float maxW = mViewport.w * 0.9f;
+			if (textW > maxW)
+				font = Font::get((int)(timeSize * maxW / textW), dateTimeFontPath(timeFontFile));
+		}
 		int lh = (int)font->getLetterHeight();
 
 		mTime = new TextComponent(mWindow);
