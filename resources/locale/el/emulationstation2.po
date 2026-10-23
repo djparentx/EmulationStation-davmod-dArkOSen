@@ -3025,3 +3025,47 @@ msgstr "ΩΡΑ ΛΗΞΗΣ"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "ΝΥΧΤΕΡΙΝΟ ΦΙΛΤΡΟ ΕΝΕΡΓΟ"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "ΡΥΘΜΙΣΕΙΣ ΠΡΟΣΤΑΣΙΑΣ ΟΘΟΝΗΣ ΕΝΥΔΡΕΙΟΥ"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "ΠΡΟΣΤΑΣΙΑ ΟΘΟΝΗΣ ΕΝΥΔΡΕΙΟΥ"
+
+#:
+msgid "FISH COUNT"
+msgstr "ΑΡΙΘΜΟΣ ΨΑΡΙΩΝ"
+
+#:
+msgid "ALL RANDOM"
+msgstr "ΟΛΑ ΤΥΧΑΙΑ"
+
+#:
+msgid "FISH"
+msgstr "ΨΑΡΙ"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "ΣΤΗΛΗ ΦΥΣΑΛΙΔΩΝ"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "ΑΥΤΟΜΑΤΟΣ ΦΩΤΙΣΜΟΣ"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "ΦΩΤΙΣΜΟΣ ΠΡΟΣΚΗΝΙΟΥ"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "ΦΩΤΙΣΜΟΣ ΦΟΝΤΟΥ"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "ΑΣΤΕΡΙΑΣ ΣΤΟ ΤΖΑΜΙ"
+
+#:
+msgid "aquarium"
+msgstr "ενυδρείο"

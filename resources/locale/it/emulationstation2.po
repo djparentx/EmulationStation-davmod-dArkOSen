@@ -3438,3 +3438,47 @@ msgstr "ORA DI FINE"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "FILTRO NOTTURNO ATTIVO"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "IMPOSTAZIONI SALVASCHERMO ACQUARIO"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "SALVASCHERMO ACQUARIO"
+
+#:
+msgid "FISH COUNT"
+msgstr "NUMERO DI PESCI"
+
+#:
+msgid "ALL RANDOM"
+msgstr "TUTTI CASUALI"
+
+#:
+msgid "FISH"
+msgstr "PESCE"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "COLONNA DI BOLLE"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "LUCI AUTOMATICHE"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "LUCI IN PRIMO PIANO"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "LUCI DI SFONDO"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "STELLA MARINA SUL VETRO"
+
+#:
+msgid "aquarium"
+msgstr "acquario"

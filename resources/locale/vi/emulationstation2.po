@@ -2551,3 +2551,47 @@ msgstr "GIỜ KẾT THÚC"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "BỘ LỌC BAN ĐÊM ĐANG BẬT"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "CÀI ĐẶT BẢO VỆ MÀN HÌNH BỂ CÁ"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "BẢO VỆ MÀN HÌNH BỂ CÁ"
+
+#:
+msgid "FISH COUNT"
+msgstr "SỐ LƯỢNG CÁ"
+
+#:
+msgid "ALL RANDOM"
+msgstr "TẤT CẢ NGẪU NHIÊN"
+
+#:
+msgid "FISH"
+msgstr "CÁ"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "CỘT BONG BÓNG"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "ĐÈN TỰ ĐỘNG"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "ĐÈN TIỀN CẢNH"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "ĐÈN NỀN"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "SAO BIỂN TRÊN KÍNH"
+
+#:
+msgid "aquarium"
+msgstr "bể cá"

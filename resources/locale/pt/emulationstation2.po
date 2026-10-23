@@ -2226,3 +2226,47 @@ msgstr "HORA DE FIM"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "FILTRO NOTURNO ATIVO"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "CONFIGURAÇÕES DO PROTETOR DE ECRÃ AQUÁRIO"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "PROTETOR DE ECRÃ AQUÁRIO"
+
+#:
+msgid "FISH COUNT"
+msgstr "NÚMERO DE PEIXES"
+
+#:
+msgid "ALL RANDOM"
+msgstr "TODOS ALEATÓRIOS"
+
+#:
+msgid "FISH"
+msgstr "PEIXE"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "COLUNA DE BOLHAS"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "LUZES AUTOMÁTICAS"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "LUZES DO PRIMEIRO PLANO"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "LUZES DO FUNDO"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "ESTRELA-DO-MAR NO VIDRO"
+
+#:
+msgid "aquarium"
+msgstr "aquário"

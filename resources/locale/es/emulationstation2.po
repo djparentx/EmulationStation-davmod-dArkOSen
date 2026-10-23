@@ -3342,3 +3342,47 @@ msgstr "HORA DE FIN"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "FILTRO NOCTURNO ACTIVO"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "AJUSTES SALVAPANTALLAS ACUARIO"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "SALVAPANTALLAS ACUARIO"
+
+#:
+msgid "FISH COUNT"
+msgstr "NÚMERO DE PECES"
+
+#:
+msgid "ALL RANDOM"
+msgstr "TODOS ALEATORIOS"
+
+#:
+msgid "FISH"
+msgstr "PEZ"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "COLUMNA DE BURBUJAS"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "LUCES AUTOMÁTICAS"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "LUCES DE PRIMER PLANO"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "LUCES DE FONDO"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "ESTRELLA DE MAR EN EL CRISTAL"
+
+#:
+msgid "aquarium"
+msgstr "acuario"
