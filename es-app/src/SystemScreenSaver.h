@@ -157,6 +157,7 @@ private:
 	unsigned long countGameListNodes(const char *nodeName);
 	void countVideos();
 	void countImages();
+	void runAquarium();
     int curBrightnessLevel();
 
 	std::string pickGameListNode(unsigned long index, const char *nodeName);
@@ -196,6 +197,7 @@ private:
 
 	//std::shared_ptr<Sound>	mBackgroundAudio;
 	bool			mLoadingNext;
+	bool			mAquariumPending;
 
 	random_device 	mRandomDevice;
 	default_random_engine* mDefaultRandomEngine;
