@@ -1228,23 +1228,20 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 	// Digital time
 	if (mClockType == "Number")
 	{
-		// 16:9 and wider: up to double size, reduced only as far as needed so the widest
+		// up to double size on every aspect ratio, reduced only as far as needed so the widest
 		// possible time (all '0' digits, current 12h/seconds format) keeps 5% padding each side
-		bool wide = (float)mViewport.w / (float)mViewport.h >= 1.7f;
-		int timeSize = (int)(h / 5.0f) * (wide ? 2 : 1);
+		int timeSize = (int)(h / 5.0f) * 2;
 		auto font = Font::get(timeSize, dateTimeFontPath(timeFontFile));
-		if (wide)
-		{
-			bool h12 = Settings::getInstance()->getBool("ClockMode12");
-			std::string widest = mShowSeconds ? "00:00:00" : "00:00";
-			float textW = font->sizeText(widest).x();
-			if (h12)
-				textW = std::max(font->sizeText(widest + " AM").x(), font->sizeText(widest + " PM").x());
 
-			float maxW = mViewport.w * 0.9f;
-			if (textW > maxW)
-				font = Font::get((int)(timeSize * maxW / textW), dateTimeFontPath(timeFontFile));
-		}
+		bool h12 = Settings::getInstance()->getBool("ClockMode12");
+		std::string widest = mShowSeconds ? "00:00:00" : "00:00";
+		float textW = font->sizeText(widest).x();
+		if (h12)
+			textW = std::max(font->sizeText(widest + " AM").x(), font->sizeText(widest + " PM").x());
+
+		float maxW = mViewport.w * 0.9f;
+		if (textW > maxW)
+			font = Font::get((int)(timeSize * maxW / textW), dateTimeFontPath(timeFontFile));
 		int lh = (int)font->getLetterHeight();
 
 		mTime = new TextComponent(mWindow);
@@ -1257,6 +1254,14 @@ DateTimeScreenSaver::DateTimeScreenSaver(Window* window) : GameScreenSaverBase(w
 		mTime->setGlowSize(3);
 		mTime->setFont(font);
 		mTime->setText(Utils::Time::timeToString(now, timeFormat()));
+
+		// date directly under the time: gap = 0.135 x time letter height (same look on every aspect ratio)
+		if (mDate)
+		{
+			int dateLh = (int)Font::get((int)(h / 15.0f), dateTimeFontPath(dateFontFile))->getLetterHeight();
+			mDate->setSize((float)mViewport.w, (float)dateLh);
+			mDate->setPosition((float)mViewport.x, mViewport.y + h * 0.5f + lh * 0.5f + lh * 0.135f);
+		}
 		return;
 	}
 
