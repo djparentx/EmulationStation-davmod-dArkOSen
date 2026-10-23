@@ -4247,3 +4247,47 @@ msgstr "ВРЕМЯ ОКОНЧАНИЯ"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "НОЧНОЙ ФИЛЬТР АКТИВЕН"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "НАСТРОЙКА ЗАСТАВКИ АКВАРИУМ"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "ЗАСТАВКА АКВАРИУМ"
+
+#:
+msgid "FISH COUNT"
+msgstr "КОЛИЧЕСТВО РЫБ"
+
+#:
+msgid "ALL RANDOM"
+msgstr "ВСЕ СЛУЧАЙНЫЕ"
+
+#:
+msgid "FISH"
+msgstr "РЫБА"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "СТОЛБ ПУЗЫРЬКОВ"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "АВТООСВЕЩЕНИЕ"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "ОСВЕЩЕНИЕ ПЕРЕДНЕГО ПЛАНА"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "ОСВЕЩЕНИЕ ФОНА"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "МОРСКАЯ ЗВЕЗДА НА СТЕКЛЕ"
+
+#:
+msgid "aquarium"
+msgstr "аквариум"

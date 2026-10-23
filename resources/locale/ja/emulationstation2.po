@@ -2086,3 +2086,47 @@ msgstr "終了時刻"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "ナイトフィルター有効"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "アクアリウムスクリーンセーバーの設定"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "アクアリウムスクリーンセーバー"
+
+#:
+msgid "FISH COUNT"
+msgstr "魚の数"
+
+#:
+msgid "ALL RANDOM"
+msgstr "すべてランダム"
+
+#:
+msgid "FISH"
+msgstr "魚"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "泡の柱"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "自動ライト"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "前景ライト"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "背景ライト"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "ガラスにヒトデ"
+
+#:
+msgid "aquarium"
+msgstr "アクアリウム"

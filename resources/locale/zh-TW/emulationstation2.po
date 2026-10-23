@@ -4245,3 +4245,47 @@ msgstr "結束時間"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "夜間濾鏡已啟用"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "水族箱螢幕保護程式設定"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "水族箱螢幕保護程式"
+
+#:
+msgid "FISH COUNT"
+msgstr "魚的數量"
+
+#:
+msgid "ALL RANDOM"
+msgstr "全部隨機"
+
+#:
+msgid "FISH"
+msgstr "魚"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "氣泡柱"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "自動燈光"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "前景燈光"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "背景燈光"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "玻璃上的海星"
+
+#:
+msgid "aquarium"
+msgstr "水族箱"

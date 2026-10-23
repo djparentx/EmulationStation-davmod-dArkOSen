@@ -3206,3 +3206,47 @@ msgstr "ENDZEIT"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "NACHTFILTER AKTIV"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "AQUARIUM-BILDSCHIRMSCHONER-EINSTELLUNGEN"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "AQUARIUM-BILDSCHIRMSCHONER"
+
+#:
+msgid "FISH COUNT"
+msgstr "ANZAHL FISCHE"
+
+#:
+msgid "ALL RANDOM"
+msgstr "ALLE ZUFÄLLIG"
+
+#:
+msgid "FISH"
+msgstr "FISCH"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "BLASENSÄULE"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "AUTOMATISCHE BELEUCHTUNG"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "VORDERGRUNDBELEUCHTUNG"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "HINTERGRUNDBELEUCHTUNG"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "SEESTERN AN DER SCHEIBE"
+
+#:
+msgid "aquarium"
+msgstr "aquarium"

@@ -3994,3 +3994,47 @@ msgstr "SLUTTID"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "NATTFILTER AKTIVT"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "INSTÄLLNINGAR FÖR AKVARIESKÄRMSLÄCKARE"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "AKVARIESKÄRMSLÄCKARE"
+
+#:
+msgid "FISH COUNT"
+msgstr "ANTAL FISKAR"
+
+#:
+msgid "ALL RANDOM"
+msgstr "ALLA SLUMPMÄSSIGA"
+
+#:
+msgid "FISH"
+msgstr "FISK"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "BUBBELPELARE"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "AUTOMATISK BELYSNING"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "FÖRGRUNDSBELYSNING"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "BAKGRUNDSBELYSNING"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "SJÖSTJÄRNA PÅ GLASET"
+
+#:
+msgid "aquarium"
+msgstr "akvarium"

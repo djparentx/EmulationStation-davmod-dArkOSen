@@ -3531,3 +3531,47 @@ msgstr "GODZINA ZAKOŃCZENIA"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "FILTR NOCNY AKTYWNY"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "USTAWIENIA WYGASZACZA AKWARIUM"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "WYGASZACZ AKWARIUM"
+
+#:
+msgid "FISH COUNT"
+msgstr "LICZBA RYB"
+
+#:
+msgid "ALL RANDOM"
+msgstr "WSZYSTKIE LOSOWE"
+
+#:
+msgid "FISH"
+msgstr "RYBA"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "KOLUMNA BĄBELKÓW"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "AUTOMATYCZNE OŚWIETLENIE"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "OŚWIETLENIE PIERWSZEGO PLANU"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "OŚWIETLENIE TŁA"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "ROZGWIAZDA NA SZYBIE"
+
+#:
+msgid "aquarium"
+msgstr "akwarium"

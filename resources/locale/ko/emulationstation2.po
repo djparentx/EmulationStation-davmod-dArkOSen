@@ -2341,3 +2341,47 @@ msgstr "종료 시간"
 #:
 msgid "NIGHT FILTER ACTIVE"
 msgstr "야간 필터 활성화됨"
+
+#:
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "수족관 화면보호기 설정"
+
+#:
+msgid "AQUARIUM SCREENSAVER"
+msgstr "수족관 화면보호기"
+
+#:
+msgid "FISH COUNT"
+msgstr "물고기 수"
+
+#:
+msgid "ALL RANDOM"
+msgstr "모두 무작위"
+
+#:
+msgid "FISH"
+msgstr "물고기"
+
+#:
+msgid "BUBBLE COLUMN"
+msgstr "거품 기둥"
+
+#:
+msgid "AUTO LIGHTS"
+msgstr "자동 조명"
+
+#:
+msgid "FOREGROUND LIGHTS"
+msgstr "전경 조명"
+
+#:
+msgid "BACKGROUND LIGHTS"
+msgstr "배경 조명"
+
+#:
+msgid "STARFISH ON GLASS"
+msgstr "유리 위 불가사리"
+
+#:
+msgid "aquarium"
+msgstr "수족관"
