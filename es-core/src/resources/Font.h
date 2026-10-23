@@ -11,6 +11,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <vector>
+#include <list>
 
 class TextCache;
 
@@ -106,7 +107,7 @@ private:
 	void rebuildTextures();
 	void unloadTextures();
 
-	std::vector<FontTexture> mTextures;
+	std::list<FontTexture> mTextures; // list: elements never move, so Glyph::texture pointers stay valid
 
 	void getTextureForNewGlyph(const Vector2i& glyphSize, FontTexture*& tex_out, Vector2i& cursor_out);
 

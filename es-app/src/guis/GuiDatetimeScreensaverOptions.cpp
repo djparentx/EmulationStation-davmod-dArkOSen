@@ -13,6 +13,7 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 	typedef std::vector<std::pair<std::string, std::string>> OptionPairs;
 	std::string clockType = settings->getString("DateTimeScreenSaverClockType");
 	std::string bgMode = settings->getString("DateTimeScreenSaverBackgroundMode");
+	std::string clockStyle = settings->getString("DateTimeScreenSaverClockStyle");
 
 	// CLOCK TYPE (changing it rebuilds the menu)
 	auto clock_type = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK TYPE"), false);
@@ -45,9 +46,14 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 	if (clockType == "Clock")
 	{
 		auto clock_style = std::make_shared< OptionListComponent<std::string> >(mWindow, _("CLOCK STYLE"), false);
-		clock_style->addRange(OptionPairs{ { "Style 1", "style1" }, { "Style 2", "style2" }, { "Style 3", "style3" } }, settings->getString("DateTimeScreenSaverClockStyle"));
+		clock_style->addRange(OptionPairs{ { "Style 1", "style1" }, { "Style 2", "style2" }, { "Style 3", "style3" }, { "Flip 1", "flip1" }, { "Flip 2", "flip2" } }, clockStyle);
 		addWithLabel(_("CLOCK STYLE"), clock_style);
 		addSaveFunc([clock_style] { Settings::getInstance()->setString("DateTimeScreenSaverClockStyle", clock_style->getSelected()); });
+		clock_style->setSelectedChangedCallback([this](const std::string& value)
+		{
+			Settings::getInstance()->setString("DateTimeScreenSaverClockStyle", value);
+			reopen();
+		});
 	}
 
 	// BACKGROUND MODE (changing it rebuilds the menu)
@@ -91,11 +97,14 @@ GuiDatetimeScreensaverOptions::GuiDatetimeScreensaverOptions(Window* window, con
 	addWithLabel(_("SHOW DATE"), show_date);
 	addSaveFunc([show_date] { Settings::getInstance()->setBool("DateTimeScreenSaverShowDate", show_date->getState()); });
 
-	// SHOW SECONDS
-	auto show_seconds = std::make_shared<SwitchComponent>(mWindow);
-	show_seconds->setState(settings->getBool("DateTimeScreenSaverShowSeconds"));
-	addWithLabel(_("SHOW SECONDS"), show_seconds);
-	addSaveFunc([show_seconds] { Settings::getInstance()->setBool("DateTimeScreenSaverShowSeconds", show_seconds->getState()); });
+	// SHOW SECONDS (not used by flip clock)
+	if (!(clockType == "Clock" && (clockStyle == "flip1" || clockStyle == "flip2")))
+	{
+		auto show_seconds = std::make_shared<SwitchComponent>(mWindow);
+		show_seconds->setState(settings->getBool("DateTimeScreenSaverShowSeconds"));
+		addWithLabel(_("SHOW SECONDS"), show_seconds);
+		addSaveFunc([show_seconds] { Settings::getInstance()->setBool("DateTimeScreenSaverShowSeconds", show_seconds->getState()); });
+	}
 }
 
 GuiDatetimeScreensaverOptions::~GuiDatetimeScreensaverOptions()
