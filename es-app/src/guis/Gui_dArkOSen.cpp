@@ -263,6 +263,11 @@ void Gui_dArkOSen::openManualSelection()
 			else
 				reverted->push_back(entry.fullname);
 
+			if (entry.isPorts)
+				::system(selected
+					? "sudo sed -i '/grep roms2/{n;s/directory=\"roms2\"/directory=\"roms\"/}' /opt/system/Tools/PortMaster/control.txt"
+					: "sudo sed -i '/grep roms2/{n;s/directory=\"roms\"/directory=\"roms2\"/}' /opt/system/Tools/PortMaster/control.txt");
+
 			changed = true;
 		}
 
@@ -324,6 +329,9 @@ void Gui_dArkOSen::runAutomatedScan()
 			system.child("path").text().set(newPath.c_str());
 			moved.push_back(fullname);
 			seenMoved.push_back(path);
+
+			if (path.find("/ports/") != std::string::npos)
+				::system("sudo sed -i '/grep roms2/{n;s/directory=\"roms2\"/directory=\"roms\"/}' /opt/system/Tools/PortMaster/control.txt");
 		}
 	}
 
@@ -347,6 +355,9 @@ void Gui_dArkOSen::runAutomatedScan()
 			system.child("path").text().set(newPath.c_str());
 			reverted.push_back(fullname);
 			seenReverted.push_back(path);
+
+			if (path.find("/ports/") != std::string::npos)
+				::system("sudo sed -i '/grep roms2/{n;s/directory=\"roms\"/directory=\"roms2\"/}' /opt/system/Tools/PortMaster/control.txt");
 		}
 	}
 
@@ -384,6 +395,9 @@ void Gui_dArkOSen::undoAllChanges()
 
 		std::string newPath = Utils::String::replace(path, "/roms/", "/roms2/");
 		system.child("path").text().set(newPath.c_str());
+
+		if (path.find("/ports/") != std::string::npos)
+			::system("sudo sed -i '/grep roms2/{n;s/directory=\"roms\"/directory=\"roms2\"/}' /opt/system/Tools/PortMaster/control.txt");
 	}
 
 	doc.save_file(CFG.c_str());
