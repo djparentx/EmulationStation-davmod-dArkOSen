@@ -402,9 +402,19 @@ void processAudioTitles(Window* window)
 }
 
 #include "ApiSystem.h"
+#if defined(__GLIBC__)
+#include <malloc.h>
+#endif
 
 int main(int argc, char* argv[])
 {
+#if defined(__GLIBC__)
+	// limit per-thread malloc arenas (fragmentation) and keep large buffers
+	// (decoded images) on mmap so freeing them returns memory to the OS
+	mallopt(M_ARENA_MAX, 2);
+	mallopt(M_MMAP_THRESHOLD, 128 * 1024);
+#endif
+
 	srand((unsigned int)time(NULL));
 
 #if WIN32
