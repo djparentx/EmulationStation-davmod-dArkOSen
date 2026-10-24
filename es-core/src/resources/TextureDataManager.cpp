@@ -7,6 +7,7 @@
 #include "utils/StringUtil.h"
 #include "utils/FileSystemUtil.h"
 #include <SDL_timer.h>
+#include <chrono>
 
 TextureDataManager::TextureDataManager()
 {
@@ -287,14 +288,12 @@ void TextureLoader::threadProc()
 			if (textureData && !textureData->isLoaded())
 			{
 				std::this_thread::yield();
-
 				textureData->load(true);
-				// mManager->onTextureLoaded(textureData);
-
-				lock.lock();
-				mProcessingTextureDataQ.remove(textureData);
-				lock.unlock();
 			}
+
+			lock.lock();
+			mProcessingTextureDataQ.remove(textureData);
+			lock.unlock();
 
 			std::this_thread::yield();
 		}
@@ -363,4 +362,25 @@ void TextureDataManager::clearQueue()
 {
 	if (mLoader != nullptr)
 		mLoader->clearQueue();
+}
+
+void TextureLoader::waitIdle()
+{
+	// drop queued work, then wait (max ~2s) for in-flight decodes to finish
+	for (int i = 0; i < 200; i++)
+	{
+		{
+			std::unique_lock<std::mutex> lock(mLoaderLock);
+			mTextureDataQ.clear();
+			if (mProcessingTextureDataQ.empty())
+				return;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+}
+
+void TextureDataManager::waitIdle()
+{
+	if (mLoader != nullptr)
+		mLoader->waitIdle();
 }

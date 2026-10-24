@@ -129,6 +129,7 @@ bool Font::unload()
 	if (mLoaded)
 	{
 		unloadTextures();
+		clearFaceCache();
 		mLoaded = false;
 		return true;
 	}
@@ -434,6 +435,8 @@ void Font::rebuildTextures()
 		// upload to texture
 		Renderer::updateTexture(tex->textureId, Renderer::Texture::ALPHA, cursor.x(), cursor.y(), glyphSize.x(), glyphSize.y(), glyphSlot->bitmap.buffer);
 	}
+
+	clearFaceCache();
 }
 
 void Font::renderTextCache(TextCache* cache)

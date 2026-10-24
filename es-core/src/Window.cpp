@@ -21,6 +21,28 @@
 #include "components/VolumeInfoComponent.h"
 #include "components/BrightnessInfoComponent.h"
 #include "Splash.h"
+#include <fstream>
+#include <sstream>
+#if defined(__GLIBC__)
+#include <malloc.h>
+#endif
+
+// TEMP: RSS diagnostics (es memory release) - remove when numbers are flat
+static void logRSS(const char* tag)
+{
+	std::ifstream status("/proc/self/status");
+	std::string line;
+	while (std::getline(status, line))
+	{
+		if (line.compare(0, 6, "VmRSS:") != 0)
+			continue;
+
+		long kb = 0;
+		std::istringstream(line.substr(6)) >> kb;
+		LOG(LogInfo) << "RSS  " << std::left << std::setw(16) << tag << std::right << std::setw(8) << kb << " kB";
+		return;
+	}
+}
 
 Window::Window() : mNormalizeNextUpdate(false), mFrameTimeElapsed(0), mFrameCountElapsed(0), mAverageDeltaTime(10),
   mAllowSleep(true), mSleeping(false), mTimeSinceLastInput(0), mScreenSaver(NULL), mRenderScreenSaver(false), mInfoPopup(NULL), mClockElapsed(0),
@@ -143,6 +165,7 @@ bool Window::init(bool initRenderer)
 	if (peekGui())
 		peekGui()->updateHelpPrompts();
 	
+	logRSS("init end");
 	return true;
 }
 
@@ -160,6 +183,8 @@ void Window::reactivateGui()
 
 void Window::deinit(bool deinitRenderer)
 {
+	logRSS("deinit start");
+
 	for (auto extra : mScreenExtras)
 		extra->onHide();
 
@@ -176,6 +201,13 @@ void Window::deinit(bool deinitRenderer)
 
 	if (deinitRenderer)
 		Renderer::deinit();
+
+#if defined(__GLIBC__)
+	// return freed heap (all arenas) to the OS before the game runs
+	malloc_trim(0);
+#endif
+
+	logRSS(deinitRenderer ? "deinit+renderer" : "deinit nowindow");
 }
 
 void Window::textInput(const char* text)
