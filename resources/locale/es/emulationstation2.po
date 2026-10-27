@@ -3386,3 +3386,39 @@ msgstr "ESTRELLA DE MAR EN EL CRISTAL"
 #:
 msgid "aquarium"
 msgstr "acuario"
+
+#:
+msgid "corridors"
+msgstr "pasillos"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "AJUSTES SALVAPANTALLAS PASILLOS"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "SALVAPANTALLAS PASILLOS"
+
+#:
+msgid "SPEED"
+msgstr "VELOCIDAD"
+
+#:
+msgid "AMBIENT"
+msgstr "LUZ AMBIENTE"
+
+#:
+msgid "PANELS"
+msgstr "PANELES"
+
+#:
+msgid "FLICKER"
+msgstr "PARPADEO"
+
+#:
+msgid "FOG"
+msgstr "NIEBLA"
+
+#:
+msgid "VOLUME"
+msgstr "VOLUMEN"

@@ -16,6 +16,7 @@ private:
 	void openSlideshowScreensaverOptions();
 	void openDateTimeScreensaverOptions();
 	void openAquariumScreensaverOptions();
+	void openCorridorsScreensaverOptions();
 };
 
 #endif // ES_APP_GUIS_GUI_GENERAL_SCREENSAVER_OPTIONS_H

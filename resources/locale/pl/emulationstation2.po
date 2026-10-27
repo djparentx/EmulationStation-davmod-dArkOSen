@@ -3575,3 +3575,39 @@ msgstr "ROZGWIAZDA NA SZYBIE"
 #:
 msgid "aquarium"
 msgstr "akwarium"
+
+#:
+msgid "corridors"
+msgstr "korytarze"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "USTAWIENIA WYGASZACZA KORYTARZE"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "WYGASZACZ KORYTARZE"
+
+#:
+msgid "SPEED"
+msgstr "PRĘDKOŚĆ"
+
+#:
+msgid "AMBIENT"
+msgstr "ŚWIATŁO OTOCZENIA"
+
+#:
+msgid "PANELS"
+msgstr "PANELE"
+
+#:
+msgid "FLICKER"
+msgstr "MIGOTANIE"
+
+#:
+msgid "FOG"
+msgstr "MGŁA"
+
+#:
+msgid "VOLUME"
+msgstr "GŁOŚNOŚĆ"

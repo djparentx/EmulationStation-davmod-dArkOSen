@@ -2270,3 +2270,39 @@ msgstr "ESTRELA-DO-MAR NO VIDRO"
 #:
 msgid "aquarium"
 msgstr "aquário"
+
+#:
+msgid "corridors"
+msgstr "corredores"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "CONFIGURAÇÕES DO PROTETOR DE ECRÃ CORREDORES"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "PROTETOR DE ECRÃ CORREDORES"
+
+#:
+msgid "SPEED"
+msgstr "VELOCIDADE"
+
+#:
+msgid "AMBIENT"
+msgstr "LUZ AMBIENTE"
+
+#:
+msgid "PANELS"
+msgstr "PAINÉIS"
+
+#:
+msgid "FLICKER"
+msgstr "CINTILAÇÃO"
+
+#:
+msgid "FOG"
+msgstr "NEVOEIRO"
+
+#:
+msgid "VOLUME"
+msgstr "VOLUME"

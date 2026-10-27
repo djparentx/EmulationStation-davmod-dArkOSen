@@ -8,6 +8,7 @@
 #include "guis/GuiSlideshowScreensaverOptions.h"
 #include "guis/GuiDatetimeScreensaverOptions.h"
 #include "guis/GuiAquariumScreensaverOptions.h"
+#include "guis/GuiCorridorsScreensaverOptions.h"
 #include "guis/GuiVideoScreensaverOptions.h"
 #include "Settings.h"
 
@@ -32,6 +33,7 @@ GuiGeneralScreensaverOptions::GuiGeneralScreensaverOptions(Window* window, std::
 	screensavers.push_back("random video");
 	screensavers.push_back("slideshow");
 	screensavers.push_back("datetime");
+	screensavers.push_back("corridors");
 	screensavers.push_back("aquarium");
 	for(auto it = screensavers.cbegin(); it != screensavers.cend(); it++)
 		screensaver_behavior->add(_(it->c_str()), *it, Settings::getInstance()->getString("ScreenSaverBehavior") == *it);
@@ -75,6 +77,12 @@ GuiGeneralScreensaverOptions::GuiGeneralScreensaverOptions(Window* window, std::
 	row.makeAcceptInputHandler(std::bind(&GuiGeneralScreensaverOptions::openAquariumScreensaverOptions, this));
 	addRow(row);
 
+	row.elements.clear();
+	row.addElement(std::make_shared<TextComponent>(mWindow, _("CORRIDORS SCREENSAVER SETTINGS"), theme->Text.font, theme->Text.color), true);
+	row.addElement(makeArrow(mWindow), false);
+	row.makeAcceptInputHandler(std::bind(&GuiGeneralScreensaverOptions::openCorridorsScreensaverOptions, this));
+	addRow(row);
+
 	// Allow ScreenSaver Controls - ScreenSaverControls
 	auto ss_controls = std::make_shared<SwitchComponent>(mWindow);
 	ss_controls->setState(Settings::getInstance()->getBool("ScreenSaverControls"));
@@ -100,4 +108,8 @@ void GuiGeneralScreensaverOptions::openDateTimeScreensaverOptions() {
 
 void GuiGeneralScreensaverOptions::openAquariumScreensaverOptions() {
 	mWindow->pushGui(new GuiAquariumScreensaverOptions(mWindow, _("AQUARIUM SCREENSAVER").c_str()));
+}
+
+void GuiGeneralScreensaverOptions::openCorridorsScreensaverOptions() {
+	mWindow->pushGui(new GuiCorridorsScreensaverOptions(mWindow, _("CORRIDORS SCREENSAVER").c_str()));
 }

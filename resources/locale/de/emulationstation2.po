@@ -3250,3 +3250,39 @@ msgstr "SEESTERN AN DER SCHEIBE"
 #:
 msgid "aquarium"
 msgstr "aquarium"
+
+#:
+msgid "corridors"
+msgstr "korridore"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "KORRIDORE-BILDSCHIRMSCHONER-EINSTELLUNGEN"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "KORRIDORE-BILDSCHIRMSCHONER"
+
+#:
+msgid "SPEED"
+msgstr "GESCHWINDIGKEIT"
+
+#:
+msgid "AMBIENT"
+msgstr "UMGEBUNGSLICHT"
+
+#:
+msgid "PANELS"
+msgstr "LEUCHTPANELE"
+
+#:
+msgid "FLICKER"
+msgstr "FLACKERN"
+
+#:
+msgid "FOG"
+msgstr "NEBEL"
+
+#:
+msgid "VOLUME"
+msgstr "LAUTSTÄRKE"

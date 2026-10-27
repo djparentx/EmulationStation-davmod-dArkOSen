@@ -2595,3 +2595,39 @@ msgstr "SAO BIỂN TRÊN KÍNH"
 #:
 msgid "aquarium"
 msgstr "bể cá"
+
+#:
+msgid "corridors"
+msgstr "hành lang"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "CÀI ĐẶT BẢO VỆ MÀN HÌNH HÀNH LANG"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "BẢO VỆ MÀN HÌNH HÀNH LANG"
+
+#:
+msgid "SPEED"
+msgstr "TỐC ĐỘ"
+
+#:
+msgid "AMBIENT"
+msgstr "ÁNH SÁNG MÔI TRƯỜNG"
+
+#:
+msgid "PANELS"
+msgstr "TẤM ĐÈN"
+
+#:
+msgid "FLICKER"
+msgstr "NHẤP NHÁY"
+
+#:
+msgid "FOG"
+msgstr "SƯƠNG MÙ"
+
+#:
+msgid "VOLUME"
+msgstr "ÂM LƯỢNG"

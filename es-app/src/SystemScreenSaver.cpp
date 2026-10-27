@@ -28,12 +28,13 @@
 #include "utils/TimeUtil.h"
 #include "VolumeControl.h"
 #include "platform.h"
+#include "CorridorsConfig.h"
 
 #define FADE_TIME					(500)
 #define DATE_TIME_UPDATE_INTERVAL	(100)
 #define AQUARIUM_DIR				"/usr/bin/emulationstation/resources/aquarium"
 #define AQUARIUM_INI				"/home/ark/.config/aquarium.ini"
-
+#define CORRIDORS_BIN				"/usr/bin/emulationstation/resources/corridors/3D_Corridors"
 
 SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mVideoScreensaver(NULL),
@@ -49,8 +50,7 @@ SystemScreenSaver::SystemScreenSaver(Window* window) :
 	mSystemName(""),
 	mGameName(""),
 	mCurrentGame(NULL),
-	mLoadingNext(false),
-	mAquariumPending(false)
+	mLoadingNext(false)
 {
 
 	mWindow->setScreenSaver(this);
@@ -80,7 +80,7 @@ SystemScreenSaver::~SystemScreenSaver()
 
 bool SystemScreenSaver::allowSleep()
 {
-	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr && mDateTimeScreensaver == nullptr && !mAquariumPending);
+	return (mVideoScreensaver == nullptr && mImageScreensaver == nullptr && mDateTimeScreensaver == nullptr && mExternalCmd.empty());
 }
 
 bool SystemScreenSaver::isScreenSaverActive()
@@ -191,10 +191,21 @@ void SystemScreenSaver::startScreenSaver()
 		return;
 	}
 
-	else if (screensaver_behavior == "aquarium")
+	else if (screensaver_behavior == "aquarium" || screensaver_behavior == "corridors")
 	{
 		// separate program: started from update(), not from inside render()
-		mAquariumPending = true;
+		if (screensaver_behavior == "aquarium")
+		{
+			mExternalName = "Aquarium";
+			mExternalBin  = AQUARIUM_DIR "/aquarium";
+			mExternalCmd  = AQUARIUM_DIR "/aquarium --screensaver --data " AQUARIUM_DIR " --config " AQUARIUM_INI;
+		}
+		else
+		{
+			mExternalName = "Corridors";
+			mExternalBin  = CORRIDORS_BIN;
+			mExternalCmd  = std::string(CORRIDORS_BIN) + " " + CorridorsConfig::load().toArgs();
+		}
 		mState = STATE_SCREENSAVER_ACTIVE;
 		mOpacity = 0.0f;
 		PowerSaver::runningScreenSaver(true);
@@ -251,7 +262,7 @@ void SystemScreenSaver::stopScreenSaver()
 	mVideoScreensaver = nullptr;
 	mImageScreensaver = nullptr;
 	mDateTimeScreensaver = nullptr;
-	mAquariumPending = false;
+	mExternalCmd.clear();
 
 	// we need this to loop through different videos
 	mState = STATE_INACTIVE;
@@ -495,10 +506,14 @@ std::string SystemScreenSaver::pickRandomCustomImage()
 
 void SystemScreenSaver::update(int deltaTime)
 {
-	if (mAquariumPending)
+	if (!mExternalCmd.empty())
 	{
-		mAquariumPending = false;
-		runAquarium();
+		// copy first: stopScreenSaver() clears the members
+		std::string bin  = mExternalBin;
+		std::string cmd  = mExternalCmd;
+		std::string name = mExternalName;
+		mExternalCmd.clear();
+		runExternalScreensaver(bin, cmd, name);
 		return;
 	}
 
@@ -548,11 +563,11 @@ void SystemScreenSaver::update(int deltaTime)
 		mImageScreensaver->update(deltaTime);
 }
 
-// Runs the aquarium like a game launch: ES releases audio and the display,
-// waits for the aquarium to exit (any button), then comes back to the menu.
-void SystemScreenSaver::runAquarium()
+// Runs an external screensaver like a game launch: ES releases audio and the
+// display, waits for the program to exit (any button), then comes back to the menu.
+void SystemScreenSaver::runExternalScreensaver(const std::string& bin, const std::string& cmd, const std::string& name)
 {
-	if (Utils::FileSystem::exists(AQUARIUM_DIR "/aquarium"))
+	if (Utils::FileSystem::exists(bin))
 	{
 		AudioManager::getInstance()->deinit();
 		VolumeControl::getInstance()->deinit();
@@ -560,9 +575,9 @@ void SystemScreenSaver::runAquarium()
 		bool hideWindow = Settings::getInstance()->getBool("HideWindow");
 		mWindow->deinit(hideWindow);
 
-		int exitCode = runSystemCommand(AQUARIUM_DIR "/aquarium --screensaver --data " AQUARIUM_DIR " --config " AQUARIUM_INI, "", hideWindow ? NULL : mWindow);
+		int exitCode = runSystemCommand(cmd, "", hideWindow ? NULL : mWindow);
 		if (exitCode != 0)
-			LOG(LogWarning) << "Aquarium screensaver exited with code " << exitCode;
+			LOG(LogWarning) << name << " screensaver exited with code " << exitCode;
 
 		mWindow->init(hideWindow);
 		VolumeControl::getInstance()->init();
@@ -573,7 +588,7 @@ void SystemScreenSaver::runAquarium()
 			AudioManager::getInstance()->playRandomMusic();
 	}
 	else
-		LOG(LogError) << "Aquarium screensaver: " AQUARIUM_DIR "/aquarium not found";
+		LOG(LogError) << name << " screensaver: " << bin << " not found";
 
 	// end the screensaver and restart the idle countdown
 	mWindow->cancelScreenSaver();

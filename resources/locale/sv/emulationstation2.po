@@ -4038,3 +4038,39 @@ msgstr "SJÖSTJÄRNA PÅ GLASET"
 #:
 msgid "aquarium"
 msgstr "akvarium"
+
+#:
+msgid "corridors"
+msgstr "korridorer"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "INSTÄLLNINGAR FÖR KORRIDORSKÄRMSLÄCKARE"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "KORRIDORSKÄRMSLÄCKARE"
+
+#:
+msgid "SPEED"
+msgstr "HASTIGHET"
+
+#:
+msgid "AMBIENT"
+msgstr "OMGIVNINGSLJUS"
+
+#:
+msgid "PANELS"
+msgstr "PANELER"
+
+#:
+msgid "FLICKER"
+msgstr "FLIMMER"
+
+#:
+msgid "FOG"
+msgstr "DIMMA"
+
+#:
+msgid "VOLUME"
+msgstr "VOLYM"

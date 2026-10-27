@@ -157,7 +157,7 @@ private:
 	unsigned long countGameListNodes(const char *nodeName);
 	void countVideos();
 	void countImages();
-	void runAquarium();
+	void runExternalScreensaver(const std::string& bin, const std::string& cmd, const std::string& name);
     int curBrightnessLevel();
 
 	std::string pickGameListNode(unsigned long index, const char *nodeName);
@@ -197,7 +197,9 @@ private:
 
 	//std::shared_ptr<Sound>	mBackgroundAudio;
 	bool			mLoadingNext;
-	bool			mAquariumPending;
+	std::string		mExternalBin;
+	std::string		mExternalCmd;
+	std::string		mExternalName;
 
 	random_device 	mRandomDevice;
 	default_random_engine* mDefaultRandomEngine;

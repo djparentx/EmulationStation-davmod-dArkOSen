@@ -4291,3 +4291,35 @@ msgstr "МОРСКАЯ ЗВЕЗДА НА СТЕКЛЕ"
 #:
 msgid "aquarium"
 msgstr "аквариум"
+
+#:
+msgid "corridors"
+msgstr "коридоры"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "НАСТРОЙКА ЗАСТАВКИ КОРИДОРЫ"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "ЗАСТАВКА КОРИДОРЫ"
+
+#:
+msgid "SPEED"
+msgstr "СКОРОСТЬ"
+
+#:
+msgid "AMBIENT"
+msgstr "ФОНОВЫЙ СВЕТ"
+
+#:
+msgid "PANELS"
+msgstr "ПАНЕЛИ"
+
+#:
+msgid "FLICKER"
+msgstr "МЕРЦАНИЕ"
+
+#:
+msgid "FOG"
+msgstr "ТУМАН"
