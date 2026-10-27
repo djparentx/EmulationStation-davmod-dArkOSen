@@ -2130,3 +2130,39 @@ msgstr "ガラスにヒトデ"
 #:
 msgid "aquarium"
 msgstr "アクアリウム"
+
+#:
+msgid "corridors"
+msgstr "廊下"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "廊下スクリーンセーバーの設定"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "廊下スクリーンセーバー"
+
+#:
+msgid "SPEED"
+msgstr "速度"
+
+#:
+msgid "AMBIENT"
+msgstr "環境光"
+
+#:
+msgid "PANELS"
+msgstr "照明パネル"
+
+#:
+msgid "FLICKER"
+msgstr "ちらつき"
+
+#:
+msgid "FOG"
+msgstr "霧"
+
+#:
+msgid "VOLUME"
+msgstr "音量"

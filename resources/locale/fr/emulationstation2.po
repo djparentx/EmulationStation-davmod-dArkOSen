@@ -2241,3 +2241,39 @@ msgstr "ÉTOILE DE MER SUR LA VITRE"
 #:
 msgid "aquarium"
 msgstr "aquarium"
+
+#:
+msgid "corridors"
+msgstr "couloirs"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "PARAMÈTRES DE L'ÉCRAN DE VEILLE COULOIRS"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "ÉCRAN DE VEILLE COULOIRS"
+
+#:
+msgid "SPEED"
+msgstr "VITESSE"
+
+#:
+msgid "AMBIENT"
+msgstr "LUMIÈRE AMBIANTE"
+
+#:
+msgid "PANELS"
+msgstr "PANNEAUX"
+
+#:
+msgid "FLICKER"
+msgstr "SCINTILLEMENT"
+
+#:
+msgid "FOG"
+msgstr "BROUILLARD"
+
+#:
+msgid "VOLUME"
+msgstr "VOLUME"

@@ -3069,3 +3069,39 @@ msgstr "ΑΣΤΕΡΙΑΣ ΣΤΟ ΤΖΑΜΙ"
 #:
 msgid "aquarium"
 msgstr "ενυδρείο"
+
+#:
+msgid "corridors"
+msgstr "διάδρομοι"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "ΡΥΘΜΙΣΕΙΣ ΠΡΟΣΤΑΣΙΑΣ ΟΘΟΝΗΣ ΔΙΑΔΡΟΜΩΝ"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "ΠΡΟΣΤΑΣΙΑ ΟΘΟΝΗΣ ΔΙΑΔΡΟΜΩΝ"
+
+#:
+msgid "SPEED"
+msgstr "ΤΑΧΥΤΗΤΑ"
+
+#:
+msgid "AMBIENT"
+msgstr "ΦΩΣ ΠΕΡΙΒΑΛΛΟΝΤΟΣ"
+
+#:
+msgid "PANELS"
+msgstr "ΦΩΤΙΣΤΙΚΑ"
+
+#:
+msgid "FLICKER"
+msgstr "ΤΡΕΜΟΠΑΙΓΜΑ"
+
+#:
+msgid "FOG"
+msgstr "ΟΜΙΧΛΗ"
+
+#:
+msgid "VOLUME"
+msgstr "ΕΝΤΑΣΗ"

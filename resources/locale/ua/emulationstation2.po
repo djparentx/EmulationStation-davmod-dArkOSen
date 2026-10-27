@@ -4502,3 +4502,35 @@ msgstr "МОРСЬКА ЗІРКА НА СКЛІ"
 #:
 msgid "aquarium"
 msgstr "акваріум"
+
+#:
+msgid "corridors"
+msgstr "коридори"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "НАЛАШТУВАННЯ ЗАСТАВКИ КОРИДОРИ"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "ЗАСТАВКА КОРИДОРИ"
+
+#:
+msgid "SPEED"
+msgstr "ШВИДКІСТЬ"
+
+#:
+msgid "AMBIENT"
+msgstr "ФОНОВЕ СВІТЛО"
+
+#:
+msgid "PANELS"
+msgstr "ПАНЕЛІ"
+
+#:
+msgid "FLICKER"
+msgstr "МЕРЕХТІННЯ"
+
+#:
+msgid "FOG"
+msgstr "ТУМАН"

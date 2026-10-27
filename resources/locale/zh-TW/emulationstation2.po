@@ -4289,3 +4289,35 @@ msgstr "玻璃上的海星"
 #:
 msgid "aquarium"
 msgstr "水族箱"
+
+#:
+msgid "corridors"
+msgstr "走廊"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "走廊螢幕保護程式設定"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "走廊螢幕保護程式"
+
+#:
+msgid "SPEED"
+msgstr "速度"
+
+#:
+msgid "AMBIENT"
+msgstr "環境光"
+
+#:
+msgid "PANELS"
+msgstr "燈板"
+
+#:
+msgid "FLICKER"
+msgstr "閃爍"
+
+#:
+msgid "FOG"
+msgstr "霧"

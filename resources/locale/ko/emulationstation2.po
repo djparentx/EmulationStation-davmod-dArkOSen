@@ -2385,3 +2385,39 @@ msgstr "유리 위 불가사리"
 #:
 msgid "aquarium"
 msgstr "수족관"
+
+#:
+msgid "corridors"
+msgstr "복도"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "복도 화면보호기 설정"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "복도 화면보호기"
+
+#:
+msgid "SPEED"
+msgstr "속도"
+
+#:
+msgid "AMBIENT"
+msgstr "주변광"
+
+#:
+msgid "PANELS"
+msgstr "조명 패널"
+
+#:
+msgid "FLICKER"
+msgstr "깜빡임"
+
+#:
+msgid "FOG"
+msgstr "안개"
+
+#:
+msgid "VOLUME"
+msgstr "음량"

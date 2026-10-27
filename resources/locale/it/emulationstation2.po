@@ -3482,3 +3482,39 @@ msgstr "STELLA MARINA SUL VETRO"
 #:
 msgid "aquarium"
 msgstr "acquario"
+
+#:
+msgid "corridors"
+msgstr "corridoi"
+
+#:
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "IMPOSTAZIONI SALVASCHERMO CORRIDOI"
+
+#:
+msgid "CORRIDORS SCREENSAVER"
+msgstr "SALVASCHERMO CORRIDOI"
+
+#:
+msgid "SPEED"
+msgstr "VELOCITÀ"
+
+#:
+msgid "AMBIENT"
+msgstr "LUCE AMBIENTE"
+
+#:
+msgid "PANELS"
+msgstr "PANNELLI"
+
+#:
+msgid "FLICKER"
+msgstr "SFARFALLIO"
+
+#:
+msgid "FOG"
+msgstr "NEBBIA"
+
+#:
+msgid "VOLUME"
+msgstr "VOLUME"
