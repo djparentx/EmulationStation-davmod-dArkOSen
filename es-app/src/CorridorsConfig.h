@@ -8,10 +8,10 @@ struct CorridorsConfig
 {
 	int speedTenths = 8;   // 5 - 15  (0.5x - 1.5x)
 	int brightness  = 50;  // 0 - 100
-	int ambient     = 25;  // 0 - 100
+	int ambient     = 15;  // 0 - 100
 	int panels      = 2;   // 1 - 5
 	int flicker     = 3;   // 1 - 5
-	int fog         = 2;   // 1 - 5
+	int fog         = 1;   // 1 - 5
 	int volume      = 3;   // 0 - 5, 0 = off
 
 	static std::string     path();
