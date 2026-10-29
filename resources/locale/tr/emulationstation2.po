@@ -4885,3 +4885,270 @@ msgstr "hoparlör"
 
 msgid "auto suspend timeout (mins)"
 msgstr "otomatik uyku süresi (dk)"
+
+msgid "SWITCH A/B BUTTONS GLOBALLY"
+msgstr "A/B TUŞLARINI GENEL OLARAK DEĞİŞTİR"
+
+msgid "STORAGE SETTINGS"
+msgstr "DEPOLAMA AYARLARI"
+
+msgid "ENABLE SD2"
+msgstr "SD2'Yİ ETKİNLEŞTİR"
+
+msgid "REASSIGN SYSTEMS TO SD1"
+msgstr "SİSTEMLERİ SD1'E YENİDEN ATA"
+
+msgid "SCAN AND REPAIR"
+msgstr "TARA VE ONAR"
+
+msgid "BOOT"
+msgstr "BOOT"
+
+msgid "ROOTFS"
+msgstr "ROOTFS"
+
+msgid "SD1 GAMES"
+msgstr "SD1 OYUNLARI"
+
+msgid "SD2"
+msgstr "SD2"
+
+msgid "MANUAL SELECTION"
+msgstr "ELLE SEÇİM"
+
+msgid "AUTOMATED SCAN"
+msgstr "OTOMATİK TARAMA"
+
+msgid "UNDO ALL CHANGES"
+msgstr "TÜM DEĞİŞİKLİKLERİ GERİ AL"
+
+msgid "SCAN /roms/ FOR CHANGES?"
+msgstr "/roms/ DEĞİŞİKLİKLER İÇİN TARANSIN MI?"
+
+msgid "REVERT ALL SYSTEMS TO SD2?"
+msgstr "TÜM SİSTEMLER SD2'YE GERİ ALINSIN MI?"
+
+msgid "NOTHING WAS MODIFIED."
+msgstr "HİÇBİR ŞEY DEĞİŞTİRİLMEDİ."
+
+msgid "RESTORING ALL SYSTEMS TO /roms2/."
+msgstr "TÜM SİSTEMLER /roms2/ KONUMUNA GERİ YÜKLENİYOR."
+
+msgid "MOVED TO SD1:"
+msgstr "SD1'E TAŞINDI:"
+
+msgid "REVERTED TO SD2:"
+msgstr "SD2'YE GERİ ALINDI:"
+
+msgid "Scan failed. Repairs were not successful."
+msgstr "Tarama başarısız. Onarımlar başarılı olmadı."
+
+msgid "Scan failed. Repairs were successful."
+msgstr "Tarama başarısız. Onarımlar başarılı oldu."
+
+msgid "Scan passed. No repairs were needed."
+msgstr "Tarama başarılı. Onarım gerekmedi."
+
+msgid "Wi-fi has been turned off to ensure the disk is not busy."
+msgstr "Diskin meşgul olmaması için Wi-Fi kapatıldı."
+
+msgid "Could not unmount /boot"
+msgstr "/boot ayrılamadı"
+
+msgid "Dirty bit cleared"
+msgstr "Kirli bit temizlendi"
+
+msgid "Boot sector mismatch noted"
+msgstr "Önyükleme sektörü uyuşmazlığı tespit edildi"
+
+msgid "Bad file entries fixed"
+msgstr "Hatalı dosya girdileri düzeltildi"
+
+msgid "Uncorrectable errors found on system partition"
+msgstr "Sistem bölümünde düzeltilemeyen hatalar bulundu"
+
+msgid "Partition 2 (system) could not be fully repaired while running. Eject the card and run 'sudo btrfs check --repair /dev/mmcblk0p2' from a Linux PC."
+msgstr "Bölüm 2 (sistem) çalışırken tamamen onarılamadı. Kartı çıkarın ve bir Linux bilgisayarda 'sudo btrfs check --repair /dev/mmcblk0p2' komutunu çalıştırın."
+
+msgid "HELPER SCRIPT NOT FOUND"
+msgstr "YARDIMCI BETİK BULUNAMADI"
+
+msgid "FAILED TO PREPARE RECOVERY SCRIPT"
+msgstr "KURTARMA BETİĞİ HAZIRLANAMADI"
+
+msgid "SCAN SD1 GAMES?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
+msgstr "SD1 OYUNLARI TARANSIN MI?\nTARAMAYI TAMAMLAMAK İÇİN KONSOL YENİDEN BAŞLATILACAK."
+
+msgid "SCAN SD2?\nTHE CONSOLE WILL REBOOT TO COMPLETE THE SCAN."
+msgstr "SD2 TARANSIN MI?\nTARAMAYI TAMAMLAMAK İÇİN KONSOL YENİDEN BAŞLATILACAK."
+
+msgid "BENCHMARKING"
+msgstr "PERFORMANS TESTİ"
+
+msgid "BENCHMARK"
+msgstr "PERFORMANS TESTİ"
+
+msgid "BENCHMARK FAILED"
+msgstr "PERFORMANS TESTİ BAŞARISIZ"
+
+msgid "RUNNING, PLEASE WAIT"
+msgstr "ÇALIŞIYOR, LÜTFEN BEKLEYİN"
+
+msgid "LOG IS EMPTY."
+msgstr "GÜNLÜK BOŞ."
+
+msgid "%d d"
+msgstr "%d g"
+
+msgid "%d mn"
+msgstr "%d dk"
+
+msgid "%d sec"
+msgstr "%d sn"
+
+msgid "LAST 20 PLAYED GAMES"
+msgstr "SON OYNANAN 20 OYUN"
+
+msgid "NO GAME PLAYED YET"
+msgstr "HENÜZ OYUN OYNANMADI"
+
+msgid "datetime"
+msgstr "tarih saat"
+
+msgid "DATE TIME SCREENSAVER SETTINGS"
+msgstr "TARİH SAAT EKRAN KORUYUCU AYARLARI"
+
+msgid "DATE & TIME SCREENSAVER"
+msgstr "TARİH VE SAAT EKRAN KORUYUCU"
+
+msgid "CLOCK TYPE"
+msgstr "SAAT TÜRÜ"
+
+msgid "CLOCK STYLE"
+msgstr "SAAT STİLİ"
+
+msgid "CLOCK COLOR"
+msgstr "SAAT RENGİ"
+
+msgid "BACKGROUND MODE"
+msgstr "ARKA PLAN MODU"
+
+msgid "BACKGROUND COLOR"
+msgstr "ARKA PLAN RENGİ"
+
+msgid "BACKGROUND IMAGE"
+msgstr "ARKA PLAN RESMİ"
+
+msgid "SHOW DATE"
+msgstr "TARİHİ GÖSTER"
+
+msgid "SHOW SECONDS"
+msgstr "SANİYELERİ GÖSTER"
+
+msgid "ENABLE VIBRATION FEEDBACK"
+msgstr "TİTREŞİM GERİ BİLDİRİMİNİ ETKİNLEŞTİR"
+
+msgid "VIBRATION INTENSITY"
+msgstr "TİTREŞİM ŞİDDETİ"
+
+msgid "TEMPERATURE"
+msgstr "RENK SICAKLIĞI"
+
+msgid "CLOCK FONT"
+msgstr "SAAT YAZI TİPİ"
+
+msgid "VERBAL PLAY TIMER WARNING"
+msgstr "SESLİ OYUN SÜRESİ UYARISI"
+
+msgid "PLAY TIMER"
+msgstr "OYUN ZAMANLAYICISI"
+
+msgid "TIME LEFT TODAY"
+msgstr "BUGÜN KALAN SÜRE"
+
+msgid "MIN"
+msgstr "DK"
+
+msgid "DAILY PLAY TIME LIMIT REACHED"
+msgstr "GÜNLÜK OYUN SÜRESİ SINIRINA ULAŞILDI"
+
+msgid "COME BACK TOMORROW!"
+msgstr "YARIN TEKRAR GEL!"
+
+msgid "PLAY TIME LEFT TODAY: %i MIN"
+msgstr "BUGÜN KALAN OYUN SÜRESİ: %i DK"
+
+msgid "PLAY TIME LEFT TODAY: < 1 MIN"
+msgstr "BUGÜN KALAN OYUN SÜRESİ: < 1 DK"
+
+msgid "NIGHT FILTER"
+msgstr "GECE FİLTRESİ"
+
+msgid "ENABLE FILTER"
+msgstr "FİLTREYİ ETKİNLEŞTİR"
+
+msgid "START TIME"
+msgstr "BAŞLANGIÇ SAATİ"
+
+msgid "END TIME"
+msgstr "BİTİŞ SAATİ"
+
+msgid "NIGHT FILTER ACTIVE"
+msgstr "GECE FİLTRESİ ETKİN"
+
+msgid "AQUARIUM SCREENSAVER SETTINGS"
+msgstr "AKVARYUM EKRAN KORUYUCU AYARLARI"
+
+msgid "AQUARIUM SCREENSAVER"
+msgstr "AKVARYUM EKRAN KORUYUCU"
+
+msgid "FISH COUNT"
+msgstr "BALIK SAYISI"
+
+msgid "ALL RANDOM"
+msgstr "TÜMÜ RASTGELE"
+
+msgid "FISH"
+msgstr "BALIK"
+
+msgid "BUBBLE COLUMN"
+msgstr "KABARCIK SÜTUNU"
+
+msgid "AUTO LIGHTS"
+msgstr "OTOMATİK IŞIKLAR"
+
+msgid "FOREGROUND LIGHTS"
+msgstr "ÖN PLAN IŞIKLARI"
+
+msgid "BACKGROUND LIGHTS"
+msgstr "ARKA PLAN IŞIKLARI"
+
+msgid "STARFISH ON GLASS"
+msgstr "CAMDA DENİZYILDIZI"
+
+msgid "aquarium"
+msgstr "akvaryum"
+
+msgid "corridors"
+msgstr "koridorlar"
+
+msgid "CORRIDORS SCREENSAVER SETTINGS"
+msgstr "KORİDORLAR EKRAN KORUYUCU AYARLARI"
+
+msgid "CORRIDORS SCREENSAVER"
+msgstr "KORİDORLAR EKRAN KORUYUCU"
+
+msgid "SPEED"
+msgstr "HIZ"
+
+msgid "AMBIENT"
+msgstr "ORTAM IŞIĞI"
+
+msgid "PANELS"
+msgstr "IŞIK PANELLERİ"
+
+msgid "FLICKER"
+msgstr "TİTREME"
+
+msgid "FOG"
+msgstr "SİS"
